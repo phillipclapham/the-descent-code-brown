@@ -285,9 +285,31 @@ function placeCenterFeature(tileMap, room) {
     const centerX = room.x + Math.floor(room.width / 2);
     const centerY = room.y + Math.floor(room.height / 2);
 
-    // Only place if center is floor
+    // Try to place at exact center first
     if (tileMap.getTile(centerX, centerY) === TILE_FLOOR) {
         tileMap.setTile(centerX, centerY, TILE_FEATURE);
+        return;
+    }
+
+    // For non-rectangular rooms, find the floor tile closest to center
+    let closestDist = Infinity;
+    let closestPos = null;
+
+    for (let y = room.y; y < room.y + room.height; y++) {
+        for (let x = room.x; x < room.x + room.width; x++) {
+            if (tileMap.getTile(x, y) === TILE_FLOOR) {
+                const dist = Math.abs(x - centerX) + Math.abs(y - centerY);
+                if (dist < closestDist) {
+                    closestDist = dist;
+                    closestPos = { x, y };
+                }
+            }
+        }
+    }
+
+    // Place feature at closest floor tile to center
+    if (closestPos) {
+        tileMap.setTile(closestPos.x, closestPos.y, TILE_FEATURE);
     }
 }
 
