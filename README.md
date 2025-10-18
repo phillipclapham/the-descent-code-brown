@@ -29,8 +29,6 @@ You wake up in a dungeon with a CODE BROWN emergency. The only working bathroom 
 
 This is a zero-pressure fun project. Built session-by-session with clear goals.
 
-See `project_memory/` for detailed development docs.
-
 ---
 
 **"Hold it together. You can make it. Probably."**
