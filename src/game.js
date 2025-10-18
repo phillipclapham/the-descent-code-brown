@@ -39,6 +39,9 @@ class Game {
         this.lastTime = 0;
         this.running = true;
 
+        // Floor transition cooldown (prevent immediate re-trigger)
+        this.transitionCooldown = 0;
+
         console.log('Game initialized');
         console.log(`Grid: ${GRID_WIDTH}x${GRID_HEIGHT}`);
         console.log(`Generated ${this.numFloors} dungeon floors`);
@@ -90,6 +93,11 @@ class Game {
         // Update desperation meter
         this.desperationMeter.update(deltaTime);
 
+        // Update transition cooldown
+        if (this.transitionCooldown > 0) {
+            this.transitionCooldown -= deltaTime;
+        }
+
         // Handle player movement input
         const movement = this.input.getMovementDirection();
 
@@ -101,7 +109,10 @@ class Game {
         this.player.update(deltaTime);
 
         // Check for level transitions (player standing on stairs)
-        this.checkLevelTransition();
+        // Only if cooldown expired (prevents immediate re-trigger after spawning)
+        if (this.transitionCooldown <= 0) {
+            this.checkLevelTransition();
+        }
     }
 
     // Check if player is on stairs and handle level transition
@@ -136,10 +147,13 @@ class Game {
         // Update player's tile map reference
         this.player.tileMap = this.tileMap;
 
-        // Find stairs position on new floor and spawn player there
-        const spawnPos = this.tileMap.findWalkablePosition();
+        // CRITICAL: Spawn ADJACENT to upstairs (guarantees safe spawn, can see/reach escape)
+        const spawnPos = this.tileMap.findSafeSpawnNearUpstairs();
         this.player.x = spawnPos.x;
         this.player.y = spawnPos.y;
+
+        // Small cooldown just in case (100ms - only for edge case where spawn IS on upstairs)
+        this.transitionCooldown = 100;
 
         const displayFloor = this.numFloors - this.currentFloor;
         console.log(`⬇️  Descended to Floor ${displayFloor}`);
@@ -153,10 +167,13 @@ class Game {
         // Update player's tile map reference
         this.player.tileMap = this.tileMap;
 
-        // Find a walkable position on the previous floor
-        const spawnPos = this.tileMap.findWalkablePosition();
+        // CRITICAL: Spawn ADJACENT to upstairs (guarantees safe spawn)
+        const spawnPos = this.tileMap.findSafeSpawnNearUpstairs();
         this.player.x = spawnPos.x;
         this.player.y = spawnPos.y;
+
+        // Small cooldown just in case (100ms - only for edge case)
+        this.transitionCooldown = 100;
 
         const displayFloor = this.numFloors - this.currentFloor;
         console.log(`⬆️  Ascended to Floor ${displayFloor}`);
@@ -201,9 +218,17 @@ class Game {
         // Display floors in descending order: Floor 10 → Floor 1
         const displayFloor = this.numFloors - this.currentFloor;
         const floorText = `Floor: ${displayFloor}`;
+        const keysText = `Keys: ${this.player.keysCollected}`;
 
         this.renderer.drawText(posText, 10, 10, '#00ff00', 14);
         this.renderer.drawText(floorText, 10, 30, '#ffff00', 14);
+        this.renderer.drawText(keysText, 10, 50, '#ffff00', 14);
+
+        // Display player message (if any)
+        const message = this.player.getMessage();
+        if (message) {
+            this.renderer.drawText(message, 10, 70, '#ff8800', 16);
+        }
     }
 }
 

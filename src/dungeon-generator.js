@@ -1,7 +1,17 @@
 // Dungeon Generator - Creates procedural room-based dungeons
 // Generates rooms, connects them with corridors, and places stairs
 
-import { TILE_FLOOR, TILE_WALL, TILE_STAIRS, TILE_STAIRS_UP, TILE_TOILET } from './tile-map.js';
+import {
+    TILE_FLOOR,
+    TILE_WALL,
+    TILE_STAIRS,
+    TILE_STAIRS_UP,
+    TILE_TOILET,
+    TILE_DOOR_OPEN,
+    TILE_DOOR_CLOSED,
+    TILE_DOOR_LOCKED,
+    TILE_KEY
+} from './tile-map.js';
 import {
     categorizeRoomBySize,
     generateRoomShape,
@@ -48,7 +58,11 @@ export class DungeonGenerator {
                 height,
                 type: categorizeRoomBySize(width, height),
                 shape: null,  // Will be assigned during carving
-                features: []
+                features: [],
+                specialType: null,  // 'vault', 'shrine', 'arena', 'library', 'trap', or null
+                hasLockedDoor: false,
+                doorPositions: [],
+                keyRequired: false
             };
 
             // Generate shape based on room size
@@ -107,6 +121,9 @@ export class DungeonGenerator {
             }
         }
 
+        // Place stairs FIRST (before doors/keys) so we know where to spawn player
+        // and can validate progression properly
+
         // Place upward stairs in the first room (for backtracking)
         // But NOT on the first floor (nothing above to go back to)
         if (this.rooms.length > 0 && !isFirstFloor) {
@@ -130,6 +147,19 @@ export class DungeonGenerator {
                 tileMap.setTile(stairsX, stairsY, TILE_STAIRS);
             }
         }
+
+        // Assign special room types (1-2 per floor)
+        this.assignSpecialRooms();
+
+        // Place doors at room entrances (after stairs placed)
+        this.placeDoors(tileMap);
+
+        // Place keys (before validation)
+        this.placeKeys(tileMap);
+
+        // CRITICAL: Validate progression is possible (stairs reachable with available keys)
+        // Now that stairs actually exist on the map!
+        this.validateProgression(tileMap, isLastFloor);
 
         // Log room variety
         const roomTypes = this.rooms.map(r => r.type);
@@ -456,5 +486,365 @@ export class DungeonGenerator {
         // Simple L-shaped connection (guaranteed to work)
         const path = this.createLShapedPath(x1, y1, x2, y2);
         this.carveWindingCorridor(tileMap, path);
+    }
+
+    // Assign special room types to 1-2 rooms per floor
+    assignSpecialRooms() {
+        if (this.rooms.length < 2) return;
+
+        const numSpecial = 1 + Math.floor(Math.random() * 2); // 1-2 special rooms
+
+        // CRITICAL: Only 1 vault per floor (1 key = 1 locked door)
+        // Other special types don't have locked doors
+        const specialTypes = ['shrine', 'arena', 'library', 'trap'];
+
+        // Select random rooms for special designation (skip first room with upstairs)
+        const availableRooms = this.rooms.slice(1);
+        const shuffled = availableRooms.sort(() => Math.random() - 0.5);
+
+        // First special room has 50% chance to be a vault
+        let vaultPlaced = false;
+
+        for (let i = 0; i < Math.min(numSpecial, shuffled.length); i++) {
+            const room = shuffled[i];
+            let specialType;
+
+            // First special room: 50% chance vault, 50% chance other
+            if (i === 0 && Math.random() < 0.5) {
+                specialType = 'vault';
+                vaultPlaced = true;
+            } else {
+                // Pick from non-vault types
+                specialType = specialTypes[Math.floor(Math.random() * specialTypes.length)];
+            }
+
+            room.specialType = specialType;
+
+            // Vaults are always locked
+            if (specialType === 'vault') {
+                room.hasLockedDoor = true;
+                room.keyRequired = true;
+            }
+        }
+    }
+
+    // Find entrance positions for a room (where corridor meets room edge)
+    findRoomEntrances(room, tileMap) {
+        const entrances = [];
+
+        // Check room perimeter for floor tiles adjacent to corridor
+        for (let x = room.x; x < room.x + room.width; x++) {
+            for (let y = room.y; y < room.y + room.height; y++) {
+                // Only check perimeter tiles
+                const isPerimeter = (x === room.x || x === room.x + room.width - 1 ||
+                                    y === room.y || y === room.y + room.height - 1);
+
+                if (!isPerimeter) continue;
+
+                const tile = tileMap.getTile(x, y);
+
+                // If this is a floor tile on room edge, check if adjacent to corridor
+                if (tile === TILE_FLOOR) {
+                    // Check 4 directions for corridor (floor outside room bounds)
+                    const neighbors = [
+                        {x: x - 1, y, dx: -1, dy: 0},
+                        {x: x + 1, y, dx: 1, dy: 0},
+                        {x, y: y - 1, dx: 0, dy: -1},
+                        {x, y: y + 1, dx: 0, dy: 1}
+                    ];
+
+                    for (const n of neighbors) {
+                        // Check if neighbor is outside room bounds
+                        const outsideRoom = (n.x < room.x || n.x >= room.x + room.width ||
+                                           n.y < room.y || n.y >= room.y + room.height);
+
+                        if (outsideRoom && tileMap.getTile(n.x, n.y) === TILE_FLOOR) {
+                            // This is an entrance! Corridor connects here
+                            entrances.push({x, y, direction: {dx: n.dx, dy: n.dy}});
+                            break; // Only count each tile once
+                        }
+                    }
+                }
+            }
+        }
+
+        return entrances;
+    }
+
+    // Place doors at room entrances
+    placeDoors(tileMap) {
+        for (const room of this.rooms) {
+            const entrances = this.findRoomEntrances(room, tileMap);
+
+            for (const entrance of entrances) {
+                let doorType = TILE_DOOR_OPEN; // Default: open
+
+                // Special rooms get 100% doors
+                if (room.specialType) {
+                    if (room.hasLockedDoor) {
+                        doorType = TILE_DOOR_LOCKED;
+                    } else {
+                        doorType = Math.random() < 0.5 ? TILE_DOOR_CLOSED : TILE_DOOR_OPEN;
+                    }
+                } else {
+                    // Normal rooms: 50% chance of closed door
+                    if (Math.random() < 0.5) {
+                        doorType = TILE_DOOR_CLOSED;
+                    }
+                }
+
+                // Place door
+                tileMap.setTile(entrance.x, entrance.y, doorType);
+                room.doorPositions.push({x: entrance.x, y: entrance.y, type: doorType});
+            }
+        }
+    }
+
+    // Find all tiles accessible from a start position (respecting locked doors)
+    // Returns Set of "x,y" strings
+    findAccessibleTiles(tileMap, startX, startY) {
+        const visited = new Set();
+        const queue = [{x: startX, y: startY}];
+
+        while (queue.length > 0) {
+            const {x, y} = queue.shift();
+            const key = `${x},${y}`;
+
+            if (visited.has(key)) continue;
+            visited.add(key);
+
+            // Check all 4 directions
+            const neighbors = [
+                {x: x - 1, y},
+                {x: x + 1, y},
+                {x, y: y - 1},
+                {x, y: y + 1}
+            ];
+
+            for (const neighbor of neighbors) {
+                const tile = tileMap.getTile(neighbor.x, neighbor.y);
+                const nKey = `${neighbor.x},${neighbor.y}`;
+
+                // Walk on floors, open doors, stairs, features - NOT walls or locked doors
+                if (!visited.has(nKey) &&
+                    tile !== TILE_WALL &&
+                    tile !== TILE_DOOR_LOCKED &&
+                    tile !== undefined) {
+                    queue.push(neighbor);
+                }
+            }
+        }
+
+        return visited;
+    }
+
+    // Find rooms accessible from a start position WITHOUT going through locked doors
+    findAccessibleRooms(tileMap, startX, startY) {
+        const accessibleTiles = this.findAccessibleTiles(tileMap, startX, startY);
+        const accessibleRooms = new Set();
+
+        // Check which rooms contain accessible tiles
+        for (const room of this.rooms) {
+            for (let x = room.x; x < room.x + room.width; x++) {
+                for (let y = room.y; y < room.y + room.height; y++) {
+                    if (accessibleTiles.has(`${x},${y}`)) {
+                        accessibleRooms.add(room);
+                        break;
+                    }
+                }
+                if (accessibleRooms.has(room)) break;
+            }
+        }
+
+        return Array.from(accessibleRooms);
+    }
+
+    // Place keys in accessible rooms (NOT inside locked rooms)
+    placeKeys(tileMap) {
+        // Find locked rooms
+        const lockedRooms = this.rooms.filter(r => r.hasLockedDoor);
+
+        if (lockedRooms.length === 0) return;
+
+        // Find spawn point (first room center, where upstairs will be)
+        const firstRoom = this.rooms[0];
+        const spawnX = firstRoom.x + Math.floor(firstRoom.width / 2);
+        const spawnY = firstRoom.y + Math.floor(firstRoom.height / 2);
+
+        // Find all rooms accessible from spawn WITHOUT unlocking doors
+        const accessibleRooms = this.findAccessibleRooms(tileMap, spawnX, spawnY);
+
+        console.log(`Accessible rooms from spawn: ${accessibleRooms.length} of ${this.rooms.length}`);
+
+        for (const lockedRoom of lockedRooms) {
+            // Find eligible rooms: accessible AND not the locked room itself
+            const eligibleRooms = accessibleRooms.filter(r => r !== lockedRoom);
+
+            if (eligibleRooms.length === 0) {
+                console.error('No accessible rooms for key placement! Placing in first room anyway.');
+                eligibleRooms.push(firstRoom); // Emergency fallback
+            }
+
+            // Place key in a random accessible room (spread keys around)
+            const targetRoom = eligibleRooms[Math.floor(Math.random() * eligibleRooms.length)];
+
+            // Find a valid floor position in room (not on stairs, features, doors)
+            let attempts = 0;
+            let keyPlaced = false;
+
+            while (attempts < 50 && !keyPlaced) {
+                attempts++;
+
+                const x = targetRoom.x + 1 + Math.floor(Math.random() * (targetRoom.width - 2));
+                const y = targetRoom.y + 1 + Math.floor(Math.random() * (targetRoom.height - 2));
+
+                const tile = tileMap.getTile(x, y);
+
+                // Only place on plain floor (not stairs, features, doors)
+                if (tile === TILE_FLOOR) {
+                    tileMap.setTile(x, y, TILE_KEY);
+                    keyPlaced = true;
+                    console.log(`Key placed in accessible room at (${x}, ${y})`);
+                }
+            }
+
+            if (!keyPlaced) {
+                console.warn('Failed to place key - trying room center as fallback');
+                // Fallback: place at room center
+                const centerX = targetRoom.x + Math.floor(targetRoom.width / 2);
+                const centerY = targetRoom.y + Math.floor(targetRoom.height / 2);
+
+                // Only place if not on stairs
+                const centerTile = tileMap.getTile(centerX, centerY);
+                if (centerTile === TILE_FLOOR) {
+                    tileMap.setTile(centerX, centerY, TILE_KEY);
+                    console.log(`Key placed at room center (${centerX}, ${centerY}) as fallback`);
+                }
+            }
+        }
+    }
+
+    // Validate that player can progress (stairs reachable with available keys)
+    // This simulates the player's journey and ensures no softlock situations
+    validateProgression(tileMap, isLastFloor) {
+        // Find spawn point (first room center)
+        const firstRoom = this.rooms[0];
+        const spawnX = firstRoom.x + Math.floor(firstRoom.width / 2);
+        const spawnY = firstRoom.y + Math.floor(firstRoom.height / 2);
+
+        // Find stairs position (last room center or toilet)
+        const lastRoom = this.rooms[this.rooms.length - 1];
+        const stairsX = lastRoom.x + Math.floor(lastRoom.width / 2);
+        const stairsY = lastRoom.y + Math.floor(lastRoom.height / 2);
+
+        // Simulate player journey with key collection
+        let keysCollected = 0;
+        let accessible = this.findAccessibleTiles(tileMap, spawnX, spawnY);
+
+        // Count accessible keys
+        for (const tileKey of accessible) {
+            const [x, y] = tileKey.split(',').map(Number);
+            if (tileMap.getTile(x, y) === TILE_KEY) {
+                keysCollected++;
+            }
+        }
+
+        console.log(`Progression check: ${keysCollected} keys accessible from spawn`);
+
+        // Check if stairs are accessible
+        const stairsKey = `${stairsX},${stairsY}`;
+        if (accessible.has(stairsKey)) {
+            console.log('✅ Stairs accessible without unlocking doors - progression valid');
+            return; // All good!
+        }
+
+        // Stairs NOT accessible - need to unlock doors
+        console.warn('⚠️ Stairs not immediately accessible, checking with keys...');
+
+        // Simulate unlocking doors with available keys
+        let doorsUnlocked = 0;
+        const maxIterations = 10; // Safety limit
+
+        for (let iteration = 0; iteration < maxIterations; iteration++) {
+            if (accessible.has(stairsKey)) {
+                console.log(`✅ Stairs accessible after unlocking ${doorsUnlocked} doors`);
+                return; // Stairs now accessible!
+            }
+
+            if (keysCollected === 0) {
+                break; // No more keys to use
+            }
+
+            // Find locked doors adjacent to accessible area
+            const lockedDoorsToTry = [];
+            for (const tileKey of accessible) {
+                const [x, y] = tileKey.split(',').map(Number);
+
+                // Check 4 neighbors for locked doors
+                const neighbors = [
+                    {x: x - 1, y},
+                    {x: x + 1, y},
+                    {x, y: y - 1},
+                    {x, y: y + 1}
+                ];
+
+                for (const n of neighbors) {
+                    if (tileMap.getTile(n.x, n.y) === TILE_DOOR_LOCKED) {
+                        lockedDoorsToTry.push({x: n.x, y: n.y});
+                    }
+                }
+            }
+
+            if (lockedDoorsToTry.length === 0) {
+                break; // No locked doors to unlock
+            }
+
+            // Unlock first locked door (simulate using a key)
+            const doorToUnlock = lockedDoorsToTry[0];
+            tileMap.setTile(doorToUnlock.x, doorToUnlock.y, TILE_DOOR_OPEN);
+            keysCollected--;
+            doorsUnlocked++;
+
+            console.log(`  Unlocking door at (${doorToUnlock.x}, ${doorToUnlock.y}), keys remaining: ${keysCollected}`);
+
+            // Re-calculate accessible area
+            accessible = this.findAccessibleTiles(tileMap, spawnX, spawnY);
+
+            // Recount accessible keys
+            keysCollected = 0;
+            for (const tileKey of accessible) {
+                const [x, y] = tileKey.split(',').map(Number);
+                if (tileMap.getTile(x, y) === TILE_KEY) {
+                    keysCollected++;
+                }
+            }
+        }
+
+        // Final check
+        if (!accessible.has(stairsKey)) {
+            console.error('❌ SOFTLOCK DETECTED: Stairs unreachable even with all keys!');
+            console.log('   Unlocking all remaining locked doors to fix...');
+
+            // Emergency fix: unlock ALL locked doors
+            for (let y = 0; y < this.height; y++) {
+                for (let x = 0; x < this.width; x++) {
+                    if (tileMap.getTile(x, y) === TILE_DOOR_LOCKED) {
+                        tileMap.setTile(x, y, TILE_DOOR_OPEN);
+                        console.log(`   Emergency unlock: (${x}, ${y})`);
+                    }
+                }
+            }
+
+            // Update room metadata (no more locked doors)
+            for (const room of this.rooms) {
+                if (room.hasLockedDoor) {
+                    room.hasLockedDoor = false;
+                    room.keyRequired = false;
+                    console.log(`   Room vault status removed`);
+                }
+            }
+
+            console.log('✅ All locks removed - progression now guaranteed');
+        }
     }
 }

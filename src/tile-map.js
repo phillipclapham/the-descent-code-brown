@@ -9,6 +9,10 @@ export const TILE_STAIRS_UP = 3;   // Stairs up
 export const TILE_TOILET = 4;      // Victory condition (final floor)
 export const TILE_PILLAR = 5;      // Pillar - blocks movement
 export const TILE_FEATURE = 6;     // Decorative feature - walkable
+export const TILE_DOOR_OPEN = 7;   // Open door - walkable
+export const TILE_DOOR_CLOSED = 8; // Closed door - walk into to open
+export const TILE_DOOR_LOCKED = 9; // Locked door - requires key
+export const TILE_KEY = 10;        // Key pickup - walkable
 
 export class TileMap {
     constructor(width, height) {
@@ -51,7 +55,15 @@ export class TileMap {
     // Check if a position is walkable (for collision detection)
     isWalkable(x, y) {
         const tile = this.getTile(x, y);
-        return tile === TILE_FLOOR || tile === TILE_STAIRS || tile === TILE_STAIRS_UP || tile === TILE_TOILET || tile === TILE_FEATURE;
+        return tile === TILE_FLOOR ||
+               tile === TILE_STAIRS ||
+               tile === TILE_STAIRS_UP ||
+               tile === TILE_TOILET ||
+               tile === TILE_FEATURE ||
+               tile === TILE_DOOR_OPEN ||
+               tile === TILE_KEY;
+        // Note: TILE_DOOR_CLOSED and TILE_DOOR_LOCKED are NOT walkable
+        // Player interaction will open/unlock them first
     }
 
     // Fill a rectangular area with a tile type
@@ -95,6 +107,14 @@ export class TileMap {
                 return 'O';  // Pillar
             case TILE_FEATURE:
                 return '*';  // Feature
+            case TILE_DOOR_OPEN:
+                return '+';  // Open door
+            case TILE_DOOR_CLOSED:
+                return '+';  // Closed door
+            case TILE_DOOR_LOCKED:
+                return '+';  // Locked door
+            case TILE_KEY:
+                return 'k';  // Key
             default:
                 return '?';
         }
@@ -117,6 +137,14 @@ export class TileMap {
                 return '#666666';     // Gray (pillar)
             case TILE_FEATURE:
                 return '#4444ff';     // Blue (feature)
+            case TILE_DOOR_OPEN:
+                return '#aa7744';     // Brown (open door)
+            case TILE_DOOR_CLOSED:
+                return '#996633';     // Brown (closed door)
+            case TILE_DOOR_LOCKED:
+                return '#ff0000';     // Red (locked door)
+            case TILE_KEY:
+                return '#ffff00';     // Yellow (key)
             default:
                 return '#ff0000';     // Red (error)
         }
@@ -147,5 +175,52 @@ export class TileMap {
             x: Math.floor(this.width / 2),
             y: Math.floor(this.height / 2)
         };
+    }
+
+    // Find upward staircase position (for guaranteed safe spawn)
+    findUpStairsPosition() {
+        // Search for upward stairs
+        for (let y = 1; y < this.height - 1; y++) {
+            for (let x = 1; x < this.width - 1; x++) {
+                if (this.getTile(x, y) === TILE_STAIRS_UP) {
+                    return { x, y };
+                }
+            }
+        }
+
+        // No upstairs found (first floor) - find any walkable position
+        return this.findWalkablePosition();
+    }
+
+    // Find a safe spawn position ADJACENT to upstairs (not ON upstairs)
+    // This prevents immediate stair re-trigger without needing cooldowns
+    findSafeSpawnNearUpstairs() {
+        // First, find upstairs
+        const upstairs = this.findUpStairsPosition();
+
+        // Find all adjacent walkable tiles (4-directional)
+        const adjacentTiles = [
+            {x: upstairs.x - 1, y: upstairs.y},     // West
+            {x: upstairs.x + 1, y: upstairs.y},     // East
+            {x: upstairs.x, y: upstairs.y - 1},     // North
+            {x: upstairs.x, y: upstairs.y + 1}      // South
+        ];
+
+        // Filter to only walkable tiles (not walls, not locked doors)
+        const walkableAdjacent = adjacentTiles.filter(tile =>
+            this.isWalkable(tile.x, tile.y)
+        );
+
+        if (walkableAdjacent.length > 0) {
+            // Pick a random adjacent walkable tile
+            const spawn = walkableAdjacent[Math.floor(Math.random() * walkableAdjacent.length)];
+            console.log(`Spawning adjacent to upstairs at (${spawn.x}, ${spawn.y}), upstairs at (${upstairs.x}, ${upstairs.y})`);
+            return spawn;
+        }
+
+        // Edge case: no adjacent walkable tiles (upstairs completely surrounded?)
+        // Fallback: spawn ON upstairs (will need cooldown, but rare)
+        console.warn('No adjacent walkable tiles to upstairs, spawning ON upstairs');
+        return upstairs;
     }
 }
