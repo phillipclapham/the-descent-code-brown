@@ -19,10 +19,11 @@ class Game {
         this.tileMap = new TileMap(GRID_WIDTH, GRID_HEIGHT);
         this.tileMap.createTestWalls(); // Session 2: test walls for collision verification
 
-        // Initialize player at center of screen
+        // Initialize player at a valid walkable position
+        const spawnPos = this.tileMap.findWalkablePosition();
         this.player = new Player(
-            Math.floor(GRID_WIDTH / 2),
-            Math.floor(GRID_HEIGHT / 2),
+            spawnPos.x,
+            spawnPos.y,
             this.tileMap
         );
 

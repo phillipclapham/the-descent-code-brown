@@ -133,4 +133,22 @@ export class TileMap {
             }
         }
     }
+
+    // Find a valid walkable position (useful for spawning player)
+    findWalkablePosition() {
+        // Search from top-left for first walkable tile
+        for (let y = 1; y < this.height - 1; y++) {
+            for (let x = 1; x < this.width - 1; x++) {
+                if (this.isWalkable(x, y)) {
+                    return { x, y };
+                }
+            }
+        }
+
+        // Fallback: return center (shouldn't happen if map has any floor)
+        return {
+            x: Math.floor(this.width / 2),
+            y: Math.floor(this.height / 2)
+        };
+    }
 }
