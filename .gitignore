@@ -1,0 +1,19 @@
+# Project memory (internal development process)
+project_memory/
+
+# Node modules if we add any tooling later
+node_modules/
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
