@@ -3,6 +3,8 @@
 import { Renderer, GRID_WIDTH, GRID_HEIGHT } from './renderer.js';
 import { Player } from './player.js';
 import { InputHandler } from './input.js';
+import { DesperationMeter } from './desperation-meter.js';
+import { TileMap } from './tile-map.js';
 
 class Game {
     constructor() {
@@ -10,10 +12,18 @@ class Game {
         this.renderer = new Renderer(this.canvas);
         this.input = new InputHandler();
 
+        // Initialize desperation meter
+        this.desperationMeter = new DesperationMeter();
+
+        // Initialize tile map (matches grid dimensions)
+        this.tileMap = new TileMap(GRID_WIDTH, GRID_HEIGHT);
+        this.tileMap.createTestWalls(); // Session 2: test walls for collision verification
+
         // Initialize player at center of screen
         this.player = new Player(
             Math.floor(GRID_WIDTH / 2),
-            Math.floor(GRID_HEIGHT / 2)
+            Math.floor(GRID_HEIGHT / 2),
+            this.tileMap
         );
 
         // Game loop timing
@@ -52,6 +62,9 @@ class Game {
 
     // Update game state
     update(currentTime, deltaTime) {
+        // Update desperation meter
+        this.desperationMeter.update(deltaTime);
+
         // Handle player movement input
         const movement = this.input.getMovementDirection();
 
@@ -68,8 +81,8 @@ class Game {
         // Clear screen
         this.renderer.clear();
 
-        // Draw floor (simple dot pattern for now)
-        this.drawFloor();
+        // Draw tile map (floors and walls)
+        this.drawTileMap();
 
         // Render player
         this.player.render(this.renderer);
@@ -78,11 +91,14 @@ class Game {
         this.drawDebugInfo();
     }
 
-    // Draw simple floor pattern
-    drawFloor() {
+    // Draw tile map
+    drawTileMap() {
         for (let y = 0; y < GRID_HEIGHT; y++) {
             for (let x = 0; x < GRID_WIDTH; x++) {
-                this.renderer.drawChar('.', x, y, '#333333');
+                const tile = this.tileMap.getTile(x, y);
+                const char = this.tileMap.getTileChar(tile);
+                const color = this.tileMap.getTileColor(tile);
+                this.renderer.drawChar(char, x, y, color);
             }
         }
     }

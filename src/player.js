@@ -3,11 +3,14 @@
 import { GRID_WIDTH, GRID_HEIGHT } from './renderer.js';
 
 export class Player {
-    constructor(x, y) {
+    constructor(x, y, tileMap = null) {
         this.x = x;
         this.y = y;
         this.char = '@';
         this.color = '#00ffff'; // Cyan
+
+        // Tile map reference for collision detection
+        this.tileMap = tileMap;
 
         // Movement timing
         this.moveDelay = 200; // milliseconds between moves
@@ -35,9 +38,20 @@ export class Player {
         return false;
     }
 
-    // Check if a position is valid (within bounds)
+    // Check if a position is valid (within bounds and walkable)
     isValidPosition(x, y) {
-        return x >= 0 && x < GRID_WIDTH && y >= 0 && y < GRID_HEIGHT;
+        // Boundary check (primary safety)
+        if (x < 0 || x >= GRID_WIDTH || y < 0 || y >= GRID_HEIGHT) {
+            return false;
+        }
+
+        // Tile map collision check (if tile map exists)
+        if (this.tileMap) {
+            return this.tileMap.isWalkable(x, y);
+        }
+
+        // Default: position is valid if in bounds
+        return true;
     }
 
     // Update player state

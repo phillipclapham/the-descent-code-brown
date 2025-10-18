@@ -35,11 +35,50 @@
             font-size: 24px;
             text-shadow: 0 0 10px #00ff00;
         }
+
+        /* Desperation Meter Styles */
+        #desperation-meter {
+            width: 800px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .meter-label {
+            font-size: 14px;
+            font-weight: bold;
+            color: #00ff00;
+            text-align: left;
+        }
+
+        .meter-bar-container {
+            width: 100%;
+            height: 30px;
+            background-color: #000000;
+            border: 2px solid #00ff00;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .meter-bar {
+            height: 100%;
+            width: 0%;
+            background-color: #00ff00;
+            transition: width 0.1s linear, background-color 0.3s ease;
+        }
+
+        .meter-percentage {
+            font-size: 12px;
+            color: #00ff00;
+            text-align: right;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
     <div id="game-container">
         <h1>THE DESCENT: CODE BROWN</h1>
+        <div id="desperation-meter"></div>
         <canvas id="game-canvas" width="800" height="600"></canvas>
     </div>
 
