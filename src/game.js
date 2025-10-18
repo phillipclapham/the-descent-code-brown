@@ -4,7 +4,7 @@ import { Renderer, GRID_WIDTH, GRID_HEIGHT } from './renderer.js';
 import { Player } from './player.js';
 import { InputHandler } from './input.js';
 import { DesperationMeter } from './desperation-meter.js';
-import { TileMap, TILE_STAIRS } from './tile-map.js';
+import { TileMap, TILE_STAIRS, TILE_STAIRS_UP, TILE_TOILET } from './tile-map.js';
 import { DungeonGenerator } from './dungeon-generator.js';
 
 class Game {
@@ -17,7 +17,7 @@ class Game {
         this.desperationMeter = new DesperationMeter();
 
         // Multi-floor system
-        this.numFloors = 5;
+        this.numFloors = 10;  // 10 floors: start at floor 10, descend to floor 1
         this.currentFloor = 0;
         this.floors = [];
 
@@ -51,7 +51,9 @@ class Game {
 
         for (let i = 0; i < this.numFloors; i++) {
             const tileMap = new TileMap(GRID_WIDTH, GRID_HEIGHT);
-            generator.generate(tileMap);
+            const isFirstFloor = (i === 0);  // Top floor (Floor 10)
+            const isLastFloor = (i === this.numFloors - 1);  // Bottom floor (Floor 1)
+            generator.generate(tileMap, isFirstFloor, isLastFloor);
             this.floors.push(tileMap);
         }
 
@@ -106,14 +108,23 @@ class Game {
     checkLevelTransition() {
         const playerTile = this.tileMap.getTile(this.player.x, this.player.y);
 
+        // Check for downward stairs
         if (playerTile === TILE_STAIRS) {
-            // Check if not on last floor
             if (this.currentFloor < this.numFloors - 1) {
                 this.descendToNextFloor();
-            } else {
-                // On last floor - victory condition (to be implemented in Phase 4)
-                console.log('You found the bathroom! (Victory not implemented yet)');
             }
+        }
+
+        // Check for upward stairs
+        if (playerTile === TILE_STAIRS_UP) {
+            if (this.currentFloor > 0) {
+                this.ascendToPreviousFloor();
+            }
+        }
+
+        // Check for toilet (victory condition)
+        if (playerTile === TILE_TOILET) {
+            this.handleVictory();
         }
     }
 
@@ -130,7 +141,31 @@ class Game {
         this.player.x = spawnPos.x;
         this.player.y = spawnPos.y;
 
-        console.log(`Descended to floor ${this.currentFloor + 1}`);
+        const displayFloor = this.numFloors - this.currentFloor;
+        console.log(`⬇️  Descended to Floor ${displayFloor}`);
+    }
+
+    // Ascend to the previous floor
+    ascendToPreviousFloor() {
+        this.currentFloor--;
+        this.tileMap = this.floors[this.currentFloor];
+
+        // Update player's tile map reference
+        this.player.tileMap = this.tileMap;
+
+        // Find a walkable position on the previous floor
+        const spawnPos = this.tileMap.findWalkablePosition();
+        this.player.x = spawnPos.x;
+        this.player.y = spawnPos.y;
+
+        const displayFloor = this.numFloors - this.currentFloor;
+        console.log(`⬆️  Ascended to Floor ${displayFloor}`);
+    }
+
+    // Handle victory condition (player reached the toilet!)
+    handleVictory() {
+        console.log('🎉 VICTORY! You made it to the bathroom!');
+        // TODO Phase 4: Display victory screen, stop game, etc.
     }
 
     // Render everything
@@ -163,7 +198,9 @@ class Game {
     // Draw debug information
     drawDebugInfo() {
         const posText = `Position: (${this.player.x}, ${this.player.y})`;
-        const floorText = `Floor: ${this.currentFloor + 1} / ${this.numFloors}`;
+        // Display floors in descending order: Floor 10 → Floor 1
+        const displayFloor = this.numFloors - this.currentFloor;
+        const floorText = `Floor: ${displayFloor}`;
 
         this.renderer.drawText(posText, 10, 10, '#00ff00', 14);
         this.renderer.drawText(floorText, 10, 30, '#ffff00', 14);

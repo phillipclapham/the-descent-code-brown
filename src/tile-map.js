@@ -4,7 +4,9 @@
 // Tile type constants
 export const TILE_FLOOR = 0;
 export const TILE_WALL = 1;
-export const TILE_STAIRS = 2;
+export const TILE_STAIRS = 2;      // Stairs down
+export const TILE_STAIRS_UP = 3;   // Stairs up
+export const TILE_TOILET = 4;      // Victory condition (final floor)
 
 export class TileMap {
     constructor(width, height) {
@@ -47,7 +49,7 @@ export class TileMap {
     // Check if a position is walkable (for collision detection)
     isWalkable(x, y) {
         const tile = this.getTile(x, y);
-        return tile === TILE_FLOOR || tile === TILE_STAIRS;
+        return tile === TILE_FLOOR || tile === TILE_STAIRS || tile === TILE_STAIRS_UP || tile === TILE_TOILET;
     }
 
     // Fill a rectangular area with a tile type
@@ -82,7 +84,11 @@ export class TileMap {
             case TILE_WALL:
                 return '#';
             case TILE_STAIRS:
-                return '>';
+                return '>';  // Down
+            case TILE_STAIRS_UP:
+                return '<';  // Up
+            case TILE_TOILET:
+                return 'T';  // Victory!
             default:
                 return '?';
         }
@@ -96,9 +102,13 @@ export class TileMap {
             case TILE_WALL:
                 return '#888888';
             case TILE_STAIRS:
-                return '#ffff00';
+                return '#ffff00';     // Yellow (down)
+            case TILE_STAIRS_UP:
+                return '#00ffff';     // Cyan (up)
+            case TILE_TOILET:
+                return '#ff00ff';     // Magenta (victory!)
             default:
-                return '#ff00ff';
+                return '#ff0000';     // Red (error)
         }
     }
 

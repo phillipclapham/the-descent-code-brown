@@ -1,7 +1,7 @@
 // Dungeon Generator - Creates procedural room-based dungeons
 // Generates rooms, connects them with corridors, and places stairs
 
-import { TILE_FLOOR, TILE_WALL, TILE_STAIRS } from './tile-map.js';
+import { TILE_FLOOR, TILE_WALL, TILE_STAIRS, TILE_STAIRS_UP, TILE_TOILET } from './tile-map.js';
 
 export class DungeonGenerator {
     constructor(width, height) {
@@ -11,7 +11,9 @@ export class DungeonGenerator {
     }
 
     // Generate a complete dungeon on a tile map
-    generate(tileMap) {
+    // isFirstFloor: if true, does NOT place upward stairs (nothing above)
+    // isLastFloor: if true, places toilet instead of downward stairs
+    generate(tileMap, isFirstFloor = false, isLastFloor = false) {
         // Clear and fill with walls
         this.fillWithWalls(tileMap);
 
@@ -49,15 +51,31 @@ export class DungeonGenerator {
             }
         }
 
-        // Place stairs in the last room
+        // Place upward stairs in the first room (for backtracking)
+        // But NOT on the first floor (nothing above to go back to)
+        if (this.rooms.length > 0 && !isFirstFloor) {
+            const firstRoom = this.rooms[0];
+            const upStairsX = firstRoom.x + Math.floor(firstRoom.width / 2);
+            const upStairsY = firstRoom.y + Math.floor(firstRoom.height / 2);
+            tileMap.setTile(upStairsX, upStairsY, TILE_STAIRS_UP);
+        }
+
+        // Place downward stairs or toilet in the last room
         if (this.rooms.length > 0) {
             const lastRoom = this.rooms[this.rooms.length - 1];
             const stairsX = lastRoom.x + Math.floor(lastRoom.width / 2);
             const stairsY = lastRoom.y + Math.floor(lastRoom.height / 2);
-            tileMap.setTile(stairsX, stairsY, TILE_STAIRS);
+
+            if (isLastFloor) {
+                // Final floor: place toilet instead of stairs
+                tileMap.setTile(stairsX, stairsY, TILE_TOILET);
+            } else {
+                // Regular floor: place downward stairs
+                tileMap.setTile(stairsX, stairsY, TILE_STAIRS);
+            }
         }
 
-        console.log(`Dungeon generated: ${this.rooms.length} rooms`);
+        console.log(`Dungeon generated: ${this.rooms.length} rooms${isLastFloor ? ' (FINAL FLOOR)' : ''}`);
     }
 
     // Fill entire map with walls
