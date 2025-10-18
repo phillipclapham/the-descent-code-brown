@@ -2,6 +2,13 @@
 // Generates rooms, connects them with corridors, and places stairs
 
 import { TILE_FLOOR, TILE_WALL, TILE_STAIRS, TILE_STAIRS_UP, TILE_TOILET } from './tile-map.js';
+import {
+    categorizeRoomBySize,
+    generateRoomShape,
+    carveRoomByShape,
+    placeArchitecturalFeatures,
+    ROOM_SHAPE
+} from './room-shapes.js';
 
 export class DungeonGenerator {
     constructor(width, height) {
@@ -27,17 +34,34 @@ export class DungeonGenerator {
         while (this.rooms.length < numRooms && attempts < maxAttempts) {
             attempts++;
 
-            // Random room parameters
-            const width = 6 + Math.floor(Math.random() * 7); // 6-12 tiles wide
-            const height = 6 + Math.floor(Math.random() * 7); // 6-12 tiles tall
+            // Random room parameters (wider size range for variety)
+            const width = 5 + Math.floor(Math.random() * 12); // 5-16 tiles wide
+            const height = 5 + Math.floor(Math.random() * 12); // 5-16 tiles tall
             const x = 2 + Math.floor(Math.random() * (this.width - width - 4));
             const y = 2 + Math.floor(Math.random() * (this.height - height - 4));
 
-            const room = { x, y, width, height };
+            // Create enhanced room object
+            const room = {
+                x,
+                y,
+                width,
+                height,
+                type: categorizeRoomBySize(width, height),
+                shape: null,  // Will be assigned during carving
+                features: []
+            };
+
+            // Generate shape based on room size
+            room.shape = generateRoomShape(room);
 
             // Check if room overlaps with existing rooms
             if (!this.overlapsAny(room)) {
-                this.carveRoom(tileMap, room);
+                // Carve room using its shape
+                carveRoomByShape(tileMap, room, room.shape);
+
+                // Add architectural features (pillars, center features)
+                placeArchitecturalFeatures(tileMap, room);
+
                 this.rooms.push(room);
 
                 // Connect to previous room if not first room
@@ -75,7 +99,12 @@ export class DungeonGenerator {
             }
         }
 
+        // Log room variety
+        const roomTypes = this.rooms.map(r => r.type);
+        const shapes = this.rooms.map(r => r.shape);
         console.log(`Dungeon generated: ${this.rooms.length} rooms${isLastFloor ? ' (FINAL FLOOR)' : ''}`);
+        console.log(`  Types: ${roomTypes.join(', ')}`);
+        console.log(`  Shapes: ${shapes.join(', ')}`);
     }
 
     // Fill entire map with walls
@@ -83,15 +112,6 @@ export class DungeonGenerator {
         for (let y = 0; y < this.height; y++) {
             for (let x = 0; x < this.width; x++) {
                 tileMap.setTile(x, y, TILE_WALL);
-            }
-        }
-    }
-
-    // Carve out a room (fill interior with floor)
-    carveRoom(tileMap, room) {
-        for (let y = room.y; y < room.y + room.height; y++) {
-            for (let x = room.x; x < room.x + room.width; x++) {
-                tileMap.setTile(x, y, TILE_FLOOR);
             }
         }
     }
