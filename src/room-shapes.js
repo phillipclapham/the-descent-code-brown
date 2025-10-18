@@ -212,7 +212,7 @@ function carveDiamond(tileMap, room) {
     }
 }
 
-// Place architectural features in a room (pillars, center features)
+// Place architectural features in a room (pillars, decorations)
 export function placeArchitecturalFeatures(tileMap, room) {
     const roomType = categorizeRoomBySize(room.width, room.height);
 
@@ -221,9 +221,9 @@ export function placeArchitecturalFeatures(tileMap, room) {
         placePillars(tileMap, room, roomType);
     }
 
-    // All non-closet rooms can have center features
-    if (roomType !== ROOM_TYPE.CLOSET && Math.random() < 0.5) {
-        placeCenterFeature(tileMap, room);
+    // All non-closet rooms get random decorations
+    if (roomType !== ROOM_TYPE.CLOSET) {
+        placeRoomDecorations(tileMap, room, roomType);
     }
 }
 
@@ -281,36 +281,79 @@ function placeCenterCluster(tileMap, room) {
     }
 }
 
-function placeCenterFeature(tileMap, room) {
-    const centerX = room.x + Math.floor(room.width / 2);
-    const centerY = room.y + Math.floor(room.height / 2);
+// Place random decorations throughout a room (scaled by room size)
+function placeRoomDecorations(tileMap, room, roomType) {
+    // Determine decoration count based on room type
+    let decorationCount = 0;
 
-    // Try to place at exact center first
-    if (tileMap.getTile(centerX, centerY) === TILE_FLOOR) {
-        tileMap.setTile(centerX, centerY, TILE_FEATURE);
-        return;
+    switch (roomType) {
+        case ROOM_TYPE.CLOSET:
+            // Closets: 0-1 (50% chance of 1)
+            decorationCount = Math.random() < 0.5 ? 1 : 0;
+            break;
+        case ROOM_TYPE.SMALL:
+            // Small: 0-2 (average 1)
+            decorationCount = Math.floor(Math.random() * 3);
+            break;
+        case ROOM_TYPE.NORMAL:
+            // Normal: 1-3 (average 2)
+            decorationCount = 1 + Math.floor(Math.random() * 3);
+            break;
+        case ROOM_TYPE.LARGE:
+            // Large: 2-4 (average 3)
+            decorationCount = 2 + Math.floor(Math.random() * 3);
+            break;
+        case ROOM_TYPE.GRAND:
+            // Grand: 2-5 (average 3.5)
+            decorationCount = 2 + Math.floor(Math.random() * 4);
+            break;
     }
 
-    // For non-rectangular rooms, find the floor tile closest to center
-    let closestDist = Infinity;
-    let closestPos = null;
+    // Get all valid floor tiles for decoration placement
+    const validTiles = getValidDecorationTiles(tileMap, room, []);
 
-    for (let y = room.y; y < room.y + room.height; y++) {
-        for (let x = room.x; x < room.x + room.width; x++) {
-            if (tileMap.getTile(x, y) === TILE_FLOOR) {
-                const dist = Math.abs(x - centerX) + Math.abs(y - centerY);
-                if (dist < closestDist) {
-                    closestDist = dist;
-                    closestPos = { x, y };
-                }
+    // Place decorations with spacing
+    const placedDecorations = [];
+
+    for (let i = 0; i < decorationCount && validTiles.length > 0; i++) {
+        // Pick random valid tile
+        const randomIndex = Math.floor(Math.random() * validTiles.length);
+        const tile = validTiles[randomIndex];
+
+        // Place decoration
+        tileMap.setTile(tile.x, tile.y, TILE_FEATURE);
+        placedDecorations.push(tile);
+
+        // Remove this tile and nearby tiles from valid list (enforce spacing)
+        const newValidTiles = [];
+        for (const vt of validTiles) {
+            const dist = Math.abs(vt.x - tile.x) + Math.abs(vt.y - tile.y);
+            if (dist >= 2) { // Minimum 2-tile spacing
+                newValidTiles.push(vt);
+            }
+        }
+        validTiles.length = 0;
+        validTiles.push(...newValidTiles);
+    }
+}
+
+// Get valid floor tiles for decoration placement (excluding edges, pillars, etc.)
+function getValidDecorationTiles(tileMap, room, existingDecorations) {
+    const validTiles = [];
+
+    // Iterate through room, excluding 1-tile border
+    for (let y = room.y + 1; y < room.y + room.height - 1; y++) {
+        for (let x = room.x + 1; x < room.x + room.width - 1; x++) {
+            const tile = tileMap.getTile(x, y);
+
+            // Only consider floor tiles (not walls, pillars, stairs, etc.)
+            if (tile === TILE_FLOOR) {
+                validTiles.push({ x, y });
             }
         }
     }
 
-    // Place feature at closest floor tile to center
-    if (closestPos) {
-        tileMap.setTile(closestPos.x, closestPos.y, TILE_FEATURE);
-    }
+    return validTiles;
 }
 
 // Distribution helper: generates target room counts for a floor
