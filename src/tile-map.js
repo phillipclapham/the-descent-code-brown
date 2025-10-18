@@ -74,29 +74,6 @@ export class TileMap {
         }
     }
 
-    // Create some test walls for verification (Session 2 testing)
-    createTestWalls() {
-        // Draw border
-        this.drawBorder();
-
-        // Add a few internal walls for collision testing
-        // Vertical wall on left side
-        for (let y = 5; y < 10; y++) {
-            this.setTile(10, y, TILE_WALL);
-        }
-
-        // Horizontal wall in middle
-        for (let x = 15; x < 25; x++) {
-            this.setTile(x, 15, TILE_WALL);
-        }
-
-        // Small room outline
-        this.fillRect(30, 20, 8, 6, TILE_WALL);
-        this.fillRect(31, 21, 6, 4, TILE_FLOOR); // Interior
-
-        console.log('Test walls created');
-    }
-
     // Get character representation for rendering
     getTileChar(tileType) {
         switch (tileType) {
