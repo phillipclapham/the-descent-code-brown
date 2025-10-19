@@ -54,9 +54,10 @@ class Game {
 
         for (let i = 0; i < this.numFloors; i++) {
             const tileMap = new TileMap(GRID_WIDTH, GRID_HEIGHT);
+            const displayFloor = this.numFloors - i;  // Floor number (10 → 1)
             const isFirstFloor = (i === 0);  // Top floor (Floor 10)
             const isLastFloor = (i === this.numFloors - 1);  // Bottom floor (Floor 1)
-            generator.generate(tileMap, isFirstFloor, isLastFloor);
+            generator.generate(tileMap, displayFloor, isFirstFloor, isLastFloor);
             this.floors.push(tileMap);
         }
 

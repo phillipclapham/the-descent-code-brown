@@ -1,6 +1,8 @@
 // Dungeon Generator - Creates procedural room-based dungeons
 // Generates rooms, connects them with corridors, and places stairs
 
+import { getThemeForFloor } from './floor-themes.js';
+import { getRandomVaultTemplate, placeVaultTemplate, canFitTemplate } from './vault-library.js';
 import {
     TILE_FLOOR,
     TILE_WALL,
@@ -20,6 +22,50 @@ import {
     ROOM_SHAPE
 } from './room-shapes.js';
 
+// Generation metrics for quality tracking and debugging
+class GenerationMetrics {
+    constructor() {
+        this.roomCount = 0;
+        this.specialRoomCount = 0;
+        this.corridorSegments = 0;
+        this.doorCount = 0;
+        this.lockedDoorCount = 0;
+        this.keyCount = 0;
+        this.startTime = 0;
+        this.endTime = 0;
+        this.specialRoomTypes = {};
+    }
+
+    start() {
+        this.startTime = performance.now();
+    }
+
+    end() {
+        this.endTime = performance.now();
+    }
+
+    log(floorNumber) {
+        const duration = (this.endTime - this.startTime).toFixed(1);
+        console.log(`📊 Floor ${floorNumber} Metrics:`);
+        console.log(`   Rooms: ${this.roomCount} (${this.specialRoomCount} special)`);
+        if (this.specialRoomCount > 0) {
+            const types = Object.entries(this.specialRoomTypes)
+                .map(([type, count]) => `${count}x${type}`)
+                .join(', ');
+            console.log(`   Special: ${types}`);
+        }
+        console.log(`   Doors: ${this.doorCount} (${this.lockedDoorCount} locked)`);
+        console.log(`   Keys: ${this.keyCount}`);
+        console.log(`   Corridor segments: ${this.corridorSegments}`);
+        console.log(`   Generation time: ${duration}ms`);
+    }
+
+    addSpecialRoom(type) {
+        this.specialRoomCount++;
+        this.specialRoomTypes[type] = (this.specialRoomTypes[type] || 0) + 1;
+    }
+}
+
 export class DungeonGenerator {
     constructor(width, height) {
         this.width = width;
@@ -28,9 +74,18 @@ export class DungeonGenerator {
     }
 
     // Generate a complete dungeon on a tile map
+    // floorNumber: Display floor number (10 = top, 1 = bottom)
     // isFirstFloor: if true, does NOT place upward stairs (nothing above)
     // isLastFloor: if true, places toilet instead of downward stairs
-    generate(tileMap, isFirstFloor = false, isLastFloor = false) {
+    generate(tileMap, floorNumber, isFirstFloor = false, isLastFloor = false) {
+        // Initialize metrics
+        const metrics = new GenerationMetrics();
+        metrics.start();
+
+        // Set floor theme for visual styling
+        tileMap.theme = getThemeForFloor(floorNumber);
+        console.log(`🎨 Generating Floor ${floorNumber} - Theme: ${tileMap.theme.name}`);
+
         // Clear and fill with walls
         this.fillWithWalls(tileMap);
 
@@ -93,6 +148,7 @@ export class DungeonGenerator {
                     tileMap
                 );
                 this.carveWindingCorridor(tileMap, path);
+                metrics.corridorSegments += path.length;
             }
 
             // Add secondary connections for loops (25% of rooms)
@@ -149,22 +205,29 @@ export class DungeonGenerator {
         }
 
         // Assign special room types (1-2 per floor)
-        this.assignSpecialRooms();
+        this.assignSpecialRooms(metrics);
+
+        // Apply vault templates to vault rooms (hand-crafted layouts)
+        this.applyVaultTemplates(tileMap);
 
         // Place doors at room entrances (after stairs placed)
-        this.placeDoors(tileMap);
+        this.placeDoors(tileMap, metrics);
 
         // Place keys (before validation)
-        this.placeKeys(tileMap);
+        this.placeKeys(tileMap, metrics);
 
         // CRITICAL: Validate progression is possible (stairs reachable with available keys)
         // Now that stairs actually exist on the map!
         this.validateProgression(tileMap, isLastFloor);
 
+        // Finalize and log metrics
+        metrics.roomCount = this.rooms.length;
+        metrics.end();
+        metrics.log(floorNumber);
+
         // Log room variety
         const roomTypes = this.rooms.map(r => r.type);
         const shapes = this.rooms.map(r => r.shape);
-        console.log(`Dungeon generated: ${this.rooms.length} rooms${isLastFloor ? ' (FINAL FLOOR)' : ''}`);
         console.log(`  Types: ${roomTypes.join(', ')}`);
         console.log(`  Shapes: ${shapes.join(', ')}`);
     }
@@ -489,7 +552,7 @@ export class DungeonGenerator {
     }
 
     // Assign special room types to 1-2 rooms per floor
-    assignSpecialRooms() {
+    assignSpecialRooms(metrics) {
         if (this.rooms.length < 2) return;
 
         const numSpecial = 1 + Math.floor(Math.random() * 2); // 1-2 special rooms
@@ -519,6 +582,7 @@ export class DungeonGenerator {
             }
 
             room.specialType = specialType;
+            metrics.addSpecialRoom(specialType);
 
             // Vaults are always locked
             if (specialType === 'vault') {
@@ -528,9 +592,47 @@ export class DungeonGenerator {
         }
     }
 
+    // Apply hand-crafted vault templates to vault rooms
+    applyVaultTemplates(tileMap) {
+        const vaultRooms = this.rooms.filter(r => r.specialType === 'vault');
+
+        for (const room of vaultRooms) {
+            // Get random vault template
+            const template = getRandomVaultTemplate();
+
+            // Check if template fits
+            if (!canFitTemplate(room, template)) {
+                console.warn(`Vault template ${template.name} doesn't fit in room, keeping procedural vault`);
+                continue;
+            }
+
+            // Clear room area first (remove procedural carving)
+            tileMap.fillRect(room.x, room.y, room.width, room.height, TILE_WALL);
+
+            // Place template
+            const entrance = placeVaultTemplate(tileMap, room, template);
+
+            if (entrance) {
+                // Store template entrance for door placement
+                // This will be used later when findRoomEntrances is called
+                room.templateEntrance = entrance;
+            }
+        }
+    }
+
     // Find entrance positions for a room (where corridor meets room edge)
     findRoomEntrances(room, tileMap) {
         const entrances = [];
+
+        // If this is a vault with a template entrance, use that directly
+        if (room.templateEntrance) {
+            entrances.push({
+                x: room.templateEntrance.x,
+                y: room.templateEntrance.y,
+                direction: {dx: 0, dy: 1} // Default direction
+            });
+            return entrances;
+        }
 
         // Check room perimeter for floor tiles adjacent to corridor
         for (let x = room.x; x < room.x + room.width; x++) {
@@ -572,7 +674,7 @@ export class DungeonGenerator {
     }
 
     // Place doors at room entrances
-    placeDoors(tileMap) {
+    placeDoors(tileMap, metrics) {
         for (const room of this.rooms) {
             const entrances = this.findRoomEntrances(room, tileMap);
 
@@ -583,6 +685,7 @@ export class DungeonGenerator {
                 if (room.specialType) {
                     if (room.hasLockedDoor) {
                         doorType = TILE_DOOR_LOCKED;
+                        metrics.lockedDoorCount++;
                     } else {
                         doorType = Math.random() < 0.5 ? TILE_DOOR_CLOSED : TILE_DOOR_OPEN;
                     }
@@ -596,6 +699,7 @@ export class DungeonGenerator {
                 // Place door
                 tileMap.setTile(entrance.x, entrance.y, doorType);
                 room.doorPositions.push({x: entrance.x, y: entrance.y, type: doorType});
+                metrics.doorCount++;
             }
         }
     }
@@ -660,7 +764,7 @@ export class DungeonGenerator {
     }
 
     // Place keys in accessible rooms (NOT inside locked rooms)
-    placeKeys(tileMap) {
+    placeKeys(tileMap, metrics) {
         // Find locked rooms
         const lockedRooms = this.rooms.filter(r => r.hasLockedDoor);
 
@@ -704,6 +808,7 @@ export class DungeonGenerator {
                 if (tile === TILE_FLOOR) {
                     tileMap.setTile(x, y, TILE_KEY);
                     keyPlaced = true;
+                    metrics.keyCount++;
                     console.log(`Key placed in accessible room at (${x}, ${y})`);
                 }
             }
@@ -718,6 +823,7 @@ export class DungeonGenerator {
                 const centerTile = tileMap.getTile(centerX, centerY);
                 if (centerTile === TILE_FLOOR) {
                     tileMap.setTile(centerX, centerY, TILE_KEY);
+                    metrics.keyCount++;
                     console.log(`Key placed at room center (${centerX}, ${centerY}) as fallback`);
                 }
             }

@@ -13,11 +13,15 @@ export const TILE_DOOR_OPEN = 7;   // Open door - walkable
 export const TILE_DOOR_CLOSED = 8; // Closed door - walk into to open
 export const TILE_DOOR_LOCKED = 9; // Locked door - requires key
 export const TILE_KEY = 10;        // Key pickup - walkable
+export const TILE_WATER = 11;      // Water - walkable, visual hazard (Phase 3: slow movement)
+export const TILE_CHASM = 12;      // Chasm - non-walkable, visual danger
+export const TILE_TRAP = 13;       // Trap - walkable, visual hazard (Phase 3: damage)
 
 export class TileMap {
     constructor(width, height) {
         this.width = width;
         this.height = height;
+        this.theme = null;  // Floor theme for visual styling (set by generator)
 
         // Initialize 2D array (row-major: tiles[y][x])
         this.tiles = [];
@@ -61,9 +65,12 @@ export class TileMap {
                tile === TILE_TOILET ||
                tile === TILE_FEATURE ||
                tile === TILE_DOOR_OPEN ||
-               tile === TILE_KEY;
-        // Note: TILE_DOOR_CLOSED and TILE_DOOR_LOCKED are NOT walkable
-        // Player interaction will open/unlock them first
+               tile === TILE_KEY ||
+               tile === TILE_WATER ||   // Walkable (Phase 3: slow movement)
+               tile === TILE_TRAP;      // Walkable (Phase 3: damage)
+        // Note: TILE_DOOR_CLOSED, TILE_DOOR_LOCKED, and TILE_CHASM are NOT walkable
+        // Player interaction will open/unlock doors first
+        // Chasms are impassable visual hazards
     }
 
     // Fill a rectangular area with a tile type
@@ -115,6 +122,12 @@ export class TileMap {
                 return '+';  // Locked door
             case TILE_KEY:
                 return 'k';  // Key
+            case TILE_WATER:
+                return '~';  // Water
+            case TILE_CHASM:
+                return ' ';  // Chasm (empty space)
+            case TILE_TRAP:
+                return '^';  // Trap
             default:
                 return '?';
         }
@@ -122,29 +135,36 @@ export class TileMap {
 
     // Get color for tile type
     getTileColor(tileType) {
+        // Use theme colors if available, otherwise fall back to defaults
         switch (tileType) {
             case TILE_FLOOR:
-                return '#333333';
+                return this.theme?.floorColor || '#333333';
             case TILE_WALL:
-                return '#888888';
+                return this.theme?.wallColor || '#888888';
             case TILE_STAIRS:
-                return '#ffff00';     // Yellow (down)
+                return '#ffff00';     // Yellow (down) - always bright
             case TILE_STAIRS_UP:
-                return '#00ffff';     // Cyan (up)
+                return '#00ffff';     // Cyan (up) - always bright
             case TILE_TOILET:
-                return '#ff00ff';     // Magenta (victory!)
+                return '#ff00ff';     // Magenta (victory!) - always bright
             case TILE_PILLAR:
-                return '#666666';     // Gray (pillar)
+                return this.theme?.pillarColor || '#666666';
             case TILE_FEATURE:
-                return '#4444ff';     // Blue (feature)
+                return this.theme?.featureColor || '#4444ff';
             case TILE_DOOR_OPEN:
-                return '#aa7744';     // Brown (open door)
+                return this.theme?.doorOpenColor || '#aa7744';
             case TILE_DOOR_CLOSED:
-                return '#996633';     // Brown (closed door)
+                return this.theme?.doorClosedColor || '#996633';
             case TILE_DOOR_LOCKED:
-                return '#ff0000';     // Red (locked door)
+                return this.theme?.doorLockedColor || '#ff0000';
             case TILE_KEY:
-                return '#ffff00';     // Yellow (key)
+                return '#ffff00';     // Yellow (key) - always bright
+            case TILE_WATER:
+                return '#4488cc';     // Blue (water)
+            case TILE_CHASM:
+                return '#000000';     // Black (chasm/void)
+            case TILE_TRAP:
+                return '#ff4444';     // Red (trap)
             default:
                 return '#ff0000';     // Red (error)
         }
