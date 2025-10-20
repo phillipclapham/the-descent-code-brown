@@ -6,6 +6,7 @@ import {
     TILE_DOOR_CLOSED,
     TILE_DOOR_LOCKED,
     TILE_KEY,
+    TILE_WEAPON,
     TILE_FLOOR
 } from './tile-map.js';
 
@@ -38,7 +39,8 @@ export class Player {
     }
 
     // Attempt to move in a direction
-    move(dx, dy, currentTime) {
+    // combat parameter is optional (for weapon pickup)
+    move(dx, dy, currentTime, combat = null) {
         // Check if enough time has passed since last move
         if (currentTime - this.lastMoveTime < this.moveDelay) {
             return false;
@@ -81,6 +83,29 @@ export class Player {
                 this.keysCollected++;
                 this.tileMap.setTile(newX, newY, TILE_FLOOR);
                 this.setMessage('Key collected! Keys: ' + this.keysCollected);
+                // Continue to move onto the tile
+            }
+
+            // Handle weapon pickup (Session 9d)
+            if (tile === TILE_WEAPON && combat) {
+                // Find weapon at this position in combat.weapons Map
+                const weaponKey = `${newX},${newY}`;
+                const weapon = combat.weapons.get(weaponKey);
+
+                if (weapon) {
+                    // Equip the weapon
+                    this.equippedWeapon = weapon;
+                    this.setMessage(`Picked up ${weapon.name}!`);
+                    console.log(`Weapon picked up: ${weapon.name} at (${newX}, ${newY})`);
+
+                    // Remove weapon from map and combat system
+                    this.tileMap.setTile(newX, newY, TILE_FLOOR);
+                    combat.weapons.delete(weaponKey);
+                } else {
+                    console.warn(`TILE_WEAPON at (${newX}, ${newY}) but no weapon in combat.weapons Map!`);
+                    // Clear the tile anyway to prevent stuck state
+                    this.tileMap.setTile(newX, newY, TILE_FLOOR);
+                }
                 // Continue to move onto the tile
             }
         }

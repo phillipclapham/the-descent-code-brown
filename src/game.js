@@ -4,9 +4,11 @@ import { Renderer, GRID_WIDTH, GRID_HEIGHT } from './renderer.js';
 import { Player } from './player.js';
 import { InputHandler } from './input.js';
 import { DesperationMeter } from './desperation-meter.js';
-import { TileMap, TILE_STAIRS, TILE_STAIRS_UP, TILE_TOILET } from './tile-map.js';
+import { TileMap, TILE_FLOOR, TILE_STAIRS, TILE_STAIRS_UP, TILE_TOILET, TILE_WEAPON } from './tile-map.js';
 import { DungeonGenerator } from './dungeon-generator.js';
 import { CombatSystem } from './combat.js';
+import { Enemy, ENEMY_SECURITY_BOT, ENEMY_COFFEE_ZOMBIE } from './enemy.js';
+import { PLUNGER, TOILET_BRUSH } from './weapon.js';
 
 class Game {
     constructor() {
@@ -39,6 +41,9 @@ class Game {
             this.tileMap
         );
 
+        // Spawn enemies and weapons for starting floor
+        this.spawnFloorEntities();
+
         // Game loop timing
         this.lastTime = 0;
         this.running = true;
@@ -66,6 +71,85 @@ class Game {
         }
 
         console.log(`${this.numFloors} floors generated`);
+    }
+
+    // Spawn enemies and weapons for the current floor
+    // Called on game start and floor transitions
+    spawnFloorEntities() {
+        // Clear any existing enemies and weapons
+        this.combat.enemies = [];
+        this.combat.weapons.clear();
+
+        const displayFloor = this.numFloors - this.currentFloor;
+        console.log(`🎲 Spawning entities for Floor ${displayFloor}...`);
+
+        // Spawn 1-2 enemies per floor
+        const numEnemies = Math.floor(Math.random() * 2) + 1;
+
+        // Find upstairs position to avoid spawning enemies nearby
+        const upstairsPos = this.tileMap.findUpStairsPosition();
+
+        for (let i = 0; i < numEnemies; i++) {
+            // Find random position at least 5 tiles from upstairs
+            let spawnPos = null;
+            let attempts = 0;
+
+            while (attempts < 50 && !spawnPos) {
+                attempts++;
+                const x = 2 + Math.floor(Math.random() * (GRID_WIDTH - 4));
+                const y = 2 + Math.floor(Math.random() * (GRID_HEIGHT - 4));
+
+                // Check walkable and distance from upstairs
+                if (this.tileMap.isWalkable(x, y)) {
+                    const distance = Math.abs(x - upstairsPos.x) + Math.abs(y - upstairsPos.y);
+                    if (distance >= 5) {
+                        const tile = this.tileMap.getTile(x, y);
+                        // Only spawn on plain floor (not stairs, keys, doors)
+                        if (tile === TILE_FLOOR) {
+                            spawnPos = { x, y };
+                        }
+                    }
+                }
+            }
+
+            if (spawnPos) {
+                // Randomly choose enemy type (50/50 split for now)
+                const config = Math.random() < 0.5 ? ENEMY_SECURITY_BOT : ENEMY_COFFEE_ZOMBIE;
+                const enemy = new Enemy(spawnPos.x, spawnPos.y, config);
+                this.combat.enemies.push(enemy);
+                console.log(`  Spawned ${enemy.name} at (${spawnPos.x}, ${spawnPos.y})`);
+            }
+        }
+
+        // Spawn 1 weapon per floor
+        let weaponSpawned = false;
+        let attempts = 0;
+
+        while (attempts < 50 && !weaponSpawned) {
+            attempts++;
+            const x = 2 + Math.floor(Math.random() * (GRID_WIDTH - 4));
+            const y = 2 + Math.floor(Math.random() * (GRID_HEIGHT - 4));
+
+            const tile = this.tileMap.getTile(x, y);
+
+            // Only spawn on plain floor
+            if (tile === TILE_FLOOR) {
+                // Randomly choose weapon (50/50 split)
+                const weapon = Math.random() < 0.5 ? PLUNGER : TOILET_BRUSH;
+
+                // Place on map
+                this.tileMap.setTile(x, y, TILE_WEAPON);
+
+                // Store in combat system
+                const weaponKey = `${x},${y}`;
+                this.combat.weapons.set(weaponKey, weapon);
+
+                console.log(`  Spawned ${weapon.name} at (${x}, ${y})`);
+                weaponSpawned = true;
+            }
+        }
+
+        console.log(`✅ Floor ${displayFloor} entities spawned: ${this.combat.enemies.length} enemies, ${this.combat.weapons.size} weapons`);
     }
 
     // Initialize and start the game
@@ -116,7 +200,7 @@ class Game {
 
             // Only move if no enemy at target position
             if (!enemyAtTarget) {
-                this.player.move(movement.dx, movement.dy, currentTime);
+                this.player.move(movement.dx, movement.dy, currentTime, this.combat);
             }
         }
 
@@ -175,6 +259,9 @@ class Game {
         this.player.x = spawnPos.x;
         this.player.y = spawnPos.y;
 
+        // Spawn enemies and weapons for new floor
+        this.spawnFloorEntities();
+
         // Small cooldown just in case (100ms - only for edge case where spawn IS on upstairs)
         this.transitionCooldown = 100;
 
@@ -194,6 +281,9 @@ class Game {
         const spawnPos = this.tileMap.findSafeSpawnNearUpstairs();
         this.player.x = spawnPos.x;
         this.player.y = spawnPos.y;
+
+        // Spawn enemies and weapons for this floor
+        this.spawnFloorEntities();
 
         // Small cooldown just in case (100ms - only for edge case)
         this.transitionCooldown = 100;

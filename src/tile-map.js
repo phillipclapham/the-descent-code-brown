@@ -16,6 +16,7 @@ export const TILE_KEY = 10;        // Key pickup - walkable
 export const TILE_WATER = 11;      // Water - walkable, visual hazard (Phase 3: slow movement)
 export const TILE_CHASM = 12;      // Chasm - non-walkable, visual danger
 export const TILE_TRAP = 13;       // Trap - walkable, visual hazard (Phase 3: damage)
+export const TILE_WEAPON = 14;     // Weapon pickup - walkable
 
 export class TileMap {
     constructor(width, height) {
@@ -66,6 +67,7 @@ export class TileMap {
                tile === TILE_FEATURE ||
                tile === TILE_DOOR_OPEN ||
                tile === TILE_KEY ||
+               tile === TILE_WEAPON ||  // Walkable (can walk over to pick up)
                tile === TILE_WATER ||   // Walkable (Phase 3: slow movement)
                tile === TILE_TRAP;      // Walkable (Phase 3: damage)
         // Note: TILE_DOOR_CLOSED, TILE_DOOR_LOCKED, and TILE_CHASM are NOT walkable
@@ -122,6 +124,8 @@ export class TileMap {
                 return '+';  // Locked door
             case TILE_KEY:
                 return 'k';  // Key
+            case TILE_WEAPON:
+                return '!';  // Weapon
             case TILE_WATER:
                 return '~';  // Water
             case TILE_CHASM:
@@ -159,6 +163,8 @@ export class TileMap {
                 return this.theme?.doorLockedColor || '#ff0000';
             case TILE_KEY:
                 return '#ffff00';     // Yellow (key) - always bright
+            case TILE_WEAPON:
+                return '#ffff00';     // Yellow (weapon) - always bright
             case TILE_WATER:
                 return '#4488cc';     // Blue (water)
             case TILE_CHASM:

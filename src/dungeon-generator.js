@@ -13,6 +13,7 @@ import {
     TILE_DOOR_CLOSED,
     TILE_DOOR_LOCKED,
     TILE_KEY,
+    TILE_WEAPON,
     TILE_FEATURE,
     TILE_PILLAR
 } from './tile-map.js';
@@ -899,6 +900,104 @@ export class DungeonGenerator {
                 }
             }
         }
+    }
+
+    // Place weapons on the floor (1 weapon per floor)
+    // Weapons spawn in random walkable positions, avoiding stairs/doors
+    placeWeapons(tileMap, combat, floorNumber) {
+        // Import weapon types (will be passed from game.js)
+        // For now, spawn 1 weapon per floor
+        const numWeapons = 1;
+
+        for (let i = 0; i < numWeapons; i++) {
+            // Find random walkable position
+            const pos = this.findRandomWalkablePosition(tileMap);
+
+            if (pos) {
+                // Place weapon tile on map
+                tileMap.setTile(pos.x, pos.y, TILE_WEAPON);
+
+                // Store weapon in combat system (will be set by game.js after generation)
+                // combat.weapons is a Map<"x,y", Weapon>
+                // The actual weapon instance will be set externally
+                console.log(`Weapon spawn point placed at (${pos.x}, ${pos.y})`);
+            }
+        }
+    }
+
+    // Place enemies on the floor (1-2 enemies per floor)
+    // Enemies spawn away from upstairs to prevent instant combat
+    placeEnemies(tileMap, combat, floorNumber) {
+        // 1-2 enemies per floor
+        const numEnemies = Math.floor(Math.random() * 2) + 1; // 1 or 2
+
+        // Find upstairs position to avoid spawning near it
+        const firstRoom = this.rooms[0];
+        const upstairsX = firstRoom.x + Math.floor(firstRoom.width / 2);
+        const upstairsY = firstRoom.y + Math.floor(firstRoom.height / 2);
+
+        for (let i = 0; i < numEnemies; i++) {
+            // Find random walkable position at least 5 tiles away from upstairs
+            const pos = this.findRandomWalkablePositionAwayFrom(tileMap, upstairsX, upstairsY, 5);
+
+            if (pos) {
+                // Enemy will be spawned by game.js after generation
+                // Store spawn position for external enemy creation
+                console.log(`Enemy spawn point placed at (${pos.x}, ${pos.y}), distance from upstairs: ${Math.abs(pos.x - upstairsX) + Math.abs(pos.y - upstairsY)} tiles`);
+            }
+        }
+
+        // Return spawn positions for external enemy creation
+        const spawnPositions = [];
+        for (let i = 0; i < numEnemies; i++) {
+            const pos = this.findRandomWalkablePositionAwayFrom(tileMap, upstairsX, upstairsY, 5);
+            if (pos) spawnPositions.push(pos);
+        }
+        return spawnPositions;
+    }
+
+    // Find a random walkable position (not on stairs, doors, keys, pillars)
+    findRandomWalkablePosition(tileMap) {
+        const maxAttempts = 50;
+
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+            // Pick random room
+            const room = this.rooms[Math.floor(Math.random() * this.rooms.length)];
+
+            // Pick random position within room (avoid edges)
+            const x = room.x + 1 + Math.floor(Math.random() * (room.width - 2));
+            const y = room.y + 1 + Math.floor(Math.random() * (room.height - 2));
+
+            const tile = tileMap.getTile(x, y);
+
+            // Only place on plain floor tiles
+            if (tile === TILE_FLOOR) {
+                return { x, y };
+            }
+        }
+
+        console.warn('Failed to find walkable position after 50 attempts');
+        return null;
+    }
+
+    // Find a random walkable position away from a specific point
+    findRandomWalkablePositionAwayFrom(tileMap, targetX, targetY, minDistance) {
+        const maxAttempts = 50;
+
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+            const pos = this.findRandomWalkablePosition(tileMap);
+
+            if (pos) {
+                const distance = Math.abs(pos.x - targetX) + Math.abs(pos.y - targetY);
+                if (distance >= minDistance) {
+                    return pos;
+                }
+            }
+        }
+
+        console.warn(`Failed to find walkable position ${minDistance} tiles away after 50 attempts`);
+        // Fallback: return any walkable position
+        return this.findRandomWalkablePosition(tileMap);
     }
 
     // Validate that player can progress (stairs reachable with available keys)
