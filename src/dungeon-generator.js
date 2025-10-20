@@ -12,7 +12,9 @@ import {
     TILE_DOOR_OPEN,
     TILE_DOOR_CLOSED,
     TILE_DOOR_LOCKED,
-    TILE_KEY
+    TILE_KEY,
+    TILE_FEATURE,
+    TILE_PILLAR
 } from './tile-map.js';
 import {
     categorizeRoomBySize,
@@ -218,7 +220,9 @@ export class DungeonGenerator {
 
         // CRITICAL: Validate progression is possible (stairs reachable with available keys)
         // Now that stairs actually exist on the map!
+        console.log('🔍 Running progression validation...');
         this.validateProgression(tileMap, isLastFloor);
+        console.log('✅ Progression validation complete');
 
         // Finalize and log metrics
         metrics.roomCount = this.rooms.length;
@@ -561,19 +565,19 @@ export class DungeonGenerator {
         // Other special types don't have locked doors
         const specialTypes = ['shrine', 'arena', 'library', 'trap'];
 
-        // Select random rooms for special designation (skip first room with upstairs)
-        const availableRooms = this.rooms.slice(1);
+        // Select random rooms for special designation (skip first room with upstairs, and last room with downstairs)
+        const availableRooms = this.rooms.slice(1, -1);
         const shuffled = availableRooms.sort(() => Math.random() - 0.5);
 
-        // First special room has 50% chance to be a vault
+        // Track if vault has been placed (max 1 per floor)
         let vaultPlaced = false;
 
         for (let i = 0; i < Math.min(numSpecial, shuffled.length); i++) {
             const room = shuffled[i];
             let specialType;
 
-            // First special room: 50% chance vault, 50% chance other
-            if (i === 0 && Math.random() < 0.5) {
+            // First special room: 75% chance vault, 25% chance other (increased from 50% for better key hunting gameplay)
+            if (i === 0 && Math.random() < 0.75) {
                 specialType = 'vault';
                 vaultPlaced = true;
             } else {
@@ -606,17 +610,84 @@ export class DungeonGenerator {
                 continue;
             }
 
-            // Clear room area first (remove procedural carving)
-            tileMap.fillRect(room.x, room.y, room.width, room.height, TILE_WALL);
+            // BEFORE clearing: detect existing corridor connections
+            const corridorEntrances = [];
+            for (let x = room.x; x < room.x + room.width; x++) {
+                for (let y = room.y; y < room.y + room.height; y++) {
+                    // Check if this is an edge tile
+                    const isEdge = (x === room.x || x === room.x + room.width - 1 ||
+                                   y === room.y || y === room.y + room.height - 1);
+
+                    if (isEdge && tileMap.getTile(x, y) === TILE_FLOOR) {
+                        // This is a corridor entrance - check if it connects outside
+                        const neighbors = [
+                            {x: x - 1, y, dx: -1, dy: 0},
+                            {x: x + 1, y, dx: 1, dy: 0},
+                            {x, y: y - 1, dx: 0, dy: -1},
+                            {x, y: y + 1, dx: 0, dy: 1}
+                        ];
+
+                        for (const n of neighbors) {
+                            const outsideRoom = (n.x < room.x || n.x >= room.x + room.width ||
+                                               n.y < room.y || n.y >= room.y + room.height);
+
+                            if (outsideRoom && tileMap.getTile(n.x, n.y) === TILE_FLOOR) {
+                                corridorEntrances.push({x, y});
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Clear room interior only (preserve edges where corridors connect)
+            for (let x = room.x + 1; x < room.x + room.width - 1; x++) {
+                for (let y = room.y + 1; y < room.y + room.height - 1; y++) {
+                    tileMap.setTile(x, y, TILE_WALL);
+                }
+            }
 
             // Place template
             const entrance = placeVaultTemplate(tileMap, room, template);
 
             if (entrance) {
                 // Store template entrance for door placement
-                // This will be used later when findRoomEntrances is called
                 room.templateEntrance = entrance;
+
+                // CRITICAL: Carve floor paths from corridor entrances to template entrance
+                // This ensures the vault is accessible even if corridors don't align with template entrance
+                for (const corridorEntrance of corridorEntrances) {
+                    this.carvePathInRoom(tileMap, corridorEntrance, entrance, room);
+                }
             }
+        }
+    }
+
+    // Carve a simple path between two points within a room (for connecting corridors to vault template entrance)
+    carvePathInRoom(tileMap, start, end, room) {
+        let x = start.x;
+        let y = start.y;
+
+        // Carve L-shaped path: horizontal first, then vertical
+        while (x !== end.x) {
+            if (x >= room.x && x < room.x + room.width && y >= room.y && y < room.y + room.height) {
+                const currentTile = tileMap.getTile(x, y);
+                // Don't overwrite stairs or special tiles
+                if (currentTile === TILE_WALL || currentTile === TILE_FEATURE || currentTile === TILE_PILLAR) {
+                    tileMap.setTile(x, y, TILE_FLOOR);
+                }
+            }
+            x += (end.x > x) ? 1 : -1;
+        }
+
+        while (y !== end.y) {
+            if (x >= room.x && x < room.x + room.width && y >= room.y && y < room.y + room.height) {
+                const currentTile = tileMap.getTile(x, y);
+                if (currentTile === TILE_WALL || currentTile === TILE_FEATURE || currentTile === TILE_PILLAR) {
+                    tileMap.setTile(x, y, TILE_FLOOR);
+                }
+            }
+            y += (end.y > y) ? 1 : -1;
         }
     }
 
@@ -624,15 +695,9 @@ export class DungeonGenerator {
     findRoomEntrances(room, tileMap) {
         const entrances = [];
 
-        // If this is a vault with a template entrance, use that directly
-        if (room.templateEntrance) {
-            entrances.push({
-                x: room.templateEntrance.x,
-                y: room.templateEntrance.y,
-                direction: {dx: 0, dy: 1} // Default direction
-            });
-            return entrances;
-        }
+        // For ALL rooms (including vaults), find actual edge entrances where corridors connect
+        // Doors should be placed at chokepoints (room edges), not in the middle of rooms
+        // For vaults, the templateEntrance is the interior destination, not where the door goes
 
         // Check room perimeter for floor tiles adjacent to corridor
         for (let x = room.x; x < room.x + room.width; x++) {
@@ -678,15 +743,21 @@ export class DungeonGenerator {
         for (const room of this.rooms) {
             const entrances = this.findRoomEntrances(room, tileMap);
 
+            // Track if we've locked a door for this vault (only lock ONE entrance per vault)
+            let lockedDoorPlaced = false;
+
             for (const entrance of entrances) {
                 let doorType = TILE_DOOR_OPEN; // Default: open
 
                 // Special rooms get 100% doors
                 if (room.specialType) {
-                    if (room.hasLockedDoor) {
+                    if (room.hasLockedDoor && !lockedDoorPlaced) {
+                        // Lock ONLY the first entrance of a vault
                         doorType = TILE_DOOR_LOCKED;
                         metrics.lockedDoorCount++;
+                        lockedDoorPlaced = true;
                     } else {
+                        // Other entrances to vault, or non-vault special rooms
                         doorType = Math.random() < 0.5 ? TILE_DOOR_CLOSED : TILE_DOOR_OPEN;
                     }
                 } else {
