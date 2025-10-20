@@ -220,45 +220,46 @@ class Game {
 
     // Draw debug information
     drawDebugInfo() {
-        // Draw solid black background for UI panel
-        this.renderer.ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
-        this.renderer.ctx.fillRect(5, 5, 250, 130);
+        // Draw bottom status bar background (full width)
+        const statusBarHeight = 40;
+        const statusBarY = 560;
 
-        // Draw border around UI panel
+        this.renderer.ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+        this.renderer.ctx.fillRect(0, statusBarY, 800, statusBarHeight);
+
+        // Draw border around status bar
         this.renderer.ctx.strokeStyle = '#888888';
         this.renderer.ctx.lineWidth = 2;
-        this.renderer.ctx.strokeRect(5, 5, 250, 130);
+        this.renderer.ctx.strokeRect(0, statusBarY, 800, statusBarHeight);
 
-        const posText = `Position: (${this.player.x}, ${this.player.y})`;
-        // Display floors in descending order: Floor 10 → Floor 1
+        // Build status text (horizontal layout with separators)
         const displayFloor = this.numFloors - this.currentFloor;
-        const floorText = `Floor: ${displayFloor}`;
-        const keysText = `Keys: ${this.player.keysCollected}`;
-
-        // Combat UI
         const healthText = `HP: ${this.player.health}/${this.player.maxHealth}`;
         const weaponName = this.player.equippedWeapon ? this.player.equippedWeapon.name : 'None';
-        const weaponText = `Weapon: ${weaponName}`;
+        const statusText = `Floor: ${displayFloor} | ${healthText} | Keys: ${this.player.keysCollected} | Weapon: ${weaponName} | Pos: (${this.player.x}, ${this.player.y})`;
 
-        this.renderer.drawText(posText, 10, 10, '#00ff00', 14);
-        this.renderer.drawText(floorText, 10, 30, '#ffff00', 14);
-        this.renderer.drawText(keysText, 10, 50, '#ffff00', 14);
-        this.renderer.drawText(healthText, 10, 70, '#ff0000', 14);
-        this.renderer.drawText(weaponText, 10, 90, '#ffff00', 14);
+        // Draw status text (centered vertically in bar)
+        this.renderer.drawText(statusText, 10, statusBarY + 12, '#ffffff', 14);
 
-        // Display player message (if any)
+        // Display player message (if any) - centered above status bar
         const message = this.player.getMessage();
         if (message) {
+            // Measure text width for centered background
+            this.renderer.ctx.font = '16px "Courier New", monospace';
+            const textWidth = this.renderer.ctx.measureText(message).width;
+            const msgX = (800 - textWidth) / 2 - 10;
+            const msgY = statusBarY - 35;
+
             // Background for message
             this.renderer.ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
-            this.renderer.ctx.fillRect(5, 140, 300, 25);
+            this.renderer.ctx.fillRect(msgX, msgY, textWidth + 20, 25);
 
             // Border for message
             this.renderer.ctx.strokeStyle = '#888888';
             this.renderer.ctx.lineWidth = 2;
-            this.renderer.ctx.strokeRect(5, 140, 300, 25);
+            this.renderer.ctx.strokeRect(msgX, msgY, textWidth + 20, 25);
 
-            this.renderer.drawText(message, 10, 145, '#ff8800', 16);
+            this.renderer.drawText(message, msgX + 10, msgY + 5, '#ff8800', 16);
         }
     }
 }
