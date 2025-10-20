@@ -51,6 +51,9 @@ class Game {
         // Floor transition cooldown (prevent immediate re-trigger)
         this.transitionCooldown = 0;
 
+        // Game state (Session 9e)
+        this.gameState = 'playing'; // 'playing', 'game_over', 'victory'
+
         console.log('Game initialized');
         console.log(`Grid: ${GRID_WIDTH}x${GRID_HEIGHT}`);
         console.log(`Generated ${this.numFloors} dungeon floors`);
@@ -179,6 +182,15 @@ class Game {
 
     // Update game state
     update(currentTime, deltaTime) {
+        // Stop updates if game over or victory (Session 9e)
+        if (this.gameState !== 'playing') {
+            // Check for restart input
+            if (this.input.isRestartPressed()) {
+                location.reload(); // Restart game by reloading page
+            }
+            return;
+        }
+
         // Update desperation meter
         this.desperationMeter.update(deltaTime);
 
@@ -298,6 +310,34 @@ class Game {
         // TODO Phase 4: Display victory screen, stop game, etc.
     }
 
+    // Render game over screen (Session 9e)
+    renderGameOver() {
+        const ctx = this.renderer.ctx;
+
+        // Black overlay (semi-transparent)
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        ctx.fillRect(0, 0, 800, 600);
+
+        // Main text: "GAME OVER"
+        ctx.font = 'bold 48px "Courier New", monospace';
+        ctx.fillStyle = '#ff0000';
+        ctx.textAlign = 'center';
+        ctx.fillText('GAME OVER', 400, 250);
+
+        // Subtext: "You didn't make it..."
+        ctx.font = '24px "Courier New", monospace';
+        ctx.fillStyle = '#888888';
+        ctx.fillText("You didn't make it...", 400, 300);
+
+        // Restart instruction: "Press R to Restart"
+        ctx.font = '20px "Courier New", monospace';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText('Press R to Restart', 400, 350);
+
+        // Reset text alignment for other text rendering
+        ctx.textAlign = 'left';
+    }
+
     // Render everything
     render() {
         // Clear screen
@@ -314,6 +354,11 @@ class Game {
 
         // Draw debug info
         this.drawDebugInfo();
+
+        // Draw game over screen if applicable (Session 9e)
+        if (this.gameState === 'game_over') {
+            this.renderGameOver();
+        }
     }
 
     // Draw all enemies

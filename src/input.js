@@ -57,4 +57,9 @@ export class InputHandler {
     isAttackPressed() {
         return this.isKeyPressed(' ');
     }
+
+    // Check if restart key (R) is pressed (Session 9e)
+    isRestartPressed() {
+        return this.isKeyPressed('r') || this.isKeyPressed('R');
+    }
 }

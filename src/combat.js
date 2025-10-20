@@ -149,7 +149,8 @@ export class CombatSystem {
 
             if (died) {
                 console.log('Player defeated!');
-                // Future: Trigger game over state
+                // Trigger game over state (Session 9e)
+                this.game.gameState = 'game_over';
             }
         }
 
