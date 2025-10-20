@@ -30,7 +30,7 @@ export class CombatSystem {
             const enemy = this.enemies.find(e =>
                 e.x === targetX &&
                 e.y === targetY &&
-                e.alive
+                e.health > 0
             );
 
             if (enemy) {
@@ -108,8 +108,7 @@ export class CombatSystem {
 
             // Check if enemy died
             if (target.health <= 0) {
-                target.alive = false;
-                console.log(`Enemy defeated! Position: (${target.x}, ${target.y})`);
+                console.log(`Enemy defeated! ${target.name} at (${target.x}, ${target.y})`);
             }
         }
 
@@ -117,12 +116,66 @@ export class CombatSystem {
         this.game.player.attackCooldown = this.game.player.equippedWeapon.cooldownTime;
     }
 
-    // Update combat state
-    update(deltaTime) {
-        // Clean up dead enemies (remove from array)
-        this.enemies = this.enemies.filter(e => e.alive);
+    // Handle a single enemy's attack on the player
+    // Enemies have 80% base accuracy (no desperation modifier)
+    handleEnemyAttack(enemy) {
+        if (!enemy.canAttack()) {
+            return; // Still on cooldown
+        }
 
-        // Future Session 9c: Update enemy AI, handle enemy attacks
+        // Check if adjacent to player
+        if (!enemy.isAdjacentToPlayer(this.game.player)) {
+            return; // Not in attack range
+        }
+
+        // Roll accuracy check (80% for enemies, no desperation)
+        const hit = Math.random() < enemy.accuracy;
+
+        if (!hit) {
+            // Enemy missed
+            console.log(`${enemy.name} MISS! (adjacent to player)`);
+        } else {
+            // Enemy hit - roll damage
+            const damage = enemy.rollDamage();
+
+            // Apply damage to player
+            const died = this.game.player.takeDamage(damage);
+
+            // Console log
+            console.log(
+                `${enemy.name} HIT player! Damage: ${damage}, ` +
+                `Player HP: ${this.game.player.health}/${this.game.player.maxHealth}`
+            );
+
+            if (died) {
+                console.log('Player defeated!');
+                // Future: Trigger game over state
+            }
+        }
+
+        // Set enemy attack cooldown
+        enemy.attackCooldown = enemy.attackCooldownTime;
+    }
+
+    // Update combat state (called every frame)
+    update(deltaTime) {
+        // Update all enemies
+        for (const enemy of this.enemies) {
+            // Update enemy cooldowns
+            enemy.update(deltaTime);
+
+            // AI: Move toward player (if not adjacent)
+            if (!enemy.isAdjacentToPlayer(this.game.player)) {
+                enemy.moveToward(this.game.player, this.game.tileMap, this.enemies);
+            }
+
+            // Try to attack player (if adjacent and cooldown ready)
+            this.handleEnemyAttack(enemy);
+        }
+
+        // Clean up dead enemies (remove from array)
+        this.enemies = this.enemies.filter(e => e.health > 0);
+
         // Future Session 9d: Handle weapon/item pickups
     }
 }

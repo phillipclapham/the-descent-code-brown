@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Enemy System Test - The Descent</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #000;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+        }
+        #game-canvas {
+            border: 2px solid #888;
+            display: block;
+            margin: 20px auto;
+        }
+        #test-controls {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #222;
+            border: 2px solid #888;
+        }
+        button {
+            background: #444;
+            color: #fff;
+            border: 2px solid #888;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+        }
+        button:hover {
+            background: #666;
+        }
+        #log {
+            background: #111;
+            padding: 10px;
+            margin-top: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;">Session 9c: Enemy System Test</h1>
+
+    <canvas id="game-canvas" width="800" height="600"></canvas>
+
+    <div id="test-controls">
+        <h2>Test Controls</h2>
+        <button onclick="spawnSecurityBot()">Spawn Security Bot (Slow/Tanky)</button>
+        <button onclick="spawnCoffeeZombie()">Spawn Coffee Zombie (Fast/Fragile)</button>
+        <button onclick="spawnBoth()">Spawn Both</button>
+        <button onclick="clearEnemies()">Clear All Enemies</button>
+        <button onclick="equipPlunger()">Equip Plunger</button>
+        <button onclick="equipBrush()">Equip Toilet Brush</button>
+
+        <h3>Test Log</h3>
+        <div id="log"></div>
+
+        <h3>Instructions</h3>
+        <p>1. Spawn enemies using buttons above</p>
+        <p>2. Use arrow keys to move toward them</p>
+        <p>3. Observe chase AI (Coffee Zombie moves 2x faster!)</p>
+        <p>4. Let them get adjacent - they'll attack you</p>
+        <p>5. Equip a weapon and press SPACE to fight back</p>
+        <p>6. Check console for detailed combat logs</p>
+
+        <h3>Success Criteria</h3>
+        <p>✓ Enemies render (S = Security Bot gray, Z = Coffee Zombie brown)</p>
+        <p>✓ Chase AI works (enemies move toward player)</p>
+        <p>✓ Speed difference visible (Coffee Zombie 2x faster)</p>
+        <p>✓ Adjacent enemies attack (player HP decreases)</p>
+        <p>✓ Player kills enemies (health → 0 → removed)</p>
+        <p>✓ Cooldowns work (no spam attacks/movement)</p>
+    </div>
+
+    <script type="module">
+        import { Enemy, ENEMY_SECURITY_BOT, ENEMY_COFFEE_ZOMBIE } from './src/enemy.js';
+        import { PLUNGER, TOILET_BRUSH } from './src/weapon.js';
+
+        // Wait for game to initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const log = document.getElementById('log');
+
+                function addLog(message) {
+                    const timestamp = new Date().toLocaleTimeString();
+                    log.innerHTML = `[${timestamp}] ${message}<br>` + log.innerHTML;
+                }
+
+                // Make test functions global
+                window.spawnSecurityBot = function() {
+                    const x = game.player.x + 5;
+                    const y = game.player.y;
+                    const enemy = new Enemy(x, y, ENEMY_SECURITY_BOT);
+                    game.combat.enemies.push(enemy);
+                    addLog(`Spawned Security Bot at (${x}, ${y}) - 40 HP, slow`);
+                    console.log('Security Bot spawned:', enemy);
+                };
+
+                window.spawnCoffeeZombie = function() {
+                    const x = game.player.x + 5;
+                    const y = game.player.y + 3;
+                    const enemy = new Enemy(x, y, ENEMY_COFFEE_ZOMBIE);
+                    game.combat.enemies.push(enemy);
+                    addLog(`Spawned Coffee Zombie at (${x}, ${y}) - 20 HP, FAST`);
+                    console.log('Coffee Zombie spawned:', enemy);
+                };
+
+                window.spawnBoth = function() {
+                    spawnSecurityBot();
+                    spawnCoffeeZombie();
+                    addLog('Watch the speed difference! Coffee Zombie moves 2x faster');
+                };
+
+                window.clearEnemies = function() {
+                    const count = game.combat.enemies.length;
+                    game.combat.enemies = [];
+                    addLog(`Cleared ${count} enemies`);
+                };
+
+                window.equipPlunger = function() {
+                    game.player.equippedWeapon = PLUNGER;
+                    addLog('Equipped PLUNGER (15-20 dmg, 1.0s cooldown)');
+                };
+
+                window.equipBrush = function() {
+                    game.player.equippedWeapon = TOILET_BRUSH;
+                    addLog('Equipped TOILET_BRUSH (8-12 dmg, 0.6s cooldown)');
+                };
+
+                addLog('Enemy test system ready! Use buttons above to test.');
+                console.log('Enemy test functions loaded. Use buttons or call functions directly.');
+            }, 500);
+        });
+    </script>
+
+    <script type="module" src="src/game.js"></script>
+</body>
+</html>

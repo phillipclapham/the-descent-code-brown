@@ -206,11 +206,21 @@ class Game {
         // Draw tile map (floors and walls)
         this.drawTileMap();
 
+        // Render enemies (before player, so player draws on top)
+        this.drawEnemies();
+
         // Render player
         this.player.render(this.renderer);
 
         // Draw debug info
         this.drawDebugInfo();
+    }
+
+    // Draw all enemies
+    drawEnemies() {
+        for (const enemy of this.combat.enemies) {
+            this.renderer.drawChar(enemy.char, enemy.x, enemy.y, enemy.color);
+        }
     }
 
     // Draw tile map
