@@ -26,6 +26,12 @@ export class Player {
         // Inventory
         this.keysCollected = 0;
 
+        // Combat properties
+        this.health = 100;
+        this.maxHealth = 100;
+        this.attackCooldown = 0; // seconds
+        this.equippedWeapon = null;
+
         // Message system (for door interaction feedback)
         this.message = '';
         this.messageTime = 0;
@@ -106,9 +112,24 @@ export class Player {
         return true;
     }
 
+    // Take damage
+    takeDamage(amount) {
+        this.health = Math.max(0, this.health - amount);
+        this.setMessage(`-${amount} HP`);
+        return this.health <= 0; // Return true if dead
+    }
+
+    // Check if player can attack
+    canAttack() {
+        return this.attackCooldown <= 0 && this.equippedWeapon !== null;
+    }
+
     // Update player state
     update(deltaTime) {
-        // Future: animations, status effects, etc.
+        // Tick attack cooldown (deltaTime in milliseconds)
+        if (this.attackCooldown > 0) {
+            this.attackCooldown -= deltaTime / 1000; // Convert to seconds
+        }
     }
 
     // Render the player

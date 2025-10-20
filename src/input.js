@@ -8,8 +8,8 @@ export class InputHandler {
 
     setupListeners() {
         window.addEventListener('keydown', (e) => {
-            // Prevent default for arrow keys to stop page scrolling
-            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+            // Prevent default for arrow keys and space to stop page scrolling
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
                 e.preventDefault();
             }
             this.keys[e.key] = true;
@@ -51,5 +51,10 @@ export class InputHandler {
                this.isKeyPressed('ArrowDown') ||
                this.isKeyPressed('ArrowLeft') ||
                this.isKeyPressed('ArrowRight');
+    }
+
+    // Check if attack key (SPACE) is pressed
+    isAttackPressed() {
+        return this.isKeyPressed(' ');
     }
 }

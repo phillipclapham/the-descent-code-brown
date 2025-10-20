@@ -106,6 +106,11 @@ class Game {
             this.player.move(movement.dx, movement.dy, currentTime);
         }
 
+        // Handle attack input (SPACE key)
+        if (this.input.isAttackPressed()) {
+            console.log('Attack pressed');
+        }
+
         // Update player state
         this.player.update(deltaTime);
 
@@ -221,14 +226,21 @@ class Game {
         const floorText = `Floor: ${displayFloor}`;
         const keysText = `Keys: ${this.player.keysCollected}`;
 
+        // Combat UI
+        const healthText = `HP: ${this.player.health}/${this.player.maxHealth}`;
+        const weaponName = this.player.equippedWeapon ? this.player.equippedWeapon.name : 'None';
+        const weaponText = `Weapon: ${weaponName}`;
+
         this.renderer.drawText(posText, 10, 10, '#00ff00', 14);
         this.renderer.drawText(floorText, 10, 30, '#ffff00', 14);
         this.renderer.drawText(keysText, 10, 50, '#ffff00', 14);
+        this.renderer.drawText(healthText, 10, 70, '#ff0000', 14);
+        this.renderer.drawText(weaponText, 10, 90, '#ffff00', 14);
 
         // Display player message (if any)
         const message = this.player.getMessage();
         if (message) {
-            this.renderer.drawText(message, 10, 70, '#ff8800', 16);
+            this.renderer.drawText(message, 10, 110, '#ff8800', 16);
         }
     }
 }
