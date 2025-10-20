@@ -92,22 +92,45 @@
                     log.innerHTML = `[${timestamp}] ${message}<br>` + log.innerHTML;
                 }
 
+                // Helper: Find random walkable position near player
+                function findSpawnPosition() {
+                    // Try to find a walkable position near player
+                    for (let attempt = 0; attempt < 20; attempt++) {
+                        const offsetX = Math.floor(Math.random() * 10) - 5; // -5 to +5
+                        const offsetY = Math.floor(Math.random() * 10) - 5;
+                        const x = game.player.x + offsetX;
+                        const y = game.player.y + offsetY;
+
+                        // Check if position is valid
+                        if (game.tileMap.isWalkable(x, y)) {
+                            // Check if not occupied by player or other enemies
+                            const occupiedByPlayer = (x === game.player.x && y === game.player.y);
+                            const occupiedByEnemy = game.combat.enemies.some(e => e.x === x && e.y === y);
+
+                            if (!occupiedByPlayer && !occupiedByEnemy) {
+                                return { x, y };
+                            }
+                        }
+                    }
+
+                    // Fallback: use any walkable position
+                    return game.tileMap.findWalkablePosition();
+                }
+
                 // Make test functions global
                 window.spawnSecurityBot = function() {
-                    const x = game.player.x + 5;
-                    const y = game.player.y;
-                    const enemy = new Enemy(x, y, ENEMY_SECURITY_BOT);
+                    const pos = findSpawnPosition();
+                    const enemy = new Enemy(pos.x, pos.y, ENEMY_SECURITY_BOT);
                     game.combat.enemies.push(enemy);
-                    addLog(`Spawned Security Bot at (${x}, ${y}) - 40 HP, slow`);
+                    addLog(`Spawned Security Bot at (${pos.x}, ${pos.y}) - 40 HP, slow`);
                     console.log('Security Bot spawned:', enemy);
                 };
 
                 window.spawnCoffeeZombie = function() {
-                    const x = game.player.x + 5;
-                    const y = game.player.y + 3;
-                    const enemy = new Enemy(x, y, ENEMY_COFFEE_ZOMBIE);
+                    const pos = findSpawnPosition();
+                    const enemy = new Enemy(pos.x, pos.y, ENEMY_COFFEE_ZOMBIE);
                     game.combat.enemies.push(enemy);
-                    addLog(`Spawned Coffee Zombie at (${x}, ${y}) - 20 HP, FAST`);
+                    addLog(`Spawned Coffee Zombie at (${pos.x}, ${pos.y}) - 20 HP, FAST`);
                     console.log('Coffee Zombie spawned:', enemy);
                 };
 
