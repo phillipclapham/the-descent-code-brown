@@ -6,6 +6,7 @@ import { InputHandler } from './input.js';
 import { DesperationMeter } from './desperation-meter.js';
 import { TileMap, TILE_STAIRS, TILE_STAIRS_UP, TILE_TOILET } from './tile-map.js';
 import { DungeonGenerator } from './dungeon-generator.js';
+import { CombatSystem } from './combat.js';
 
 class Game {
     constructor() {
@@ -15,6 +16,9 @@ class Game {
 
         // Initialize desperation meter
         this.desperationMeter = new DesperationMeter();
+
+        // Initialize combat system
+        this.combat = new CombatSystem(this);
 
         // Multi-floor system
         this.numFloors = 10;  // 10 floors: start at floor 10, descend to floor 1
@@ -108,11 +112,14 @@ class Game {
 
         // Handle attack input (SPACE key)
         if (this.input.isAttackPressed()) {
-            console.log('Attack pressed');
+            this.combat.handlePlayerAttack();
         }
 
         // Update player state
         this.player.update(deltaTime);
+
+        // Update combat system
+        this.combat.update(deltaTime);
 
         // Check for level transitions (player standing on stairs)
         // Only if cooldown expired (prevents immediate re-trigger after spawning)
