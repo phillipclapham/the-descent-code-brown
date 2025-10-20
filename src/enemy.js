@@ -82,7 +82,7 @@ export class Enemy {
             const targetX = this.x + dx;
             const targetY = this.y;
 
-            if (this.canMoveTo(targetX, targetY, tileMap, enemies)) {
+            if (this.canMoveTo(targetX, targetY, tileMap, enemies, player)) {
                 this.x = targetX;
                 this.moveCooldown = 1.0 / this.moveSpeed;  // Set cooldown based on speed
                 return;
@@ -94,7 +94,7 @@ export class Enemy {
             const targetX = this.x;
             const targetY = this.y + dy;
 
-            if (this.canMoveTo(targetX, targetY, tileMap, enemies)) {
+            if (this.canMoveTo(targetX, targetY, tileMap, enemies, player)) {
                 this.y = targetY;
                 this.moveCooldown = 1.0 / this.moveSpeed;  // Set cooldown based on speed
                 return;
@@ -108,11 +108,17 @@ export class Enemy {
      * @param {number} y - Target y
      * @param {Object} tileMap - TileMap for walkability
      * @param {Array} enemies - Array of all enemies
+     * @param {Object} player - Player object (optional, to prevent same-tile occupation)
      * @returns {boolean}
      */
-    canMoveTo(x, y, tileMap, enemies) {
+    canMoveTo(x, y, tileMap, enemies, player = null) {
         // Check walkability
         if (!tileMap.isWalkable(x, y)) {
+            return false;
+        }
+
+        // Check if player is at target position (prevent same-tile occupation)
+        if (player && x === player.x && y === player.y) {
             return false;
         }
 

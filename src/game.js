@@ -107,7 +107,17 @@ class Game {
         const movement = this.input.getMovementDirection();
 
         if (movement.dx !== 0 || movement.dy !== 0) {
-            this.player.move(movement.dx, movement.dy, currentTime);
+            // Check if enemy occupies target position (prevent same-tile occupation)
+            const targetX = this.player.x + movement.dx;
+            const targetY = this.player.y + movement.dy;
+            const enemyAtTarget = this.combat.enemies.some(e =>
+                e.x === targetX && e.y === targetY
+            );
+
+            // Only move if no enemy at target position
+            if (!enemyAtTarget) {
+                this.player.move(movement.dx, movement.dy, currentTime);
+            }
         }
 
         // Handle attack input (SPACE key)
