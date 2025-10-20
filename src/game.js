@@ -220,6 +220,10 @@ class Game {
 
     // Draw debug information
     drawDebugInfo() {
+        // Draw solid black background for UI panel
+        this.renderer.ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+        this.renderer.ctx.fillRect(5, 5, 250, 130);
+
         const posText = `Position: (${this.player.x}, ${this.player.y})`;
         // Display floors in descending order: Floor 10 → Floor 1
         const displayFloor = this.numFloors - this.currentFloor;
@@ -240,6 +244,9 @@ class Game {
         // Display player message (if any)
         const message = this.player.getMessage();
         if (message) {
+            // Background for message
+            this.renderer.ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+            this.renderer.ctx.fillRect(5, 105, 300, 25);
             this.renderer.drawText(message, 10, 110, '#ff8800', 16);
         }
     }
@@ -249,4 +256,7 @@ class Game {
 window.addEventListener('DOMContentLoaded', () => {
     const game = new Game();
     game.start();
+
+    // Make game globally accessible for console testing
+    window.game = game;
 });
