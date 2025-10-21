@@ -123,14 +123,19 @@ class Game {
         const enemyConfigs = this.getEnemyConfigsForFloor(displayFloor);
 
         // Find upstairs position to avoid spawning enemies nearby
-        const upstairsPos = this.tileMap.findUpStairsPosition();
+        // Session 12c fix: Handle null case (Floor 10 has no upstairs)
+        let upstairsPos = this.tileMap.findUpStairsPosition();
+        if (!upstairsPos) {
+            // No upstairs (Floor 10), use downstairs position instead
+            upstairsPos = this.tileMap.findDownStairsPosition();
+        }
 
         // Spawn each enemy config
         for (const { config, type, count } of enemyConfigs) {
             const enemiesToSpawn = count || 1;
 
             for (let i = 0; i < enemiesToSpawn; i++) {
-                // Find random position at least 5 tiles from upstairs
+                // Find random position at least 5 tiles from spawn area (stairs)
                 let spawnPos = null;
                 let attempts = 0;
 
@@ -139,9 +144,12 @@ class Game {
                     const x = 2 + Math.floor(Math.random() * (GRID_WIDTH - 4));
                     const y = 2 + Math.floor(Math.random() * (GRID_HEIGHT - 4));
 
-                    // Check walkable and distance from upstairs
+                    // Check walkable and distance from player spawn area
                     if (this.tileMap.isWalkable(x, y)) {
-                        const distance = Math.abs(x - upstairsPos.x) + Math.abs(y - upstairsPos.y);
+                        // Session 12c fix: Check if upstairsPos exists before accessing properties
+                        const distance = upstairsPos
+                            ? Math.abs(x - upstairsPos.x) + Math.abs(y - upstairsPos.y)
+                            : 999; // No stairs found, allow spawn anywhere
                         if (distance >= 5) {
                             const tile = this.tileMap.getTile(x, y);
                             // Only spawn on plain floor (not stairs, keys, doors)

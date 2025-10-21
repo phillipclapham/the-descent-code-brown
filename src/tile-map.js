@@ -317,6 +317,38 @@ export class TileMap {
         // First, find upstairs
         const upstairs = this.findUpStairsPosition();
 
+        // Session 12c fix: Handle null case (Floor 10 has no upstairs)
+        if (!upstairs) {
+            console.warn('No upstairs found (Floor 10?), using findWalkablePosition fallback');
+            // Fallback to downstairs or general walkable position
+            const downstairs = this.findDownStairsPosition();
+            if (downstairs) {
+                // Try adjacent to downstairs
+                const adjacent = [
+                    {x: downstairs.x - 1, y: downstairs.y},
+                    {x: downstairs.x + 1, y: downstairs.y},
+                    {x: downstairs.x, y: downstairs.y - 1},
+                    {x: downstairs.x, y: downstairs.y + 1}
+                ];
+
+                for (const pos of adjacent) {
+                    if (this.isWalkable(pos.x, pos.y)) {
+                        return pos;
+                    }
+                }
+                return downstairs;
+            }
+
+            // Last resort: search for any walkable position
+            for (let y = 1; y < this.height - 1; y++) {
+                for (let x = 1; x < this.width - 1; x++) {
+                    if (this.isWalkable(x, y)) {
+                        return { x, y };
+                    }
+                }
+            }
+        }
+
         // Find all adjacent walkable tiles (4-directional)
         const adjacentTiles = [
             {x: upstairs.x - 1, y: upstairs.y},     // West
