@@ -73,6 +73,99 @@
             text-align: right;
             font-weight: bold;
         }
+
+        /* Intro Modal Styles */
+        #intro-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+        }
+
+        .modal-overlay {
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: #1a1a1a;
+            border: 3px solid #00ff00;
+            padding: 30px;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.3);
+        }
+
+        .modal-content h2 {
+            margin: 0 0 20px 0;
+            font-size: 28px;
+            color: #00ff00;
+            text-align: center;
+            text-shadow: 0 0 15px #00ff00;
+        }
+
+        .modal-story {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #00ff00;
+            background-color: #000000;
+            padding: 20px;
+            border: 1px solid #00ff00;
+            margin: 0 0 20px 0;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .btn-primary, .btn-secondary {
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            padding: 12px 30px;
+            border: 2px solid #00ff00;
+            background-color: #000000;
+            color: #00ff00;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: bold;
+        }
+
+        .btn-primary:hover {
+            background-color: #00ff00;
+            color: #000000;
+            box-shadow: 0 0 15px #00ff00;
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            border-color: #007700;
+            color: #007700;
+            padding: 12px 20px;
+        }
+
+        .btn-secondary:hover {
+            border-color: #00ff00;
+            color: #00ff00;
+        }
     </style>
 </head>
 <body>

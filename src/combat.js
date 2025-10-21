@@ -15,6 +15,7 @@ import {
 } from './weapon.js';
 import { ANTACID, COFFEE, DONUT, ENERGY_DRINK } from './consumable.js';
 import { TILE_WEAPON, TILE_CONSUMABLE } from './tile-map.js';
+import { SaveSystem } from './save-system.js';
 
 export class CombatSystem {
     constructor(game) {
@@ -167,6 +168,9 @@ export class CombatSystem {
                 console.log('Player defeated!');
                 // Trigger game over state (Session 9e)
                 this.game.gameState = 'game_over';
+
+                // Delete save on death (preserve permadeath) (Session 12b)
+                SaveSystem.deleteSave();
             }
         }
 

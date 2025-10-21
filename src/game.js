@@ -7,6 +7,9 @@ import { DesperationMeter } from './desperation-meter.js';
 import { TileMap, TILE_FLOOR, TILE_STAIRS, TILE_STAIRS_UP, TILE_TOILET, TILE_WEAPON, TILE_CONSUMABLE } from './tile-map.js';
 import { DungeonGenerator } from './dungeon-generator.js';
 import { CombatSystem } from './combat.js';
+import { IntroModal } from './intro-modal.js';
+import { SaveSystem } from './save-system.js';
+import { MenuSystem } from './menu-system.js';
 import {
     Enemy,
     ENEMY_SECURITY_BOT,
@@ -451,6 +454,9 @@ class Game {
 
         const displayFloor = this.numFloors - this.currentFloor;
         console.log(`⬇️  Descended to Floor ${displayFloor}`);
+
+        // Auto-save on floor transition (Session 12b)
+        SaveSystem.save(this);
     }
 
     // Ascend to the previous floor
@@ -474,6 +480,9 @@ class Game {
 
         const displayFloor = this.numFloors - this.currentFloor;
         console.log(`⬆️  Ascended to Floor ${displayFloor}`);
+
+        // Auto-save on floor transition (Session 12b)
+        SaveSystem.save(this);
     }
 
     // Handle victory condition (player reached the toilet!) (Session 12a)
@@ -481,6 +490,9 @@ class Game {
         console.log('🎉 VICTORY! You made it to the bathroom!');
         this.gameState = 'victory';
         this.saveHighScore();
+
+        // Delete save on victory (preserve permadeath) (Session 12b)
+        SaveSystem.deleteSave();
     }
 
     // Render game over screen (Session 9e)
@@ -990,13 +1002,115 @@ class Game {
             this.renderer.drawText(message, msgX + 10, msgY + 5, '#ff8800', 16);
         }
     }
+
+    // Helper: Get weapon by ID (for save/load)
+    getWeaponById(id) {
+        const weaponMap = {
+            'plunger': PLUNGER,
+            'toilet-brush': TOILET_BRUSH,
+            'wrench': WRENCH,
+            'mop': MOP,
+            'tp-launcher': TP_LAUNCHER,
+            'stapler': STAPLER,
+            'fire-extinguisher': FIRE_EXTINGUISHER,
+            'coffee-pot': COFFEE_POT,
+            'keyboard': KEYBOARD,
+            'ceremonial-plunger': CEREMONIAL_PLUNGER
+        };
+        return weaponMap[id] ? { ...weaponMap[id] } : null;
+    }
+
+    // Helper: Get consumable by ID (for save/load)
+    getConsumableById(id) {
+        const consumableMap = {
+            'antacid': ANTACID,
+            'coffee': COFFEE,
+            'donut': DONUT,
+            'energy-drink': ENERGY_DRINK
+        };
+        return consumableMap[id] ? { ...consumableMap[id] } : null;
+    }
 }
 
 // Initialize game when DOM is ready
 window.addEventListener('DOMContentLoaded', () => {
+    // Show intro modal if first time
+    const introModal = new IntroModal();
+
+    introModal.show(() => {
+        // Modal dismissed, show menu
+        showMenu();
+    });
+});
+
+// Show main menu (NEW GAME / CONTINUE)
+function showMenu() {
+    const canvas = document.getElementById('game-canvas');
+    const tempRenderer = new Renderer(canvas);
+    const menu = new MenuSystem(canvas, tempRenderer);
+
+    // Menu loop
+    function menuLoop() {
+        if (menu.isActive()) {
+            menu.render();
+            requestAnimationFrame(menuLoop);
+        } else {
+            // Menu closed, get selected option
+            const selectedOption = menu.getSelectedOption();
+
+            if (selectedOption === 'new_game') {
+                startNewGame();
+            } else if (selectedOption === 'continue') {
+                continueGame();
+            }
+        }
+    }
+
+    menuLoop();
+}
+
+// Start a new game
+function startNewGame() {
     const game = new Game();
     game.start();
 
     // Make game globally accessible for console testing
     window.game = game;
-});
+
+    // Auto-save on page unload (Session 12b)
+    window.addEventListener('beforeunload', () => {
+        if (game.gameState === 'playing') {
+            SaveSystem.save(game);
+        }
+    });
+}
+
+// Continue from save
+function continueGame() {
+    const saveData = SaveSystem.loadSave();
+
+    if (!saveData) {
+        console.error('No save data found!');
+        startNewGame();
+        return;
+    }
+
+    // Create game instance
+    const game = new Game();
+
+    // Restore state from save BEFORE starting game loop
+    SaveSystem.continue(game, saveData);
+
+    // Start game loop
+    game.start();
+
+    // Make game globally accessible for console testing
+    window.game = game;
+
+    // Auto-save on page unload (Session 12b)
+    window.addEventListener('beforeunload', () => {
+        if (game.gameState === 'playing') {
+            SaveSystem.save(game);
+        }
+    });
+}
