@@ -42,6 +42,13 @@ export class Player {
         this.invincibilityEndTime = 0;   // Energy Drink: invincibility for 10 seconds
         this.crashEndTime = 0;           // Energy Drink: slow crash for 5 seconds after invincibility
 
+        // Clench mechanic (Session 12a)
+        this.clenchActive = false;
+        this.clenchDuration = 10; // seconds
+        this.clenchCooldown = 60; // seconds
+        this.clenchCooldownRemaining = 0;
+        this.clenchTimeRemaining = 0;
+
         // Message system (for door interaction feedback)
         this.message = '';
         this.messageTime = 0;
@@ -78,6 +85,12 @@ export class Player {
                     this.keysCollected--;
                     this.setMessage('Door unlocked! Keys: ' + this.keysCollected);
                     this.lastMoveTime = currentTime;
+
+                    // Increment game stats (Session 12a)
+                    if (combat && combat.game) {
+                        combat.game.keysUsed++;
+                    }
+
                     return true; // Door unlocked, but don't move into it this turn
                 } else {
                     // Can't unlock without key
@@ -116,6 +129,9 @@ export class Player {
                         // Remove weapon from map and combat system
                         this.tileMap.setTile(newX, newY, TILE_FLOOR);
                         combat.weapons.delete(weaponKey);
+
+                        // Increment game stats (Session 12a)
+                        combat.game.itemsCollected++;
                     } else {
                         // Inventory full - don't move onto tile, show message
                         this.setMessage('Inventory full!');
@@ -144,6 +160,9 @@ export class Player {
                         // Remove consumable from map and combat system
                         this.tileMap.setTile(newX, newY, TILE_FLOOR);
                         combat.consumables.delete(consumableKey);
+
+                        // Increment game stats (Session 12a)
+                        combat.game.itemsCollected++;
                     } else {
                         // Inventory full - don't move onto tile, show message
                         this.setMessage('Inventory full!');
@@ -199,10 +218,38 @@ export class Player {
 
     // Update player state
     update(deltaTime) {
+        // Update Clench duration (Session 12a)
+        if (this.clenchActive) {
+            this.clenchTimeRemaining -= deltaTime / 1000; // Convert to seconds
+            if (this.clenchTimeRemaining <= 0) {
+                this.clenchActive = false;
+                this.setMessage('Clench ended!');
+            }
+        }
+
+        // Update cooldown (always ticking down if > 0) (Session 12a)
+        if (this.clenchCooldownRemaining > 0) {
+            this.clenchCooldownRemaining -= deltaTime / 1000; // Convert to seconds
+        }
+
         // Tick attack cooldown (deltaTime in milliseconds)
         if (this.attackCooldown > 0) {
             this.attackCooldown -= deltaTime / 1000; // Convert to seconds
         }
+    }
+
+    // Activate Clench mechanic (Session 12a)
+    activateClench() {
+        if (this.clenchCooldownRemaining > 0) {
+            this.setMessage(`Clench on cooldown! (${Math.ceil(this.clenchCooldownRemaining)}s)`);
+            return false;
+        }
+
+        this.clenchActive = true;
+        this.clenchTimeRemaining = this.clenchDuration;
+        this.clenchCooldownRemaining = this.clenchCooldown;
+        this.setMessage('CLENCH ACTIVATED!');
+        return true;
     }
 
     // ===== INVENTORY MANAGEMENT (Session 10) =====

@@ -228,6 +228,9 @@ export class CombatSystem {
                 this.spawnDrop(deadEnemy.x, deadEnemy.y, drop);
                 console.log(`  💰 ${deadEnemy.name} dropped ${drop.name}!`);
             }
+
+            // Increment game stats (Session 12a)
+            this.game.enemiesDefeated++;
         }
 
         // Clean up dead enemies (remove from array)

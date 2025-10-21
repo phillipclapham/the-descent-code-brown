@@ -63,6 +63,11 @@ export class InputHandler {
         return this.isKeyPressed('r') || this.isKeyPressed('R');
     }
 
+    // Check if Clench key (C) is pressed (Session 12a)
+    isClenchPressed() {
+        return this.isKeyPressed('c') || this.isKeyPressed('C');
+    }
+
     // Get number key pressed (1-8 for inventory slots) (Session 10)
     // Returns slot index (0-7) if a number key is pressed, null otherwise
     getNumberPressed() {

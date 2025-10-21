@@ -51,7 +51,12 @@ export class DesperationMeter {
     }
 
     // Update meter value based on time
-    update(deltaTime) {
+    update(deltaTime, player) {  // Add player parameter (Session 12a)
+        // Check if clenched (Session 12a)
+        if (player && player.clenchActive) {
+            return; // Don't increment desperation while clenched
+        }
+
         if (this.value >= this.maxValue) {
             // Future: trigger game over or max desperation effects
             return;
@@ -79,12 +84,18 @@ export class DesperationMeter {
         // Update percentage text
         this.element.percentage.textContent = `${percentage}%`;
 
-        // Update color based on thresholds
-        const color = this.getMeterColor(percentage);
+        // Update color based on thresholds (Session 12a)
+        const threshold = this.getCurrentThreshold();
+
+        // Apply flashing effect if threshold has flash property
+        const color = threshold.flash
+            ? (Date.now() % 400 < 200 ? threshold.color : '#880000') // Flash effect
+            : threshold.color;
+
         this.element.bar.style.backgroundColor = color;
     }
 
-    // Determine meter color based on value
+    // Determine meter color based on value (DEPRECATED - use getCurrentThreshold())
     getMeterColor(percentage) {
         if (percentage < 33) {
             return '#00ff00'; // Green - safe
@@ -125,5 +136,24 @@ export class DesperationMeter {
         this.value = Math.min(this.value + amount, this.maxValue);
         this.render();
         console.log(`Desperation increased by ${amount}% (now ${Math.floor(this.value)}%)`);
+    }
+
+    // Get current desperation threshold for visual effects (Session 12a)
+    getCurrentThreshold() {
+        const desp = this.value;
+
+        if (desp < 25) {
+            return { level: 1, name: 'Comfortable', color: '#00ff00', shake: 0, tintColor: null, tintAlpha: 0 };
+        } else if (desp < 50) {
+            return { level: 2, name: 'Urgent', color: '#ffff00', shake: 0, tintColor: 'rgba(50,50,0', tintAlpha: 0.05 };
+        } else if (desp < 75) {
+            return { level: 3, name: 'Critical', color: '#ff8800', shake: 2, tintColor: 'rgba(255,136,0', tintAlpha: 0.15 };
+        } else if (desp < 90) {
+            return { level: 4, name: 'Desperate', color: '#ff0000', shake: 3, tintColor: 'rgba(255,0,0', tintAlpha: 0.25 };
+        } else if (desp < 100) {
+            return { level: 5, name: 'EXTREME', color: '#ff0000', shake: 4, tintColor: 'rgba(255,0,0', tintAlpha: 0.35, flash: true };
+        } else {
+            return { level: 6, name: 'GAME OVER', color: '#ff0000', shake: 0, tintColor: null, tintAlpha: 0 };
+        }
     }
 }

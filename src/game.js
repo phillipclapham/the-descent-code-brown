@@ -75,6 +75,14 @@ class Game {
         // Game state (Session 9e)
         this.gameState = 'playing'; // 'playing', 'game_over', 'victory'
 
+        // Statistics tracking (Session 12a)
+        this.startTime = Date.now();
+        this.enemiesDefeated = 0;
+        this.itemsCollected = 0;
+        this.specialRoomsFound = new Set(); // Track unique rooms
+        this.vaultsUnlocked = 0;
+        this.keysUsed = 0;
+
         console.log('Game initialized');
         console.log(`Grid: ${GRID_WIDTH}x${GRID_HEIGHT}`);
         console.log(`Generated ${this.numFloors} dungeon floors`);
@@ -340,8 +348,8 @@ class Game {
             return;
         }
 
-        // Update desperation meter
-        this.desperationMeter.update(deltaTime);
+        // Update desperation meter (Session 12a: pass player for clench check)
+        this.desperationMeter.update(deltaTime, this.player);
 
         // Update transition cooldown
         if (this.transitionCooldown > 0) {
@@ -378,6 +386,11 @@ class Game {
             this.player.selectSlot(slotPressed);
             // Use/equip the item in that slot
             this.player.useSlot(slotPressed, this.desperationMeter, this);
+        }
+
+        // Handle Clench input (Session 12a)
+        if (this.input.isClenchPressed()) {
+            this.player.activateClench();
         }
 
         // Update player state
@@ -463,10 +476,11 @@ class Game {
         console.log(`⬆️  Ascended to Floor ${displayFloor}`);
     }
 
-    // Handle victory condition (player reached the toilet!)
+    // Handle victory condition (player reached the toilet!) (Session 12a)
     handleVictory() {
         console.log('🎉 VICTORY! You made it to the bathroom!');
-        // TODO Phase 4: Display victory screen, stop game, etc.
+        this.gameState = 'victory';
+        this.saveHighScore();
     }
 
     // Render game over screen (Session 9e)
@@ -497,8 +511,295 @@ class Game {
         ctx.textAlign = 'left';
     }
 
+    // Render Clench UI (Session 12a)
+    renderClenchUI() {
+        const ctx = this.renderer.ctx;
+        const x = 650;
+        const y = 520;
+
+        ctx.font = '14px "Courier New", monospace';
+
+        if (this.player.clenchActive) {
+            // Active: show remaining time
+            ctx.fillStyle = '#00ffff'; // Cyan
+            ctx.fillText(`Clench: ACTIVE (${Math.ceil(this.player.clenchTimeRemaining)}s)`, x, y);
+        } else if (this.player.clenchCooldownRemaining > 0) {
+            // Cooldown: show remaining cooldown
+            ctx.fillStyle = '#888888'; // Gray
+            ctx.fillText(`Clench: ${Math.ceil(this.player.clenchCooldownRemaining)}s`, x, y);
+        } else {
+            // Ready: show ready state
+            ctx.fillStyle = '#00ff00'; // Green
+            ctx.fillText('Clench: READY', x, y);
+        }
+    }
+
+    // Render Clench visual effect (pulsing cyan border) (Session 12a)
+    renderClenchEffect() {
+        const ctx = this.renderer.ctx;
+
+        // Pulsing cyan border
+        const pulse = Math.sin(Date.now() / 150) * 0.5 + 0.5; // 0 to 1
+        const alpha = 0.3 + (pulse * 0.4); // 0.3 to 0.7
+
+        ctx.strokeStyle = `rgba(0, 255, 255, ${alpha})`;
+        ctx.lineWidth = 4;
+        ctx.strokeRect(2, 2, 796, 596);
+    }
+
+    // Apply screen shake effect based on desperation threshold (Session 12a)
+    applyScreenShake(threshold) {
+        // Shake frequency based on threshold
+        let shouldShake = false;
+        const time = Date.now();
+
+        if (threshold.level === 3) {
+            // Occasional (every 3-5 seconds)
+            shouldShake = (time % 4000) < 100;
+        } else if (threshold.level === 4) {
+            // Frequent (every 1-2 seconds)
+            shouldShake = (time % 1500) < 100;
+        } else if (threshold.level === 5) {
+            // Constant
+            shouldShake = true;
+        }
+
+        if (shouldShake) {
+            const offsetX = (Math.random() - 0.5) * threshold.shake * 2;
+            const offsetY = (Math.random() - 0.5) * threshold.shake * 2;
+            this.renderer.ctx.save();
+            this.renderer.ctx.translate(offsetX, offsetY);
+        }
+
+        return shouldShake; // Return whether shake was applied (for restore later)
+    }
+
+    // Apply screen tint overlay based on desperation threshold (Session 12a)
+    applyScreenTint(threshold, shakeApplied) {
+        const ctx = this.renderer.ctx;
+        ctx.fillStyle = `${threshold.tintColor},${threshold.tintAlpha})`;
+        ctx.fillRect(0, 0, 800, 600);
+
+        // Restore after shake (if shake was applied)
+        if (shakeApplied) {
+            ctx.restore();
+        }
+    }
+
+    // Render victory screen (Session 12a)
+    renderVictory() {
+        const ctx = this.renderer.ctx;
+
+        // Black background
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, 800, 600);
+
+        // ASCII Art Toilet (THE THRONE)
+        ctx.font = '14px "Courier New", monospace';
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+
+        const toilet = [
+            "           _____           ",
+            "          /     \\          ",
+            "         |  ___  |         ",
+            "         | |   | |         ",
+            "         | |___| |         ",
+            "         |_______|         ",
+            "            | |            ",
+            "           /   \\           ",
+            "          /_____\\          ",
+            "                           ",
+            "      * THE THRONE *       "
+        ];
+
+        let y = 60;
+        toilet.forEach(line => {
+            ctx.fillText(line, 400, y);
+            y += 18;
+        });
+
+        // Victory Text
+        y += 20;
+        ctx.font = 'bold 32px "Courier New", monospace';
+        ctx.fillStyle = '#00ff00';
+        ctx.fillText('YOU MADE IT!', 400, y);
+
+        y += 40;
+        ctx.font = 'italic 20px "Courier New", monospace';
+        ctx.fillStyle = '#888888';
+        ctx.fillText('"Relief at last..."', 400, y);
+
+        // Statistics
+        y += 50;
+        ctx.font = '16px "Courier New", monospace';
+        ctx.fillStyle = '#ffff00';
+        ctx.fillText('========== RUN STATISTICS ==========', 400, y);
+
+        const elapsedTime = (Date.now() - this.startTime) / 1000;
+        const minutes = Math.floor(elapsedTime / 60);
+        const seconds = Math.floor(elapsedTime % 60);
+
+        ctx.fillStyle = '#ffffff';
+        y += 30;
+        ctx.fillText(`Time Taken:          ${minutes}m ${seconds}s`, 400, y);
+        y += 20;
+        ctx.fillText(`Final Desperation:   ${Math.floor(this.desperationMeter.value)}%`, 400, y);
+        y += 20;
+        ctx.fillText(`Floors Explored:     10/10`, 400, y);
+        y += 30;
+        ctx.fillText(`Enemies Defeated:    ${this.enemiesDefeated}`, 400, y);
+        y += 20;
+        ctx.fillText(`Items Collected:     ${this.itemsCollected}`, 400, y);
+        y += 20;
+        ctx.fillText(`Special Rooms:       ${this.specialRoomsFound.size}`, 400, y);
+        y += 20;
+        ctx.fillText(`Keys Used:           ${this.keysUsed}`, 400, y);
+        y += 20;
+        ctx.fillText(`Vaults Unlocked:     ${this.vaultsUnlocked}`, 400, y);
+
+        // Scoring
+        y += 40;
+        ctx.fillStyle = '#ffff00';
+        ctx.fillText('===================================', 400, y);
+
+        const score = this.calculateScore(elapsedTime);
+
+        ctx.fillStyle = '#00ff00';
+        y += 30;
+        ctx.fillText(`Base Score:                   1000`, 400, y);
+        y += 20;
+        ctx.fillText(`Time Bonus (${minutes}:${seconds.toString().padStart(2, '0')}):          +${score.timeBonus}`, 400, y);
+        y += 20;
+        ctx.fillText(`Desperation Bonus (${Math.floor(this.desperationMeter.value)}%):    +${score.desperationBonus}`, 400, y);
+        y += 20;
+        ctx.fillText(`Combat Bonus (${this.enemiesDefeated} enemies):  +${score.combatBonus}`, 400, y);
+        y += 20;
+        ctx.fillText(`Exploration Bonus (${this.specialRoomsFound.size} rooms):+${score.explorationBonus}`, 400, y);
+        y += 20;
+        ctx.fillText(`Item Bonus (${this.itemsCollected} items):      +${score.itemBonus}`, 400, y);
+        y += 20;
+        ctx.fillStyle = '#ffff00';
+        ctx.fillText('                          ______', 400, y);
+        y += 20;
+        ctx.font = 'bold 18px "Courier New", monospace';
+        ctx.fillStyle = '#00ff00';
+        ctx.fillText(`FINAL SCORE:                ${score.finalScore}`, 400, y);
+
+        // High Score Comparison
+        const highScore = this.loadHighScore();
+        if (highScore && score.finalScore > highScore.score) {
+            y += 30;
+            ctx.fillStyle = '#ffff00';
+            ctx.fillText('** NEW HIGH SCORE! **', 400, y);
+            y += 20;
+            ctx.fillStyle = '#888888';
+            ctx.font = '14px "Courier New", monospace';
+            ctx.fillText(`Previous Best: ${highScore.score}`, 400, y);
+        } else if (highScore) {
+            y += 30;
+            ctx.fillStyle = '#888888';
+            ctx.font = '14px "Courier New", monospace';
+            ctx.fillText(`High Score: ${highScore.score}`, 400, y);
+        }
+
+        // Rank
+        y += 40;
+        const rank = this.getRank(score.finalScore);
+        ctx.font = 'bold 20px "Courier New", monospace';
+        ctx.fillStyle = '#00ffff';
+        ctx.fillText(`Rank: ${rank.name}`, 400, y);
+        y += 25;
+        ctx.font = 'italic 14px "Courier New", monospace';
+        ctx.fillStyle = '#888888';
+        ctx.fillText(`"${rank.flavor}"`, 400, y);
+
+        // Options
+        y += 50;
+        ctx.font = '16px "Courier New", monospace';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText('[R] Play Again', 400, y);
+
+        ctx.textAlign = 'left';
+    }
+
+    // Calculate score based on statistics (Session 12a)
+    calculateScore(elapsedTime) {
+        const baseScore = 1000;
+        const timeBonus = Math.floor((300 / elapsedTime) * 100);
+        const desperationBonus = Math.floor(this.desperationMeter.value * 5);
+        const combatBonus = this.enemiesDefeated * 10;
+        const explorationBonus = this.specialRoomsFound.size * 30;
+        const itemBonus = this.itemsCollected * 5;
+
+        const finalScore = baseScore + timeBonus + desperationBonus + combatBonus + explorationBonus + itemBonus;
+
+        return {
+            baseScore,
+            timeBonus,
+            desperationBonus,
+            combatBonus,
+            explorationBonus,
+            itemBonus,
+            finalScore
+        };
+    }
+
+    // Get rank based on score (Session 12a)
+    getRank(score) {
+        if (score >= 2500) {
+            return { name: 'LEGENDARY HOLDER', flavor: 'You held it like a legend' };
+        } else if (score >= 2000) {
+            return { name: 'DESPERATE HERO', flavor: 'You held it like a champion' };
+        } else if (score >= 1500) {
+            return { name: 'MADE IT', flavor: 'You survived the descent' };
+        } else if (score >= 1000) {
+            return { name: 'BARELY SURVIVED', flavor: 'That was close...' };
+        } else if (score >= 500) {
+            return { name: "SHOULD'VE GONE EARLIER", flavor: 'Next time, listen to your gut' };
+        } else {
+            return { name: 'NEXT TIME, SKIP LUNCH', flavor: 'Questionable life choices' };
+        }
+    }
+
+    // Save high score to localStorage (Session 12a)
+    saveHighScore() {
+        const elapsedTime = (Date.now() - this.startTime) / 1000;
+        const score = this.calculateScore(elapsedTime);
+        const rank = this.getRank(score.finalScore);
+
+        const minutes = Math.floor(elapsedTime / 60);
+        const seconds = Math.floor(elapsedTime % 60);
+
+        const highScoreData = {
+            score: score.finalScore,
+            time: `${minutes}:${seconds.toString().padStart(2, '0')}`,
+            desperation: Math.floor(this.desperationMeter.value),
+            enemiesDefeated: this.enemiesDefeated,
+            date: new Date().toLocaleDateString(),
+            rank: rank.name
+        };
+
+        localStorage.setItem('high_score', JSON.stringify(highScoreData));
+    }
+
+    // Load high score from localStorage (Session 12a)
+    loadHighScore() {
+        const data = localStorage.getItem('high_score');
+        return data ? JSON.parse(data) : null;
+    }
+
     // Render everything
     render() {
+        // Get desperation threshold for visual effects (Session 12a)
+        const threshold = this.desperationMeter.getCurrentThreshold();
+
+        // Apply screen shake BEFORE rendering (Session 12a)
+        let shakeApplied = false;
+        if (threshold.shake > 0) {
+            shakeApplied = this.applyScreenShake(threshold);
+        }
+
         // Clear screen
         this.renderer.clear();
 
@@ -517,9 +818,27 @@ class Game {
         // Draw debug info
         this.drawDebugInfo();
 
+        // Render Clench UI (Session 12a)
+        this.renderClenchUI();
+
+        // Apply screen tint AFTER rendering (overlay) (Session 12a)
+        if (threshold.tintColor) {
+            this.applyScreenTint(threshold, shakeApplied);
+        }
+
+        // Clench visual effect (cyan border pulse) (Session 12a)
+        if (this.player.clenchActive) {
+            this.renderClenchEffect();
+        }
+
         // Draw game over screen if applicable (Session 9e)
         if (this.gameState === 'game_over') {
             this.renderGameOver();
+        }
+
+        // Draw victory screen if applicable (Session 12a)
+        if (this.gameState === 'victory') {
+            this.renderVictory();
         }
     }
 
