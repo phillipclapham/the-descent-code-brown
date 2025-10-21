@@ -326,10 +326,10 @@ export class Player {
             playerColor = '#00ff00'; // Bright green (speed boost active)
         }
 
-        // Energy Drink invincibility: Flash between white and cyan
+        // Energy Drink invincibility: Flash between white and cyan (softer colors for transparency)
         if (this.invincibilityEndTime && currentTime < this.invincibilityEndTime) {
             const flash = Math.floor(currentTime / 150) % 2; // Flash every 150ms
-            playerColor = flash ? '#ffffff' : '#00ffff'; // White / Cyan
+            playerColor = flash ? '#cccccc' : '#66ffff'; // Soft white / Soft cyan (more transparent feel)
         }
 
         // Crash effect: Gray/dim (overrides other effects)

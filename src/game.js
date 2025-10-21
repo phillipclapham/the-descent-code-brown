@@ -514,10 +514,11 @@ class Game {
     // Render Clench UI (Session 12a)
     renderClenchUI() {
         const ctx = this.renderer.ctx;
-        const x = 650;
+        const x = 790; // Right-aligned position (10px from right edge)
         const y = 520;
 
         ctx.font = '14px "Courier New", monospace';
+        ctx.textAlign = 'right'; // Right-align to prevent overflow
 
         if (this.player.clenchActive) {
             // Active: show remaining time
@@ -532,6 +533,9 @@ class Game {
             ctx.fillStyle = '#00ff00'; // Green
             ctx.fillText('Clench: READY', x, y);
         }
+
+        // Reset text alignment
+        ctx.textAlign = 'left';
     }
 
     // Render Clench visual effect (pulsing cyan border) (Session 12a)
