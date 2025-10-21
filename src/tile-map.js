@@ -213,7 +213,58 @@ export class TileMap {
 
     // Find a valid walkable position (useful for spawning player)
     findWalkablePosition() {
-        // Search from top-left for first walkable tile
+        // CRITICAL FIX (Session 12c): Spawn in connected room, not isolated room
+        // Bug: Old logic scanned top-left, could spawn in isolated room
+        // Fix: Spawn near stairs (guaranteed connected via connectivity validation)
+
+        // Priority 1: Spawn near upstairs (guaranteed connected room)
+        const upstairs = this.findUpStairsPosition();
+        if (upstairs) {
+            // Found upstairs, spawn adjacent
+            const adjacent = [
+                {x: upstairs.x - 1, y: upstairs.y},
+                {x: upstairs.x + 1, y: upstairs.y},
+                {x: upstairs.x, y: upstairs.y - 1},
+                {x: upstairs.x, y: upstairs.y + 1}
+            ];
+
+            for (const pos of adjacent) {
+                if (this.isWalkable(pos.x, pos.y)) {
+                    console.log(`Spawning near upstairs at (${pos.x}, ${pos.y})`);
+                    return pos;
+                }
+            }
+
+            // No adjacent walkable, spawn ON upstairs
+            console.log(`Spawning ON upstairs at (${upstairs.x}, ${upstairs.y})`);
+            return upstairs;
+        }
+
+        // Priority 2: No upstairs (Floor 10), spawn near downstairs
+        const downstairs = this.findDownStairsPosition();
+        if (downstairs) {
+            const adjacent = [
+                {x: downstairs.x - 1, y: downstairs.y},
+                {x: downstairs.x + 1, y: downstairs.y},
+                {x: downstairs.x, y: downstairs.y - 1},
+                {x: downstairs.x, y: downstairs.y + 1}
+            ];
+
+            for (const pos of adjacent) {
+                if (this.isWalkable(pos.x, pos.y)) {
+                    console.log(`Spawning near downstairs at (${pos.x}, ${pos.y})`);
+                    return pos;
+                }
+            }
+
+            // No adjacent walkable, spawn ON downstairs (rare, but safe)
+            console.log(`Spawning ON downstairs at (${downstairs.x}, ${downstairs.y})`);
+            return downstairs;
+        }
+
+        // Priority 3: Fallback - search from top-left for first walkable tile
+        // This should never happen if dungeon generated correctly
+        console.warn('⚠️ No stairs found, using fallback spawn (isolated room risk!)');
         for (let y = 1; y < this.height - 1; y++) {
             for (let x = 1; x < this.width - 1; x++) {
                 if (this.isWalkable(x, y)) {
@@ -222,7 +273,7 @@ export class TileMap {
             }
         }
 
-        // Fallback: return center (shouldn't happen if map has any floor)
+        // Last resort: center of map
         return {
             x: Math.floor(this.width / 2),
             y: Math.floor(this.height / 2)
@@ -240,8 +291,24 @@ export class TileMap {
             }
         }
 
-        // No upstairs found (first floor) - find any walkable position
-        return this.findWalkablePosition();
+        // No upstairs found (e.g., Floor 10)
+        return null;
+    }
+
+    // Find downward staircase or toilet position (Session 12c)
+    findDownStairsPosition() {
+        // Search for downward stairs or toilet
+        for (let y = 1; y < this.height - 1; y++) {
+            for (let x = 1; x < this.width - 1; x++) {
+                const tile = this.getTile(x, y);
+                if (tile === TILE_STAIRS || tile === TILE_TOILET) {
+                    return { x, y };
+                }
+            }
+        }
+
+        // No downstairs found
+        return null;
     }
 
     // Find a safe spawn position ADJACENT to upstairs (not ON upstairs)
