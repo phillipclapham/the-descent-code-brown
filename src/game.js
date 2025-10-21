@@ -7,7 +7,16 @@ import { DesperationMeter } from './desperation-meter.js';
 import { TileMap, TILE_FLOOR, TILE_STAIRS, TILE_STAIRS_UP, TILE_TOILET, TILE_WEAPON, TILE_CONSUMABLE } from './tile-map.js';
 import { DungeonGenerator } from './dungeon-generator.js';
 import { CombatSystem } from './combat.js';
-import { Enemy, ENEMY_SECURITY_BOT, ENEMY_COFFEE_ZOMBIE } from './enemy.js';
+import {
+    Enemy,
+    ENEMY_SECURITY_BOT,
+    ENEMY_COFFEE_ZOMBIE,
+    ENEMY_JANITOR,
+    ENEMY_GREMLIN,
+    ENEMY_RAT,
+    ENEMY_PIPE_MONSTER,
+    ENEMY_THE_DESPERATE
+} from './enemy.js';
 import {
     PLUNGER,
     TOILET_BRUSH,
@@ -99,41 +108,44 @@ class Game {
         const displayFloor = this.numFloors - this.currentFloor;
         console.log(`🎲 Spawning entities for Floor ${displayFloor}...`);
 
-        // Spawn 1-2 enemies per floor
-        const numEnemies = Math.floor(Math.random() * 2) + 1;
+        // Floor-based enemy spawning (Session 11)
+        const enemyConfigs = this.getEnemyConfigsForFloor(displayFloor);
 
         // Find upstairs position to avoid spawning enemies nearby
         const upstairsPos = this.tileMap.findUpStairsPosition();
 
-        for (let i = 0; i < numEnemies; i++) {
-            // Find random position at least 5 tiles from upstairs
-            let spawnPos = null;
-            let attempts = 0;
+        // Spawn each enemy config
+        for (const { config, type, count } of enemyConfigs) {
+            const enemiesToSpawn = count || 1;
 
-            while (attempts < 50 && !spawnPos) {
-                attempts++;
-                const x = 2 + Math.floor(Math.random() * (GRID_WIDTH - 4));
-                const y = 2 + Math.floor(Math.random() * (GRID_HEIGHT - 4));
+            for (let i = 0; i < enemiesToSpawn; i++) {
+                // Find random position at least 5 tiles from upstairs
+                let spawnPos = null;
+                let attempts = 0;
 
-                // Check walkable and distance from upstairs
-                if (this.tileMap.isWalkable(x, y)) {
-                    const distance = Math.abs(x - upstairsPos.x) + Math.abs(y - upstairsPos.y);
-                    if (distance >= 5) {
-                        const tile = this.tileMap.getTile(x, y);
-                        // Only spawn on plain floor (not stairs, keys, doors)
-                        if (tile === TILE_FLOOR) {
-                            spawnPos = { x, y };
+                while (attempts < 50 && !spawnPos) {
+                    attempts++;
+                    const x = 2 + Math.floor(Math.random() * (GRID_WIDTH - 4));
+                    const y = 2 + Math.floor(Math.random() * (GRID_HEIGHT - 4));
+
+                    // Check walkable and distance from upstairs
+                    if (this.tileMap.isWalkable(x, y)) {
+                        const distance = Math.abs(x - upstairsPos.x) + Math.abs(y - upstairsPos.y);
+                        if (distance >= 5) {
+                            const tile = this.tileMap.getTile(x, y);
+                            // Only spawn on plain floor (not stairs, keys, doors)
+                            if (tile === TILE_FLOOR) {
+                                spawnPos = { x, y };
+                            }
                         }
                     }
                 }
-            }
 
-            if (spawnPos) {
-                // Randomly choose enemy type (50/50 split for now)
-                const config = Math.random() < 0.5 ? ENEMY_SECURITY_BOT : ENEMY_COFFEE_ZOMBIE;
-                const enemy = new Enemy(spawnPos.x, spawnPos.y, config);
-                this.combat.enemies.push(enemy);
-                console.log(`  Spawned ${enemy.name} at (${spawnPos.x}, ${spawnPos.y})`);
+                if (spawnPos) {
+                    const enemy = new Enemy(spawnPos.x, spawnPos.y, config, type);
+                    this.combat.enemies.push(enemy);
+                    console.log(`  Spawned ${enemy.name} at (${spawnPos.x}, ${spawnPos.y})`);
+                }
             }
         }
 
@@ -222,6 +234,74 @@ class Game {
         if (rand < 65) return DONUT;         // 25% (40 + 25 = 65)
         if (rand < 85) return COFFEE;        // 20% (65 + 20 = 85)
         return ENERGY_DRINK;                 // 15% (remaining)
+    }
+
+    // Get enemy configurations for floor (Session 11)
+    // Returns array of { config, type, count } objects
+    // Floor-themed spawning from GAME_DESIGN.md
+    getEnemyConfigsForFloor(floor) {
+        const enemies = [];
+
+        // Floor 10-8: Office Zone (Security Bot, Coffee Zombie)
+        if (floor >= 8) {
+            // 1-2 Security Bots
+            if (Math.random() < 0.8) {
+                enemies.push({ config: ENEMY_SECURITY_BOT, type: 'SECURITY_BOT', count: 1 });
+            }
+            // 0-2 Coffee Zombies
+            const zombieCount = Math.floor(Math.random() * 3); // 0-2
+            if (zombieCount > 0) {
+                enemies.push({ config: ENEMY_COFFEE_ZOMBIE, type: 'COFFEE_ZOMBIE', count: zombieCount });
+            }
+        }
+
+        // Floor 7-5: Maintenance Zone (Security Bot, Coffee Zombie, Janitor, Gremlin)
+        else if (floor >= 5) {
+            const count = 2 + Math.floor(Math.random() * 3); // 2-4 enemies
+            const types = [
+                { config: ENEMY_SECURITY_BOT, type: 'SECURITY_BOT' },
+                { config: ENEMY_COFFEE_ZOMBIE, type: 'COFFEE_ZOMBIE' },
+                { config: ENEMY_JANITOR, type: 'JANITOR' },
+                { config: ENEMY_GREMLIN, type: 'GREMLIN' }
+            ];
+            for (let i = 0; i < count; i++) {
+                const enemyType = types[Math.floor(Math.random() * types.length)];
+                enemies.push({ ...enemyType, count: 1 });
+            }
+        }
+
+        // Floor 4-2: Sewer Zone (Rats in swarms, Gremlin, Pipe Monster)
+        else if (floor >= 2) {
+            // Rat swarms (2-4 rats)
+            const ratCount = 2 + Math.floor(Math.random() * 3); // 2-4
+            enemies.push({ config: ENEMY_RAT, type: 'RAT', count: ratCount });
+
+            // 30% chance for Gremlin
+            if (Math.random() < 0.3) {
+                enemies.push({ config: ENEMY_GREMLIN, type: 'GREMLIN', count: 1 });
+            }
+
+            // 20% chance for Pipe Monster (rare)
+            if (Math.random() < 0.2) {
+                enemies.push({ config: ENEMY_PIPE_MONSTER, type: 'PIPE_MONSTER', count: 1 });
+            }
+        }
+
+        // Floor 1: Throne Room (Pipe Monster + Rats)
+        else {
+            // Pipe Monster guards the throne
+            enemies.push({ config: ENEMY_PIPE_MONSTER, type: 'PIPE_MONSTER', count: 1 });
+            // Rat swarm
+            const ratCount = 2 + Math.floor(Math.random() * 3); // 2-4
+            enemies.push({ config: ENEMY_RAT, type: 'RAT', count: ratCount });
+        }
+
+        // 10% chance: The Desperate appears on ANY floor
+        if (Math.random() < 0.1) {
+            enemies.push({ config: ENEMY_THE_DESPERATE, type: 'THE_DESPERATE', count: 1 });
+        }
+
+        return enemies;
     }
 
     // Initialize and start the game

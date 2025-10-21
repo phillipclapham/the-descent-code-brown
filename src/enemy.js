@@ -9,9 +9,10 @@ export class Enemy {
      * @param {number} y - Starting y position
      * @param {Object} config - Enemy configuration object
      */
-    constructor(x, y, config) {
+    constructor(x, y, config, type = 'UNKNOWN') {
         this.x = x;
         this.y = y;
+        this.type = type;  // Enemy type for drops and AI behavior
 
         // Copy config properties
         this.name = config.name;
@@ -28,6 +29,16 @@ export class Enemy {
 
         // Enemy-specific accuracy (80% base, no desperation modifier)
         this.accuracy = 0.80;
+
+        // Behavioral flags (Session 11)
+        this.fleeWhenDamaged = config.fleeWhenDamaged || false;
+        this.fleeAt50Percent = config.fleeAt50Percent || false;
+        this.swarmCourage = config.swarmCourage || false;
+        this.territorial = config.territorial || false;
+        this.guardVaults = config.guardVaults || false;
+        this.competitor = config.competitor || false;
+        this.goalSeeker = config.goalSeeker || false;
+        this.avoidsConflict = config.avoidsConflict || false;
     }
 
     /**
@@ -144,6 +155,92 @@ export class Enemy {
     }
 
     /**
+     * Flee behavior - move away from player (Session 11)
+     * Used by Gremlin (always) and Rat (when low HP)
+     * @param {Object} player - Player object with x, y
+     * @param {Object} tileMap - TileMap for walkability checks
+     * @param {Array} enemies - Array of all enemies (for collision check)
+     */
+    moveAwayFrom(player, tileMap, enemies) {
+        if (!this.canMove()) return;
+
+        // Calculate direction AWAY from player
+        const dx = player.x > this.x ? -1 : (player.x < this.x ? 1 : 0);
+        const dy = player.y > this.y ? -1 : (player.y < this.y ? 1 : 0);
+
+        // Try horizontal movement first
+        if (dx !== 0) {
+            const targetX = this.x + dx;
+            const targetY = this.y;
+
+            if (this.canMoveTo(targetX, targetY, tileMap, enemies, player)) {
+                this.x = targetX;
+                this.moveCooldown = 1.0 / this.moveSpeed;
+                return;
+            }
+        }
+
+        // Try vertical movement
+        if (dy !== 0) {
+            const targetX = this.x;
+            const targetY = this.y + dy;
+
+            if (this.canMoveTo(targetX, targetY, tileMap, enemies, player)) {
+                this.y = targetY;
+                this.moveCooldown = 1.0 / this.moveSpeed;
+                return;
+            }
+        }
+    }
+
+    /**
+     * Drop item on death (Session 11)
+     * Returns item object or null based on enemy type and drop probabilities
+     * @returns {Object|null} { type: 'weapon'|'consumable', name: string }
+     */
+    dropItem() {
+        const roll = Math.random();
+
+        switch(this.type) {
+            case 'JANITOR':
+                // 50% Mop, 30% Janitor's Keys, 20% Antacid
+                if (roll < 0.5) return { type: 'weapon', name: 'MOP' };
+                if (roll < 0.8) return { type: 'equipment', name: 'JANITORS_KEYS' };
+                return { type: 'consumable', name: 'ANTACID' };
+
+            case 'GREMLIN':
+                // 50% Wrench, 30% Tools, 20% Nothing
+                if (roll < 0.5) return { type: 'weapon', name: 'WRENCH' };
+                if (roll < 0.8) return { type: 'consumable', name: 'ANTACID' };  // Tools→Antacid for now
+                return null;
+
+            case 'RAT':
+                // 10% Fiber Bar, 5% Random consumable, 85% Nothing
+                if (roll < 0.10) return { type: 'consumable', name: 'FIBER_BAR' };
+                if (roll < 0.15) {
+                    const consumables = ['ANTACID', 'DONUT', 'COFFEE'];
+                    return { type: 'consumable', name: consumables[Math.floor(Math.random() * consumables.length)] };
+                }
+                return null;
+
+            case 'PIPE_MONSTER':
+                // 70% Plunger, 20% Antacid, 10% Legendary (for now: Ceremonial Plunger)
+                if (roll < 0.7) return { type: 'weapon', name: 'PLUNGER' };
+                if (roll < 0.9) return { type: 'consumable', name: 'ANTACID' };
+                return { type: 'weapon', name: 'CEREMONIAL_PLUNGER' };
+
+            case 'COFFEE_ZOMBIE':
+                // 60% chance Coffee
+                if (roll < 0.6) return { type: 'consumable', name: 'COFFEE' };
+                return null;
+
+            default:
+                // Security Bot, The Desperate, etc. - no drops for now
+                return null;
+        }
+    }
+
+    /**
      * Update enemy cooldowns
      * @param {number} deltaTime - Time in milliseconds since last frame
      */
@@ -200,4 +297,117 @@ export const ENEMY_COFFEE_ZOMBIE = {
     moveSpeed: 2.0,
     char: 'Z',
     color: '#aa5500'  // Brown (coffee color)
+};
+
+/**
+ * Janitor Enforcer - Territorial guard enemy (floors 7-5)
+ * Health: 60 HP (tanky)
+ * Damage: 12-18 (moderate-high)
+ * Attack Cooldown: 1.2 sec (medium, area attack 2-tile reach)
+ * Move Speed: 1.5 tiles/sec (medium)
+ * Behavior: Guards special rooms (vaults), uses pillars for cover
+ * Drop: 50% Mop, 30% Janitor's Keys, 20% Antacid
+ */
+export const ENEMY_JANITOR = {
+    name: 'Janitor Enforcer',
+    health: 60,
+    damageMin: 12,
+    damageMax: 18,
+    attackCooldownTime: 1.2,
+    moveSpeed: 1.5,
+    char: 'J',
+    color: '#8b4513',  // Brown (janitor uniform)
+    territorial: true,
+    guardVaults: true
+};
+
+/**
+ * Maintenance Gremlin - Chaotic fast enemy (floors 6-3)
+ * Health: 25 HP (fragile)
+ * Damage: 6-10 (low)
+ * Attack Cooldown: 1.0 sec (medium)
+ * Move Speed: 2.5 tiles/sec (very fast!)
+ * Behavior: Erratic movement, flees when damaged, pack tactics (spawn in groups of 2)
+ * Drop: 50% Wrench, 30% Tools, 20% Nothing
+ */
+export const ENEMY_GREMLIN = {
+    name: 'Maintenance Gremlin',
+    health: 25,
+    damageMin: 6,
+    damageMax: 10,
+    attackCooldownTime: 1.0,
+    moveSpeed: 2.5,
+    char: 'g',
+    color: '#556b2f',  // Dark olive green
+    fleeWhenDamaged: true,  // Coward AI
+    packSpawn: 2  // Spawn in groups of 2
+};
+
+/**
+ * Sewer Rat - Swarm enemy (floors 4-2)
+ * Health: 10 HP (very fragile)
+ * Damage: 4-8 (low)
+ * Attack Cooldown: 0.7 sec (quick bites)
+ * Move Speed: 2.0 tiles/sec (fast)
+ * Behavior: Swarm spawns (2-4 together), surround player, flee at 50% HP if alone
+ * Drop: 10% Fiber Bar, 5% Random consumable, 85% Nothing
+ */
+export const ENEMY_RAT = {
+    name: 'Sewer Rat',
+    health: 10,
+    damageMin: 4,
+    damageMax: 8,
+    attackCooldownTime: 0.7,
+    moveSpeed: 2.0,
+    char: 'r',
+    color: '#654321',  // Dark brown
+    swarmSpawn: true,  // Spawn in groups of 2-4
+    fleeAt50Percent: true,  // Flee when health < 50% if alone
+    swarmCourage: true  // Don't flee if 2+ rats nearby
+};
+
+/**
+ * Pipe Monster - Tank enemy (floors 3-1)
+ * Health: 100 HP (very tanky, mini-boss tier)
+ * Damage: 20-30 (high)
+ * Attack Cooldown: 2.0 sec (slow, heavy hits)
+ * Move Speed: 0.8 tiles/sec (slow)
+ * Behavior: Blocks corridors, guards stairs, heals 2 HP/sec in water
+ * Drop: 70% Plunger, 20% Antacid, 10% Legendary
+ */
+export const ENEMY_PIPE_MONSTER = {
+    name: 'Pipe Monster',
+    health: 100,
+    damageMin: 20,
+    damageMax: 30,
+    attackCooldownTime: 2.0,
+    moveSpeed: 0.8,
+    char: 'P',
+    color: '#2f4f2f',  // Dark green (sewage)
+    tank: true,
+    guardsStairs: true,
+    waterRegen: 2  // HP/sec when in water
+};
+
+/**
+ * The Desperate - Competitor AI (all floors, 10% spawn rate)
+ * Health: 50 HP (same as player)
+ * Damage: 10-15 (weapon-dependent in future)
+ * Attack Cooldown: 1.0 sec (same as player)
+ * Move Speed: 1.0 tiles/sec (affected by desperation, same as player)
+ * Behavior: Goal-seeking (reach Floor 1), avoids combat, picks up items, has own desperation
+ * If reaches Floor 1 first → game over
+ */
+export const ENEMY_THE_DESPERATE = {
+    name: 'The Desperate',
+    health: 50,
+    damageMin: 10,
+    damageMax: 15,
+    attackCooldownTime: 1.0,
+    moveSpeed: 1.0,
+    char: '&',
+    color: '#9370db',  // Purple/magenta (distinct from player)
+    competitor: true,
+    goalSeeker: true,  // Seeks downstairs, not player
+    avoidsConflict: true  // Prefers avoiding combat
 };

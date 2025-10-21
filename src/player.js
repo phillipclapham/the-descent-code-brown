@@ -269,9 +269,28 @@ export class Player {
 
     // ===== END INVENTORY MANAGEMENT =====
 
-    // Render the player
+    // Render the player with visual effects (Session 11)
     render(renderer) {
-        renderer.drawChar(this.char, this.x, this.y, this.color);
+        const currentTime = Date.now();
+        let playerColor = this.color; // Default cyan
+
+        // Coffee speed boost: Bright green tint
+        if (this.speedBoostEndTime && currentTime < this.speedBoostEndTime) {
+            playerColor = '#00ff00'; // Bright green (speed boost active)
+        }
+
+        // Energy Drink invincibility: Flash between white and cyan
+        if (this.invincibilityEndTime && currentTime < this.invincibilityEndTime) {
+            const flash = Math.floor(currentTime / 150) % 2; // Flash every 150ms
+            playerColor = flash ? '#ffffff' : '#00ffff'; // White / Cyan
+        }
+
+        // Crash effect: Gray/dim (overrides other effects)
+        if (this.crashEndTime && currentTime < this.crashEndTime) {
+            playerColor = '#666666'; // Gray (slowed/crashed)
+        }
+
+        renderer.drawChar(this.char, this.x, this.y, playerColor);
     }
 
     // Set a message to display to the player

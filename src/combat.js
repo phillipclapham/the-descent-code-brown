@@ -1,6 +1,21 @@
 // Combat System - Handles player and enemy combat mechanics
 // Implements desperation-modified combat formulas from GAME_DESIGN.md
 
+import {
+    PLUNGER,
+    TOILET_BRUSH,
+    WRENCH,
+    MOP,
+    TP_LAUNCHER,
+    STAPLER,
+    FIRE_EXTINGUISHER,
+    COFFEE_POT,
+    KEYBOARD,
+    CEREMONIAL_PLUNGER
+} from './weapon.js';
+import { ANTACID, COFFEE, DONUT, ENERGY_DRINK } from './consumable.js';
+import { TILE_WEAPON, TILE_CONSUMABLE } from './tile-map.js';
+
 export class CombatSystem {
     constructor(game) {
         this.game = game; // Reference to Game instance for accessing player, tileMap, desperationMeter
@@ -166,18 +181,112 @@ export class CombatSystem {
             // Update enemy cooldowns
             enemy.update(deltaTime);
 
-            // AI: Move toward player (if not adjacent)
+            // AI: Determine movement behavior (Session 11 - Tactical AI)
             if (!enemy.isAdjacentToPlayer(this.game.player)) {
-                enemy.moveToward(this.game.player, this.game.tileMap, this.enemies);
+                // Check for flee behaviors
+                let shouldFlee = false;
+
+                // Gremlin: Flee when damaged
+                if (enemy.fleeWhenDamaged && enemy.health < enemy.maxHealth) {
+                    shouldFlee = true;
+                }
+
+                // Rat: Flee at 50% HP if alone
+                if (enemy.fleeAt50Percent && enemy.health < enemy.maxHealth * 0.5) {
+                    // Check swarm courage: Don't flee if 2+ rats nearby
+                    if (enemy.swarmCourage) {
+                        const nearbyAllies = this.enemies.filter(e =>
+                            e.type === enemy.type &&
+                            e !== enemy &&
+                            Math.abs(e.x - enemy.x) + Math.abs(e.y - enemy.y) <= 3
+                        );
+                        // Only flee if alone (< 2 nearby allies)
+                        shouldFlee = (nearbyAllies.length < 2);
+                    } else {
+                        shouldFlee = true;
+                    }
+                }
+
+                // Execute movement
+                if (shouldFlee) {
+                    enemy.moveAwayFrom(this.game.player, this.game.tileMap, this.enemies);
+                } else {
+                    enemy.moveToward(this.game.player, this.game.tileMap, this.enemies);
+                }
             }
 
             // Try to attack player (if adjacent and cooldown ready)
             this.handleEnemyAttack(enemy);
         }
 
+        // Handle enemy drops and clean up dead enemies (Session 11)
+        const deadEnemies = this.enemies.filter(e => e.health <= 0);
+        for (const deadEnemy of deadEnemies) {
+            // Try to drop an item
+            const drop = deadEnemy.dropItem();
+            if (drop) {
+                this.spawnDrop(deadEnemy.x, deadEnemy.y, drop);
+                console.log(`  💰 ${deadEnemy.name} dropped ${drop.name}!`);
+            }
+        }
+
         // Clean up dead enemies (remove from array)
         this.enemies = this.enemies.filter(e => e.health > 0);
+    }
 
-        // Future Session 9d: Handle weapon/item pickups
+    // Spawn dropped item on map (Session 11)
+    // Called when enemy dies and drops an item
+    spawnDrop(x, y, drop) {
+        const { type, name } = drop;
+
+        if (type === 'weapon') {
+            // Spawn weapon tile
+            this.game.tileMap.setTile(x, y, TILE_WEAPON);
+            // Get weapon object by name
+            const weapon = this.getWeaponByName(name);
+            if (weapon) {
+                const weaponKey = `${x},${y}`;
+                this.weapons.set(weaponKey, weapon);
+            }
+        } else if (type === 'consumable') {
+            // Spawn consumable tile
+            this.game.tileMap.setTile(x, y, TILE_CONSUMABLE);
+            // Get consumable object by name
+            const consumable = this.getConsumableByName(name);
+            if (consumable) {
+                const consumableKey = `${x},${y}`;
+                this.consumables.set(consumableKey, consumable);
+            }
+        }
+        // Note: 'equipment' type not yet implemented (Phase 4)
+    }
+
+    // Get weapon object by name (Session 11)
+    getWeaponByName(name) {
+        const weaponMap = {
+            'PLUNGER': PLUNGER,
+            'TOILET_BRUSH': TOILET_BRUSH,
+            'WRENCH': WRENCH,
+            'MOP': MOP,
+            'TP_LAUNCHER': TP_LAUNCHER,
+            'STAPLER': STAPLER,
+            'FIRE_EXTINGUISHER': FIRE_EXTINGUISHER,
+            'COFFEE_POT': COFFEE_POT,
+            'KEYBOARD': KEYBOARD,
+            'CEREMONIAL_PLUNGER': CEREMONIAL_PLUNGER
+        };
+        return weaponMap[name] || null;
+    }
+
+    // Get consumable object by name (Session 11)
+    getConsumableByName(name) {
+        const consumableMap = {
+            'ANTACID': ANTACID,
+            'COFFEE': COFFEE,
+            'DONUT': DONUT,
+            'ENERGY_DRINK': ENERGY_DRINK,
+            'FIBER_BAR': ANTACID  // Placeholder: Fiber Bar not implemented yet, use Antacid
+        };
+        return consumableMap[name] || null;
     }
 }
