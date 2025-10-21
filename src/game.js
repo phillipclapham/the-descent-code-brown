@@ -511,11 +511,11 @@ class Game {
         ctx.textAlign = 'left';
     }
 
-    // Render Clench UI (Session 12a)
+    // Render Clench UI (Session 12a - top-right corner to avoid overlap)
     renderClenchUI() {
         const ctx = this.renderer.ctx;
         const x = 790; // Right-aligned position (10px from right edge)
-        const y = 520;
+        const y = 20;  // Top of screen to avoid overlap with status bar
 
         ctx.font = '14px "Courier New", monospace';
         ctx.textAlign = 'right'; // Right-align to prevent overflow
