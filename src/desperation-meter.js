@@ -11,6 +11,9 @@ export class DesperationMeter {
         this.bashWallsUnlocked = false;
         this.forceDoorsUnlocked = false;
 
+        // Session 12d: Track break room state for entry/exit messages
+        this.inBreakRoom = false;
+
         // Create DOM element for the meter
         this.element = this.createMeterElement();
 
@@ -59,6 +62,26 @@ export class DesperationMeter {
         // Check if clenched (Session 12a)
         if (player && player.clenchActive) {
             return; // Don't increment desperation while clenched
+        }
+
+        // Session 12d: Check if player in break room (desperation pauses)
+        if (player && player.tileMap && player.tileMap.isPositionInBreakRoom) {
+            const nowInBreakRoom = player.tileMap.isPositionInBreakRoom(player.x, player.y);
+
+            // Entry/exit messages
+            if (nowInBreakRoom && !this.inBreakRoom) {
+                player.setMessage('BREAK ROOM - Desperation paused');
+                console.log('🛋️  Entered break room (desperation paused)');
+            } else if (!nowInBreakRoom && this.inBreakRoom) {
+                console.log('🚪 Left break room (desperation resuming)');
+            }
+
+            this.inBreakRoom = nowInBreakRoom;
+
+            // Pause desperation while in break room
+            if (nowInBreakRoom) {
+                return; // Don't increment in break room (safe zone!)
+            }
         }
 
         if (this.value >= this.maxValue) {
@@ -135,6 +158,8 @@ export class DesperationMeter {
         // Session 12c: Reset threshold unlock flags
         this.bashWallsUnlocked = false;
         this.forceDoorsUnlocked = false;
+        // Session 12d: Reset break room state
+        this.inBreakRoom = false;
         this.render();
     }
 

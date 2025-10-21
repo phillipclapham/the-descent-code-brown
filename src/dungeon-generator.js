@@ -210,7 +210,8 @@ export class DungeonGenerator {
         }
 
         // Assign special room types (1-2 per floor)
-        this.assignSpecialRooms(metrics);
+        // Session 12d: Pass tileMap and floorNumber for break room registration
+        this.assignSpecialRooms(metrics, tileMap, floorNumber);
 
         // Apply vault templates to vault rooms (hand-crafted layouts)
         this.applyVaultTemplates(tileMap);
@@ -565,14 +566,15 @@ export class DungeonGenerator {
     }
 
     // Assign special room types to 1-2 rooms per floor
-    assignSpecialRooms(metrics) {
+    assignSpecialRooms(metrics, tileMap, floorNumber) {  // Session 12d: Add tileMap and floorNumber params
         if (this.rooms.length < 2) return;
 
         const numSpecial = 1 + Math.floor(Math.random() * 2); // 1-2 special rooms
 
         // CRITICAL: Only 1 vault per floor (1 key = 1 locked door)
         // Other special types don't have locked doors
-        const specialTypes = ['shrine', 'arena', 'library', 'trap'];
+        // Session 12d: Added 'break_room' special type
+        const specialTypes = ['shrine', 'arena', 'library', 'trap', 'break_room'];
 
         // Select random rooms for special designation (skip first room with upstairs, and last room with downstairs)
         const availableRooms = this.rooms.slice(1, -1);
@@ -592,6 +594,19 @@ export class DungeonGenerator {
             } else {
                 // Pick from non-vault types
                 specialType = specialTypes[Math.floor(Math.random() * specialTypes.length)];
+
+                // Session 12d: Break rooms only on floors 8-3 (office/maintenance, not sewer)
+                // 25% spawn rate to make them rare/special
+                if (specialType === 'break_room') {
+                    const canHaveBreakRoom = floorNumber >= 3 && floorNumber <= 8;
+                    const spawnBreakRoom = Math.random() < 0.25;
+
+                    if (!canHaveBreakRoom || !spawnBreakRoom) {
+                        // Re-pick from non-break-room types
+                        const otherTypes = ['shrine', 'arena', 'library', 'trap'];
+                        specialType = otherTypes[Math.floor(Math.random() * otherTypes.length)];
+                    }
+                }
             }
 
             room.specialType = specialType;
@@ -601,6 +616,11 @@ export class DungeonGenerator {
             if (specialType === 'vault') {
                 room.hasLockedDoor = true;
                 room.keyRequired = true;
+            }
+
+            // Session 12d: Register break room bounds for desperation pause detection
+            if (specialType === 'break_room') {
+                tileMap.addBreakRoom(room.x, room.y, room.width, room.height);
             }
         }
     }

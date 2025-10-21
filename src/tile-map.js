@@ -38,6 +38,10 @@ export class TileMap {
         // Map key: "x,y" -> boolean (true if bashable)
         this.wallBashable = new Map();
 
+        // Session 12d: Break room safe zones (desperation pauses inside)
+        // Array of {x, y, width, height} for room bounds checking
+        this.breakRooms = [];
+
         console.log(`TileMap initialized: ${width}x${height}`);
     }
 
@@ -95,6 +99,20 @@ export class TileMap {
     isWallBashable(x, y) {
         const key = `${x},${y}`;
         return this.wallBashable.has(key) && this.wallBashable.get(key) === true;
+    }
+
+    // Session 12d: Add break room bounds for desperation pause detection
+    addBreakRoom(x, y, width, height) {
+        this.breakRooms.push({ x, y, width, height });
+        console.log(`   🛋️  Break Room registered at (${x}, ${y}) size ${width}x${height}`);
+    }
+
+    // Session 12d: Check if position is inside any break room
+    isPositionInBreakRoom(x, y) {
+        return this.breakRooms.some(room =>
+            x >= room.x && x < room.x + room.width &&
+            y >= room.y && y < room.y + room.height
+        );
     }
 
     // Fill a rectangular area with a tile type

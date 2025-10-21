@@ -229,6 +229,56 @@ class Game {
             }
         }
 
+        // Session 12d: Spawn extra consumables in break rooms
+        if (this.tileMap.breakRooms && this.tileMap.breakRooms.length > 0) {
+            for (const breakRoom of this.tileMap.breakRooms) {
+                const numBreakRoomItems = 2 + Math.floor(Math.random() * 2); // 2-3 consumables
+                console.log(`  🛋️  Spawning ${numBreakRoomItems} consumables in Break Room at (${breakRoom.x}, ${breakRoom.y})`);
+
+                for (let i = 0; i < numBreakRoomItems; i++) {
+                    // Find random position inside break room
+                    let spawnPos = null;
+                    let attempts = 0;
+
+                    while (attempts < 30 && !spawnPos) {
+                        attempts++;
+                        const x = breakRoom.x + Math.floor(Math.random() * breakRoom.width);
+                        const y = breakRoom.y + Math.floor(Math.random() * breakRoom.height);
+
+                        const tile = this.tileMap.getTile(x, y);
+
+                        // Only spawn on plain floor
+                        if (tile === TILE_FLOOR) {
+                            spawnPos = { x, y };
+                        }
+                    }
+
+                    if (spawnPos) {
+                        // Weighted probabilities for break room consumables
+                        // Coffee (60%), Donut (30%), Energy Drink (10%)
+                        const roll = Math.random();
+                        let consumable;
+                        if (roll < 0.60) {
+                            consumable = COFFEE;
+                        } else if (roll < 0.90) {
+                            consumable = DONUT;
+                        } else {
+                            consumable = ENERGY_DRINK;
+                        }
+
+                        // Place on map
+                        this.tileMap.setTile(spawnPos.x, spawnPos.y, TILE_CONSUMABLE);
+
+                        // Store in combat system
+                        const consumableKey = `${spawnPos.x},${spawnPos.y}`;
+                        this.combat.consumables.set(consumableKey, consumable);
+
+                        console.log(`     ☕ ${consumable.name} at (${spawnPos.x}, ${spawnPos.y})`);
+                    }
+                }
+            }
+        }
+
         console.log(`✅ Floor ${displayFloor} entities spawned: ${this.combat.enemies.length} enemies, ${this.combat.weapons.size} weapons, ${this.combat.consumables.size} consumables`);
     }
 
