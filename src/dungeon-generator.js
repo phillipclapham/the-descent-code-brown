@@ -15,7 +15,9 @@ import {
     TILE_KEY,
     TILE_WEAPON,
     TILE_FEATURE,
-    TILE_PILLAR
+    TILE_PILLAR,
+    TILE_WATER,
+    TILE_TRAP
 } from './tile-map.js';
 import {
     categorizeRoomBySize,
@@ -227,6 +229,9 @@ export class DungeonGenerator {
 
         // Session 12c: Mark some walls as bashable (desperation ability)
         this.markBashableWalls(tileMap, floorNumber);
+
+        // Session 12c: Place environmental hazards (water, traps)
+        this.placeEnvironmentalHazards(tileMap, floorNumber);
 
         // Finalize and log metrics
         metrics.roomCount = this.rooms.length;
@@ -1180,6 +1185,87 @@ export class DungeonGenerator {
                 if (onPerimeter) {
                     return true;
                 }
+            }
+        }
+        return false;
+    }
+
+    // Session 12c: Place environmental hazards (water, traps)
+    placeEnvironmentalHazards(tileMap, floorNumber) {
+        let waterPlaced = 0;
+        let trapsPlaced = 0;
+
+        // Water pools in sewer floors (floors 4-1)
+        if (floorNumber <= 4) {
+            // Place 1-3 water puddles per floor
+            const numPuddles = 1 + Math.floor(Math.random() * 3);
+
+            for (let i = 0; i < numPuddles; i++) {
+                // Pick a random room
+                const room = this.rooms[Math.floor(Math.random() * this.rooms.length)];
+
+                // Place 2-5 water tiles in this room
+                const waterTiles = 2 + Math.floor(Math.random() * 4);
+
+                for (let j = 0; j < waterTiles; j++) {
+                    const wx = room.x + 1 + Math.floor(Math.random() * (room.width - 2));
+                    const wy = room.y + 1 + Math.floor(Math.random() * (room.height - 2));
+
+                    // Only place on floor tiles (don't overwrite stairs, items, etc.)
+                    if (tileMap.getTile(wx, wy) === TILE_FLOOR) {
+                        tileMap.setTile(wx, wy, TILE_WATER);
+                        waterPlaced++;
+                    }
+                }
+            }
+        }
+
+        // Traps in all floors
+        // Place traps in trap rooms and corridors
+        for (const room of this.rooms) {
+            // Trap rooms have 3-5 traps
+            if (room.specialType === 'trap') {
+                const numTraps = 3 + Math.floor(Math.random() * 3);
+
+                for (let i = 0; i < numTraps; i++) {
+                    const tx = room.x + 1 + Math.floor(Math.random() * (room.width - 2));
+                    const ty = room.y + 1 + Math.floor(Math.random() * (room.height - 2));
+
+                    if (tileMap.getTile(tx, ty) === TILE_FLOOR) {
+                        tileMap.setTile(tx, ty, TILE_TRAP);
+                        trapsPlaced++;
+                    }
+                }
+            }
+        }
+
+        // Also place 1-2 random traps in corridors
+        const corridorTraps = 1 + Math.floor(Math.random() * 2);
+        let attempts = 0;
+
+        while (trapsPlaced < corridorTraps + 3 && attempts < 50) {
+            attempts++;
+            const tx = 2 + Math.floor(Math.random() * (this.width - 4));
+            const ty = 2 + Math.floor(Math.random() * (this.height - 4));
+
+            // Place on floor tiles that are NOT in rooms (corridors only)
+            if (tileMap.getTile(tx, ty) === TILE_FLOOR && !this.isInAnyRoom(tx, ty)) {
+                tileMap.setTile(tx, ty, TILE_TRAP);
+                trapsPlaced++;
+            }
+        }
+
+        if (waterPlaced > 0 || trapsPlaced > 0) {
+            console.log(`💧 Placed ${waterPlaced} water tiles, ${trapsPlaced} traps`);
+        }
+    }
+
+    // Helper: Check if position is inside any room
+    isInAnyRoom(x, y) {
+        for (const room of this.rooms) {
+            if (x >= room.x && x < room.x + room.width &&
+                y >= room.y && y < room.y + room.height) {
+                return true;
             }
         }
         return false;

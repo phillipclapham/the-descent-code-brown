@@ -7,6 +7,10 @@ export class DesperationMeter {
         this.maxValue = 100;
         this.increaseRate = 0.35; // Percent per second (tuned in Session 12c for strategic play)
 
+        // Session 12c: Track threshold crossings for power unlock messages
+        this.bashWallsUnlocked = false;
+        this.forceDoorsUnlocked = false;
+
         // Create DOM element for the meter
         this.element = this.createMeterElement();
 
@@ -62,9 +66,28 @@ export class DesperationMeter {
             return;
         }
 
+        const oldValue = this.value;
+
         // Increase based on delta time (deltaTime is in milliseconds)
         const increase = (this.increaseRate / 1000) * deltaTime;
         this.value = Math.min(this.value + increase, this.maxValue);
+
+        // Session 12c: Check for threshold crossings and show power unlock messages
+        if (player) {
+            // Bash walls unlock at 75%
+            if (oldValue < 75 && this.value >= 75 && !this.bashWallsUnlocked) {
+                this.bashWallsUnlocked = true;
+                player.setMessage('DESPERATE! You can now BASH through weak walls!');
+                console.log('🧱 Bash walls ability unlocked at 75% desperation');
+            }
+
+            // Force doors unlock at 90%
+            if (oldValue < 90 && this.value >= 90 && !this.forceDoorsUnlocked) {
+                this.forceDoorsUnlocked = true;
+                player.setMessage('EXTREME! You can now FORCE locked doors open!');
+                console.log('🚪 Force doors ability unlocked at 90% desperation');
+            }
+        }
 
         // Update visual
         this.render();
@@ -109,6 +132,9 @@ export class DesperationMeter {
     // Reset meter (for new game, level transitions, etc.)
     reset() {
         this.value = 0;
+        // Session 12c: Reset threshold unlock flags
+        this.bashWallsUnlocked = false;
+        this.forceDoorsUnlocked = false;
         this.render();
     }
 
@@ -126,6 +152,15 @@ export class DesperationMeter {
     // amount is in percentage points (e.g., 25 = reduce by 25%)
     reduceBy(amount) {
         this.value = Math.max(this.value - amount, 0);
+
+        // Session 12c: Reset threshold unlock flags if we drop back below them
+        if (this.value < 75) {
+            this.bashWallsUnlocked = false;
+        }
+        if (this.value < 90) {
+            this.forceDoorsUnlocked = false;
+        }
+
         this.render();
         console.log(`Desperation reduced by ${amount}% (now ${Math.floor(this.value)}%)`);
     }

@@ -867,11 +867,21 @@ class Game {
 
     // Draw tile map
     drawTileMap() {
+        // Session 12c: Get player desperation for bashable wall highlighting
+        const desperation = this.desperationMeter ? this.desperationMeter.getValue() : 0;
+        const canBashWalls = desperation >= 75;
+
         for (let y = 0; y < GRID_HEIGHT; y++) {
             for (let x = 0; x < GRID_WIDTH; x++) {
                 const tile = this.tileMap.getTile(x, y);
                 const char = this.tileMap.getTileChar(tile);
-                const color = this.tileMap.getTileColor(tile);
+                let color = this.tileMap.getTileColor(tile);
+
+                // Session 12c: Highlight bashable walls when at 75%+ desperation
+                if (tile === 1 && canBashWalls && this.tileMap.isWallBashable(x, y)) {
+                    color = '#aa6600'; // Orange-brown color for bashable walls (weaker looking)
+                }
+
                 this.renderer.drawChar(char, x, y, color);
             }
         }
