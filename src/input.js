@@ -62,4 +62,15 @@ export class InputHandler {
     isRestartPressed() {
         return this.isKeyPressed('r') || this.isKeyPressed('R');
     }
+
+    // Get number key pressed (1-8 for inventory slots) (Session 10)
+    // Returns slot index (0-7) if a number key is pressed, null otherwise
+    getNumberPressed() {
+        for (let i = 1; i <= 8; i++) {
+            if (this.isKeyPressed(String(i))) {
+                return i - 1; // Return 0-7 (array indices)
+            }
+        }
+        return null; // No number key pressed
+    }
 }

@@ -7,6 +7,7 @@ import {
     TILE_DOOR_LOCKED,
     TILE_KEY,
     TILE_WEAPON,
+    TILE_CONSUMABLE,
     TILE_FLOOR
 } from './tile-map.js';
 
@@ -24,14 +25,22 @@ export class Player {
         this.moveDelay = 200; // milliseconds between moves
         this.lastMoveTime = 0;
 
-        // Inventory
+        // Inventory (Session 10)
         this.keysCollected = 0;
+        this.inventory = new Array(8).fill(null); // 8 slots for weapons and consumables
+        this.inventorySize = 8;
+        this.selectedSlot = 0; // Currently selected inventory slot (0-7)
 
         // Combat properties
         this.health = 100;
         this.maxHealth = 100;
         this.attackCooldown = 0; // seconds
         this.equippedWeapon = null;
+
+        // Consumable effect timers (Session 10)
+        this.speedBoostEndTime = 0;      // Coffee: +30% speed for 30 seconds
+        this.invincibilityEndTime = 0;   // Energy Drink: invincibility for 10 seconds
+        this.crashEndTime = 0;           // Energy Drink: slow crash for 5 seconds after invincibility
 
         // Message system (for door interaction feedback)
         this.message = '';
@@ -86,23 +95,62 @@ export class Player {
                 // Continue to move onto the tile
             }
 
-            // Handle weapon pickup (Session 9d)
+            // Handle weapon pickup (Session 10: use inventory)
             if (tile === TILE_WEAPON && combat) {
                 // Find weapon at this position in combat.weapons Map
                 const weaponKey = `${newX},${newY}`;
                 const weapon = combat.weapons.get(weaponKey);
 
                 if (weapon) {
-                    // Equip the weapon
-                    this.equippedWeapon = weapon;
-                    this.setMessage(`Picked up ${weapon.name}!`);
-                    console.log(`Weapon picked up: ${weapon.name} at (${newX}, ${newY})`);
+                    // Try to add to inventory
+                    if (this.addToInventory(weapon)) {
+                        // Success! Auto-equip if no weapon equipped
+                        if (this.equippedWeapon === null) {
+                            this.equippedWeapon = weapon;
+                            this.setMessage(`Picked up and equipped ${weapon.name}!`);
+                        } else {
+                            this.setMessage(`Picked up ${weapon.name} (in inventory)`);
+                        }
+                        console.log(`Weapon picked up: ${weapon.name} at (${newX}, ${newY})`);
 
-                    // Remove weapon from map and combat system
-                    this.tileMap.setTile(newX, newY, TILE_FLOOR);
-                    combat.weapons.delete(weaponKey);
+                        // Remove weapon from map and combat system
+                        this.tileMap.setTile(newX, newY, TILE_FLOOR);
+                        combat.weapons.delete(weaponKey);
+                    } else {
+                        // Inventory full - don't move onto tile, show message
+                        this.setMessage('Inventory full!');
+                        return false;
+                    }
                 } else {
                     console.warn(`TILE_WEAPON at (${newX}, ${newY}) but no weapon in combat.weapons Map!`);
+                    // Clear the tile anyway to prevent stuck state
+                    this.tileMap.setTile(newX, newY, TILE_FLOOR);
+                }
+                // Continue to move onto the tile
+            }
+
+            // Handle consumable pickup (Session 10)
+            if (tile === TILE_CONSUMABLE && combat) {
+                // Find consumable at this position in combat.consumables Map
+                const consumableKey = `${newX},${newY}`;
+                const consumable = combat.consumables.get(consumableKey);
+
+                if (consumable) {
+                    // Try to add to inventory
+                    if (this.addToInventory(consumable)) {
+                        this.setMessage(`Picked up ${consumable.name}!`);
+                        console.log(`Consumable picked up: ${consumable.name} at (${newX}, ${newY})`);
+
+                        // Remove consumable from map and combat system
+                        this.tileMap.setTile(newX, newY, TILE_FLOOR);
+                        combat.consumables.delete(consumableKey);
+                    } else {
+                        // Inventory full - don't move onto tile, show message
+                        this.setMessage('Inventory full!');
+                        return false;
+                    }
+                } else {
+                    console.warn(`TILE_CONSUMABLE at (${newX}, ${newY}) but no consumable in combat.consumables Map!`);
                     // Clear the tile anyway to prevent stuck state
                     this.tileMap.setTile(newX, newY, TILE_FLOOR);
                 }
@@ -156,6 +204,70 @@ export class Player {
             this.attackCooldown -= deltaTime / 1000; // Convert to seconds
         }
     }
+
+    // ===== INVENTORY MANAGEMENT (Session 10) =====
+
+    // Add item to inventory (weapon or consumable)
+    // Returns true if successful, false if inventory full
+    addToInventory(item) {
+        // Find first empty slot
+        const emptySlot = this.inventory.findIndex(slot => slot === null);
+        if (emptySlot !== -1) {
+            this.inventory[emptySlot] = item;
+            console.log(`Added ${item.name} to inventory slot ${emptySlot + 1}`);
+            return true;
+        }
+        console.log('Inventory full! Cannot add item.');
+        return false; // Inventory full
+    }
+
+    // Select inventory slot (0-7)
+    selectSlot(slotIndex) {
+        if (slotIndex >= 0 && slotIndex < this.inventorySize) {
+            this.selectedSlot = slotIndex;
+            console.log(`Selected inventory slot ${slotIndex + 1}`);
+        }
+    }
+
+    // Use item in selected slot
+    // For weapons: equip them
+    // For consumables: use them (and remove from inventory)
+    useSlot(slotIndex, desperationMeter, game) {
+        const item = this.inventory[slotIndex];
+        if (!item) {
+            return; // Empty slot, nothing to do
+        }
+
+        // Check if item is a weapon (has damageMin property)
+        const isWeapon = item.damageMin !== undefined;
+        // Check if item is a consumable (has effectFn property)
+        const isConsumable = item.effectFn !== undefined;
+
+        if (isWeapon) {
+            // Equip weapon
+            this.equippedWeapon = item;
+            this.setMessage(`Equipped ${item.name}`);
+            console.log(`Equipped ${item.name} from slot ${slotIndex + 1}`);
+        } else if (isConsumable) {
+            // Use consumable
+            item.use(this, desperationMeter, game);
+            this.setMessage(`Used ${item.name}`);
+            this.inventory[slotIndex] = null; // Remove consumable after use
+            console.log(`Used ${item.name} from slot ${slotIndex + 1} (removed from inventory)`);
+        }
+    }
+
+    // Remove item from inventory slot
+    removeFromInventory(slotIndex) {
+        if (slotIndex >= 0 && slotIndex < this.inventorySize) {
+            const item = this.inventory[slotIndex];
+            this.inventory[slotIndex] = null;
+            return item;
+        }
+        return null;
+    }
+
+    // ===== END INVENTORY MANAGEMENT =====
 
     // Render the player
     render(renderer) {

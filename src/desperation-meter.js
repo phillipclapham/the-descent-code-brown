@@ -110,4 +110,20 @@ export class DesperationMeter {
     setRate(rate) {
         this.increaseRate = rate;
     }
+
+    // Reduce desperation by percentage points (Session 10: consumables)
+    // amount is in percentage points (e.g., 25 = reduce by 25%)
+    reduceBy(amount) {
+        this.value = Math.max(this.value - amount, 0);
+        this.render();
+        console.log(`Desperation reduced by ${amount}% (now ${Math.floor(this.value)}%)`);
+    }
+
+    // Increase desperation by percentage points (Session 10: consumables)
+    // amount is in percentage points (e.g., 15 = increase by 15%)
+    increaseBy(amount) {
+        this.value = Math.min(this.value + amount, this.maxValue);
+        this.render();
+        console.log(`Desperation increased by ${amount}% (now ${Math.floor(this.value)}%)`);
+    }
 }

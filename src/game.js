@@ -4,11 +4,23 @@ import { Renderer, GRID_WIDTH, GRID_HEIGHT } from './renderer.js';
 import { Player } from './player.js';
 import { InputHandler } from './input.js';
 import { DesperationMeter } from './desperation-meter.js';
-import { TileMap, TILE_FLOOR, TILE_STAIRS, TILE_STAIRS_UP, TILE_TOILET, TILE_WEAPON } from './tile-map.js';
+import { TileMap, TILE_FLOOR, TILE_STAIRS, TILE_STAIRS_UP, TILE_TOILET, TILE_WEAPON, TILE_CONSUMABLE } from './tile-map.js';
 import { DungeonGenerator } from './dungeon-generator.js';
 import { CombatSystem } from './combat.js';
 import { Enemy, ENEMY_SECURITY_BOT, ENEMY_COFFEE_ZOMBIE } from './enemy.js';
-import { PLUNGER, TOILET_BRUSH } from './weapon.js';
+import {
+    PLUNGER,
+    TOILET_BRUSH,
+    WRENCH,
+    MOP,
+    TP_LAUNCHER,
+    STAPLER,
+    FIRE_EXTINGUISHER,
+    COFFEE_POT,
+    KEYBOARD,
+    CEREMONIAL_PLUNGER
+} from './weapon.js';
+import { ANTACID, COFFEE, DONUT, ENERGY_DRINK } from './consumable.js';
 
 class Game {
     constructor() {
@@ -76,12 +88,13 @@ class Game {
         console.log(`${this.numFloors} floors generated`);
     }
 
-    // Spawn enemies and weapons for the current floor
+    // Spawn enemies, weapons, and consumables for the current floor (Session 10)
     // Called on game start and floor transitions
     spawnFloorEntities() {
-        // Clear any existing enemies and weapons
+        // Clear any existing enemies, weapons, and consumables
         this.combat.enemies = [];
         this.combat.weapons.clear();
+        this.combat.consumables.clear(); // Session 10
 
         const displayFloor = this.numFloors - this.currentFloor;
         console.log(`🎲 Spawning entities for Floor ${displayFloor}...`);
@@ -137,8 +150,8 @@ class Game {
 
             // Only spawn on plain floor
             if (tile === TILE_FLOOR) {
-                // Randomly choose weapon (50/50 split)
-                const weapon = Math.random() < 0.5 ? PLUNGER : TOILET_BRUSH;
+                // Get random weapon from full pool (Session 10)
+                const weapon = this.getRandomWeapon();
 
                 // Place on map
                 this.tileMap.setTile(x, y, TILE_WEAPON);
@@ -152,7 +165,63 @@ class Game {
             }
         }
 
-        console.log(`✅ Floor ${displayFloor} entities spawned: ${this.combat.enemies.length} enemies, ${this.combat.weapons.size} weapons`);
+        // Spawn 2-3 consumables per floor (Session 10)
+        const numConsumables = 2 + Math.floor(Math.random() * 2); // 2-3 consumables
+
+        for (let i = 0; i < numConsumables; i++) {
+            let consumableSpawned = false;
+            let attempts = 0;
+
+            while (attempts < 50 && !consumableSpawned) {
+                attempts++;
+                const x = 2 + Math.floor(Math.random() * (GRID_WIDTH - 4));
+                const y = 2 + Math.floor(Math.random() * (GRID_HEIGHT - 4));
+
+                const tile = this.tileMap.getTile(x, y);
+
+                // Only spawn on plain floor
+                if (tile === TILE_FLOOR) {
+                    // Get random consumable (weighted probabilities)
+                    const consumable = this.getRandomConsumable();
+
+                    // Place on map
+                    this.tileMap.setTile(x, y, TILE_CONSUMABLE);
+
+                    // Store in combat system
+                    const consumableKey = `${x},${y}`;
+                    this.combat.consumables.set(consumableKey, consumable);
+
+                    console.log(`  Spawned ${consumable.name} at (${x}, ${y})`);
+                    consumableSpawned = true;
+                }
+            }
+        }
+
+        console.log(`✅ Floor ${displayFloor} entities spawned: ${this.combat.enemies.length} enemies, ${this.combat.weapons.size} weapons, ${this.combat.consumables.size} consumables`);
+    }
+
+    // Get random weapon from full weapon pool (Session 10)
+    getRandomWeapon() {
+        const allWeapons = [
+            PLUNGER, TOILET_BRUSH, WRENCH, MOP,
+            TP_LAUNCHER, STAPLER, FIRE_EXTINGUISHER,
+            COFFEE_POT, KEYBOARD, CEREMONIAL_PLUNGER
+        ];
+        return allWeapons[Math.floor(Math.random() * allWeapons.length)];
+    }
+
+    // Get random consumable with weighted probabilities (Session 10)
+    // Spawn rates from GAME_DESIGN.md:
+    // - Antacid: 40% (most common - essential desperation management)
+    // - Donut: 25% (healing)
+    // - Coffee: 20% (speed boost + desperation)
+    // - Energy Drink: 15% (invincibility + crash)
+    getRandomConsumable() {
+        const rand = Math.random() * 100;
+        if (rand < 40) return ANTACID;       // 40%
+        if (rand < 65) return DONUT;         // 25% (40 + 25 = 65)
+        if (rand < 85) return COFFEE;        // 20% (65 + 20 = 85)
+        return ENERGY_DRINK;                 // 15% (remaining)
     }
 
     // Initialize and start the game
@@ -219,6 +288,16 @@ class Game {
         // Handle attack input (SPACE key)
         if (this.input.isAttackPressed()) {
             this.combat.handlePlayerAttack();
+        }
+
+        // Handle inventory number key input (Session 10)
+        // Press 1-8 to select and use/equip items from inventory
+        const slotPressed = this.input.getNumberPressed();
+        if (slotPressed !== null) {
+            // Select the slot
+            this.player.selectSlot(slotPressed);
+            // Use/equip the item in that slot
+            this.player.useSlot(slotPressed, this.desperationMeter, this);
         }
 
         // Update player state
@@ -352,6 +431,9 @@ class Game {
         // Render player
         this.player.render(this.renderer);
 
+        // Draw inventory UI (Session 10)
+        this.drawInventoryUI();
+
         // Draw debug info
         this.drawDebugInfo();
 
@@ -377,6 +459,87 @@ class Game {
                 const color = this.tileMap.getTileColor(tile);
                 this.renderer.drawChar(char, x, y, color);
             }
+        }
+    }
+
+    // Draw inventory UI (Session 10)
+    // Shows 8 inventory slots with items and selection highlighting
+    // Positioned at bottom of screen above status bar to avoid map overlap
+    drawInventoryUI() {
+        const slotWidth = 40;
+        const slotHeight = 40;
+        const slotPadding = 5;
+        const inventoryBarHeight = 50; // Total height of inventory bar
+        const inventoryBarY = 505; // Position above status bar (status bar at 560)
+
+        // Draw inventory bar background panel (similar to status bar)
+        this.renderer.ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+        this.renderer.ctx.fillRect(0, inventoryBarY, 800, inventoryBarHeight);
+
+        // Draw border around inventory bar
+        this.renderer.ctx.strokeStyle = '#888888';
+        this.renderer.ctx.lineWidth = 2;
+        this.renderer.ctx.strokeRect(0, inventoryBarY, 800, inventoryBarHeight);
+
+        // Calculate starting X to center the 8 slots
+        const totalSlotsWidth = (slotWidth * 8) + (slotPadding * 7);
+        const startX = (800 - totalSlotsWidth) / 2;
+        const startY = inventoryBarY + 5; // 5px padding from top of bar
+
+        // Draw 8 inventory slots horizontally
+        for (let i = 0; i < 8; i++) {
+            const slotX = startX + i * (slotWidth + slotPadding);
+            const slotY = startY;
+
+            // Determine if this slot is selected
+            const isSelected = (i === this.player.selectedSlot);
+
+            // Slot background
+            this.renderer.ctx.fillStyle = isSelected ? 'rgba(100, 100, 255, 0.5)' : 'rgba(50, 50, 50, 0.8)';
+            this.renderer.ctx.fillRect(slotX, slotY, slotWidth, slotHeight);
+
+            // Slot border
+            this.renderer.ctx.strokeStyle = isSelected ? '#ffff00' : '#666666';
+            this.renderer.ctx.lineWidth = isSelected ? 3 : 1;
+            this.renderer.ctx.strokeRect(slotX, slotY, slotWidth, slotHeight);
+
+            // Slot number (1-8)
+            this.renderer.ctx.font = '10px "Courier New", monospace';
+            this.renderer.ctx.fillStyle = '#aaaaaa';
+            this.renderer.ctx.textAlign = 'left';
+            this.renderer.ctx.textBaseline = 'top';
+            this.renderer.ctx.fillText(String(i + 1), slotX + 2, slotY + 2);
+
+            // Item character (if slot has item)
+            const item = this.player.inventory[i];
+            if (item) {
+                this.renderer.ctx.font = 'bold 24px "Courier New", monospace';
+                this.renderer.ctx.fillStyle = item.color;
+                this.renderer.ctx.textAlign = 'center';
+                this.renderer.ctx.textBaseline = 'middle';
+                this.renderer.ctx.fillText(item.char, slotX + slotWidth / 2, slotY + slotHeight / 2 + 4);
+            }
+        }
+
+        // Item name tooltip (show name and stats of selected slot item)
+        // Display to the right of the slots
+        const selectedItem = this.player.inventory[this.player.selectedSlot];
+        if (selectedItem) {
+            let tooltipText = selectedItem.name;
+            // Add damage stats for weapons
+            if (selectedItem.damageMin !== undefined) {
+                tooltipText += ` (${Math.floor(selectedItem.damageMin)}-${Math.floor(selectedItem.damageMax)} dmg)`;
+            }
+
+            // Position tooltip to the right of slots
+            const tooltipX = startX + totalSlotsWidth + 15;
+            const tooltipY = inventoryBarY + (inventoryBarHeight / 2) - 7; // Vertically centered
+
+            this.renderer.ctx.font = '14px "Courier New", monospace';
+            this.renderer.ctx.fillStyle = '#ffff00';
+            this.renderer.ctx.textAlign = 'left';
+            this.renderer.ctx.textBaseline = 'middle';
+            this.renderer.ctx.fillText(tooltipText, tooltipX, tooltipY);
         }
     }
 

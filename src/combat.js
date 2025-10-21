@@ -6,6 +6,7 @@ export class CombatSystem {
         this.game = game; // Reference to Game instance for accessing player, tileMap, desperationMeter
         this.enemies = []; // Enemy array (will populate in Session 9c)
         this.weapons = new Map(); // Ground weapons: Map<"x,y", Weapon> (Session 9d)
+        this.consumables = new Map(); // Ground consumables: Map<"x,y", Consumable> (Session 10)
     }
 
     // Find nearest adjacent enemy (auto-targeting)
