@@ -8,7 +8,10 @@ import {
     TILE_KEY,
     TILE_WEAPON,
     TILE_CONSUMABLE,
-    TILE_FLOOR
+    TILE_FLOOR,
+    TILE_WALL,
+    TILE_WATER,
+    TILE_TRAP
 } from './tile-map.js';
 
 export class Player {
@@ -22,7 +25,8 @@ export class Player {
         this.tileMap = tileMap;
 
         // Movement timing
-        this.moveDelay = 200; // milliseconds between moves
+        this.baseMoveDelay = 200; // Base milliseconds between moves
+        this.moveDelay = 200; // Current milliseconds between moves (modified by water, speed boosts, etc.)
         this.lastMoveTime = 0;
 
         // Inventory (Session 10)
@@ -79,8 +83,17 @@ export class Player {
             }
 
             if (tile === TILE_DOOR_LOCKED) {
-                if (this.keysCollected > 0) {
-                    // Unlock the door
+                // Session 12c: Force door at 90%+ desperation
+                const desperation = this.desperationMeter ? this.desperationMeter.getValue() : 0;
+
+                if (desperation >= 90) {
+                    // FORCE the door open (no key needed!)
+                    this.tileMap.setTile(newX, newY, TILE_DOOR_OPEN);
+                    this.setMessage('You FORCE the door open!');
+                    this.lastMoveTime = currentTime;
+                    return true; // Door forced, don't move into it this turn
+                } else if (this.keysCollected > 0) {
+                    // Unlock the door with key
                     this.tileMap.setTile(newX, newY, TILE_DOOR_OPEN);
                     this.keysCollected--;
                     this.setMessage('Door unlocked! Keys: ' + this.keysCollected);
@@ -175,6 +188,31 @@ export class Player {
                 }
                 // Continue to move onto the tile
             }
+
+            // Session 12c: Bash walls at 75%+ desperation
+            if (tile === TILE_WALL && this.tileMap) {
+                const desperation = this.desperationMeter ? this.desperationMeter.getValue() : 0;
+
+                if (desperation >= 75) {
+                    // Check if this wall is bashable
+                    if (this.tileMap.isWallBashable(newX, newY)) {
+                        // BASH through the wall!
+                        this.tileMap.setTile(newX, newY, TILE_FLOOR);
+                        this.setMessage('You bash through the wall!');
+                        this.lastMoveTime = currentTime;
+                        // Don't move into the tile this turn, but wall is now broken
+                        return true;
+                    } else {
+                        // Wall is too strong to bash
+                        this.setMessage('Wall is too strong to bash');
+                        return false;
+                    }
+                } else {
+                    // Not desperate enough
+                    this.setMessage('Not desperate enough to bash walls...');
+                    return false;
+                }
+            }
         }
 
         // Check boundaries (collision with canvas edges)
@@ -182,6 +220,29 @@ export class Player {
             this.x = newX;
             this.y = newY;
             this.lastMoveTime = currentTime;
+
+            // Session 12c: Environmental hazards (after successful movement)
+            if (this.tileMap) {
+                const movedTile = this.tileMap.getTile(newX, newY);
+
+                // Water slows movement (50% slower next move)
+                if (movedTile === TILE_WATER) {
+                    this.moveDelay = this.baseMoveDelay * 1.5; // 50% slower
+                    this.setMessage('You wade through water...');
+                } else {
+                    // Reset to base speed when not in water
+                    this.moveDelay = this.baseMoveDelay;
+                }
+
+                // Traps deal damage
+                if (movedTile === TILE_TRAP) {
+                    const trapDamage = 5;
+                    this.health -= trapDamage;
+                    this.setMessage(`You trigger a trap! -${trapDamage} HP`);
+                    console.log(`Player stepped on trap: -${trapDamage} HP (now ${this.health}/${this.maxHealth})`);
+                }
+            }
+
             return true;
         }
 

@@ -34,6 +34,10 @@ export class TileMap {
             }
         }
 
+        // Session 12c: Wall metadata for bashable walls
+        // Map key: "x,y" -> boolean (true if bashable)
+        this.wallBashable = new Map();
+
         console.log(`TileMap initialized: ${width}x${height}`);
     }
 
@@ -75,6 +79,22 @@ export class TileMap {
         // Note: TILE_DOOR_CLOSED, TILE_DOOR_LOCKED, and TILE_CHASM are NOT walkable
         // Player interaction will open/unlock doors first
         // Chasms are impassable visual hazards
+    }
+
+    // Session 12c: Mark a wall as bashable
+    setWallBashable(x, y, bashable = true) {
+        const key = `${x},${y}`;
+        if (bashable) {
+            this.wallBashable.set(key, true);
+        } else {
+            this.wallBashable.delete(key);
+        }
+    }
+
+    // Session 12c: Check if a wall is bashable
+    isWallBashable(x, y) {
+        const key = `${x},${y}`;
+        return this.wallBashable.has(key) && this.wallBashable.get(key) === true;
     }
 
     // Fill a rectangular area with a tile type

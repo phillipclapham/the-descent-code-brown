@@ -225,6 +225,9 @@ export class DungeonGenerator {
         this.validateProgression(tileMap, isLastFloor);
         console.log('✅ Progression validation complete');
 
+        // Session 12c: Mark some walls as bashable (desperation ability)
+        this.markBashableWalls(tileMap, floorNumber);
+
         // Finalize and log metrics
         metrics.roomCount = this.rooms.length;
         metrics.end();
@@ -1122,5 +1125,63 @@ export class DungeonGenerator {
 
             console.log('✅ All locks removed - progression now guaranteed');
         }
+    }
+
+    // Session 12c: Mark some walls as bashable (desperation ability at 75%+)
+    markBashableWalls(tileMap, floorNumber) {
+        // Determine bashable percentage based on floor (office = weak walls, sewer = strong walls)
+        let bashablePercentage;
+        if (floorNumber >= 8) {
+            bashablePercentage = 0.60; // Office floors (10-8): 60% drywall
+        } else if (floorNumber >= 5) {
+            bashablePercentage = 0.40; // Maintenance floors (7-5): 40% mixed
+        } else {
+            bashablePercentage = 0.30; // Sewer floors (4-1): 30% concrete
+        }
+
+        let wallsMarked = 0;
+        let wallsTotal = 0;
+
+        // Iterate over all tiles and mark non-critical walls as bashable
+        for (let y = 1; y < this.height - 1; y++) {  // Skip outer boundary
+            for (let x = 1; x < this.width - 1; x++) {  // Skip outer boundary
+                if (tileMap.getTile(x, y) === TILE_WALL) {
+                    wallsTotal++;
+
+                    // Never mark critical walls:
+                    // 1. Outer boundary (already skipped above)
+                    // 2. Vault walls (walls of rooms with hasLockedDoor=true)
+                    const isVaultWall = this.isWallOfVault(x, y);
+
+                    if (!isVaultWall && Math.random() < bashablePercentage) {
+                        tileMap.setWallBashable(x, y, true);
+                        wallsMarked++;
+                    }
+                }
+            }
+        }
+
+        console.log(`🧱 Marked ${wallsMarked}/${wallsTotal} walls as bashable (${Math.floor(bashablePercentage * 100)}%)`);
+    }
+
+    // Helper: Check if a wall position is part of a vault room perimeter
+    isWallOfVault(x, y) {
+        for (const room of this.rooms) {
+            if (room.specialType === 'vault' || room.hasLockedDoor) {
+                // Check if (x,y) is on the perimeter of this vault room
+                const onPerimeter = (
+                    (x === room.x - 1 || x === room.x + room.width) &&
+                    (y >= room.y - 1 && y <= room.y + room.height)
+                ) || (
+                    (y === room.y - 1 || y === room.y + room.height) &&
+                    (x >= room.x - 1 && x <= room.x + room.width)
+                );
+
+                if (onPerimeter) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

@@ -5,7 +5,7 @@ export class DesperationMeter {
     constructor() {
         this.value = 0; // 0-100
         this.maxValue = 100;
-        this.increaseRate = 1; // Percent per second (tunable)
+        this.increaseRate = 0.35; // Percent per second (tuned in Session 12c for strategic play)
 
         // Create DOM element for the meter
         this.element = this.createMeterElement();
