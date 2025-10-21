@@ -147,11 +147,11 @@ export class DesperationMeter {
         } else if (desp < 50) {
             return { level: 2, name: 'Urgent', color: '#ffff00', shake: 0, tintColor: 'rgba(50,50,0', tintAlpha: 0.05 };
         } else if (desp < 75) {
-            return { level: 3, name: 'Critical', color: '#ff8800', shake: 2, tintColor: 'rgba(255,136,0', tintAlpha: 0.15 };
+            return { level: 3, name: 'Critical', color: '#ff8800', shake: 2, tintColor: 'rgba(255,136,0', tintAlpha: 0.10 };
         } else if (desp < 90) {
-            return { level: 4, name: 'Desperate', color: '#ff0000', shake: 3, tintColor: 'rgba(255,0,0', tintAlpha: 0.25 };
+            return { level: 4, name: 'Desperate', color: '#ff0000', shake: 3, tintColor: 'rgba(255,0,0', tintAlpha: 0.15 };
         } else if (desp < 100) {
-            return { level: 5, name: 'EXTREME', color: '#ff0000', shake: 4, tintColor: 'rgba(255,0,0', tintAlpha: 0.35, flash: true };
+            return { level: 5, name: 'EXTREME', color: '#ff0000', shake: 4, tintColor: 'rgba(255,0,0', tintAlpha: 0.20, flash: true };
         } else {
             return { level: 6, name: 'GAME OVER', color: '#ff0000', shake: 0, tintColor: null, tintAlpha: 0 };
         }
