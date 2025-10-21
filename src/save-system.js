@@ -169,6 +169,9 @@ export class SaveSystem {
         // Update player's tile map reference
         game.player.tileMap = game.tileMap;
 
+        // Session 12d: Restore desperationMeter reference (needed for wall bashing & door forcing)
+        game.player.desperationMeter = game.desperationMeter;
+
         // Respawn enemies and items for this floor
         game.spawnFloorEntities();
 

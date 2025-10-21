@@ -62,7 +62,8 @@ class Game {
         this.player = new Player(
             spawnPos.x,
             spawnPos.y,
-            this.tileMap
+            this.tileMap,
+            this.desperationMeter  // Session 12d: Pass reference for desperation abilities
         );
 
         // Spawn enemies and weapons for starting floor
@@ -361,6 +362,15 @@ class Game {
 
         // Update desperation meter (Session 12a: pass player for clench check)
         this.desperationMeter.update(deltaTime, this.player);
+
+        // Session 12d: Check for game over at 100% desperation
+        if (this.desperationMeter.getValue() >= 100) {
+            console.log('💀 GAME OVER! Desperation reached 100%');
+            this.gameState = 'game_over';
+            // Delete save on desperation death (preserve permadeath)
+            SaveSystem.deleteSave();
+            return; // Stop processing this frame
+        }
 
         // Update transition cooldown
         if (this.transitionCooldown > 0) {

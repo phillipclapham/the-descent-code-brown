@@ -15,7 +15,7 @@ import {
 } from './tile-map.js';
 
 export class Player {
-    constructor(x, y, tileMap = null) {
+    constructor(x, y, tileMap = null, desperationMeter = null) {
         this.x = x;
         this.y = y;
         this.char = '@';
@@ -23,6 +23,9 @@ export class Player {
 
         // Tile map reference for collision detection
         this.tileMap = tileMap;
+
+        // Desperation meter reference (Session 12d: needed for wall bashing & door forcing)
+        this.desperationMeter = desperationMeter;
 
         // Movement timing
         this.baseMoveDelay = 200; // Base milliseconds between moves
