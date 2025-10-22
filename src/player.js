@@ -135,7 +135,7 @@ export class Player {
                     // Try to add to inventory (Session 14: routes to weapon inventory)
                     if (this.addToInventory(weapon)) {
                         // Success! Auto-equip happens in addWeapon() if needed
-                        this.setMessage(`Picked up ${weapon.name}`);
+                        this.setMessage(`Picked up ${weapon.name} (${weapon.damageMin}-${weapon.damageMax} dmg)`);
                         console.log(`Weapon picked up: ${weapon.name} at (${newX}, ${newY})`);
 
                         // Remove weapon from map and combat system
@@ -375,7 +375,9 @@ export class Player {
         if (this.selectedSlot < 4) {
             this.lastWeaponSlot = this.selectedSlot;
             this.equippedWeapon = this.weaponInventory[this.selectedSlot];
-            const weaponName = this.equippedWeapon ? this.equippedWeapon.name : 'Empty';
+            const weaponName = this.equippedWeapon ?
+                `${this.equippedWeapon.name} (${this.equippedWeapon.damageMin}-${this.equippedWeapon.damageMax} dmg)` :
+                'Empty';
             this.setMessage(`Selected: ${weaponName}`);
             console.log(`Cycled to weapon slot ${this.selectedSlot + 1}: ${weaponName}`);
         } else {
@@ -444,7 +446,9 @@ export class Player {
         if (slotIndex < 4) {
             this.lastWeaponSlot = slotIndex;
             this.equippedWeapon = this.weaponInventory[slotIndex];
-            const weaponName = this.equippedWeapon ? this.equippedWeapon.name : 'Empty';
+            const weaponName = this.equippedWeapon ?
+                `${this.equippedWeapon.name} (${this.equippedWeapon.damageMin}-${this.equippedWeapon.damageMax} dmg)` :
+                'Empty';
             this.setMessage(`Equipped: ${weaponName}`);
             console.log(`Selected weapon slot ${slotIndex + 1}: ${weaponName}`);
         } else {

@@ -4,7 +4,7 @@ export const TILE_SIZE = 20;
 export const GRID_WIDTH = 40;
 export const GRID_HEIGHT = 30;
 export const CANVAS_WIDTH = 800;
-export const CANVAS_HEIGHT = 600;
+export const CANVAS_HEIGHT = 660; // Increased to fit inventory bar below map
 
 export class Renderer {
     constructor(canvas) {

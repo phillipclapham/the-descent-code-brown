@@ -17,6 +17,9 @@ export class DesperationMeter {
         // Create DOM element for the meter
         this.element = this.createMeterElement();
 
+        // Session 15: Force initial render to ensure visual state matches value (fixes rare bug)
+        this.render();
+
         console.log('Desperation meter initialized');
     }
 

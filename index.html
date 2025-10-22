@@ -3,177 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="The Descent: Code Brown - An ASCII roguelike where you desperately need to reach the bathroom at the bottom of a dungeon. Built with vanilla JavaScript.">
+    <meta property="og:title" content="The Descent: Code Brown">
+    <meta property="og:description" content="ASCII roguelike dungeon crawler with a comedic twist">
+    <meta property="og:type" content="website">
+
     <title>The Descent: Code Brown</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #1a1a1a;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            font-family: 'Courier New', monospace;
-            color: #00ff00;
-        }
-
-        #game-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-        }
-
-        #game-canvas {
-            border: 2px solid #00ff00;
-            image-rendering: pixelated;
-            image-rendering: crisp-edges;
-        }
-
-        h1 {
-            margin: 0;
-            font-size: 24px;
-            text-shadow: 0 0 10px #00ff00;
-        }
-
-        /* Desperation Meter Styles */
-        #desperation-meter {
-            width: 800px;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .meter-label {
-            font-size: 14px;
-            font-weight: bold;
-            color: #00ff00;
-            text-align: left;
-        }
-
-        .meter-bar-container {
-            width: 100%;
-            height: 30px;
-            background-color: #000000;
-            border: 2px solid #00ff00;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .meter-bar {
-            height: 100%;
-            width: 0%;
-            background-color: #00ff00;
-            transition: width 0.1s linear, background-color 0.3s ease;
-        }
-
-        .meter-percentage {
-            font-size: 12px;
-            color: #00ff00;
-            text-align: right;
-            font-weight: bold;
-        }
-
-        /* Intro Modal Styles */
-        #intro-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1000;
-        }
-
-        .modal-overlay {
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.95);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .modal-content {
-            background-color: #1a1a1a;
-            border: 3px solid #00ff00;
-            padding: 30px;
-            max-width: 600px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 0 30px rgba(0, 255, 0, 0.3);
-        }
-
-        .modal-content h2 {
-            margin: 0 0 20px 0;
-            font-size: 28px;
-            color: #00ff00;
-            text-align: center;
-            text-shadow: 0 0 15px #00ff00;
-        }
-
-        .modal-story {
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            line-height: 1.5;
-            color: #00ff00;
-            background-color: #000000;
-            padding: 20px;
-            border: 1px solid #00ff00;
-            margin: 0 0 20px 0;
-            white-space: pre-wrap;
-            overflow-x: auto;
-        }
-
-        .modal-buttons {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .btn-primary, .btn-secondary {
-            font-family: 'Courier New', monospace;
-            font-size: 16px;
-            padding: 12px 30px;
-            border: 2px solid #00ff00;
-            background-color: #000000;
-            color: #00ff00;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-weight: bold;
-        }
-
-        .btn-primary:hover {
-            background-color: #00ff00;
-            color: #000000;
-            box-shadow: 0 0 15px #00ff00;
-        }
-
-        .btn-secondary {
-            background-color: transparent;
-            border-color: #007700;
-            color: #007700;
-            padding: 12px 20px;
-        }
-
-        .btn-secondary:hover {
-            border-color: #00ff00;
-            color: #00ff00;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div id="game-container">
+    <!-- Header -->
+    <header>
         <h1>THE DESCENT: CODE BROWN</h1>
-        <div id="desperation-meter"></div>
-        <canvas id="game-canvas" width="800" height="600"></canvas>
-    </div>
+        <p class="tagline">An ASCII Roguelike Terminal Adventure</p>
+        <p class="author">by Phill Clapham</p>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Controls Sidebar -->
+        <aside class="controls-sidebar">
+            <h2>Controls</h2>
+
+            <div class="controls-section">
+                <h3>Movement</h3>
+                <div class="control-item">
+                    <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or <kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd></span>
+                    <span class="description">Move</span>
+                </div>
+                <div class="control-item">
+                    <span><kbd>SPACE</kbd></span>
+                    <span class="description">Attack</span>
+                </div>
+            </div>
+
+            <div class="controls-section">
+                <h3>Inventory</h3>
+                <div class="control-item">
+                    <span><kbd>Q</kbd> / <kbd>E</kbd></span>
+                    <span class="description">Cycle slots</span>
+                </div>
+                <div class="control-item">
+                    <span><kbd>1</kbd>-<kbd>4</kbd></span>
+                    <span class="description">Select weapon</span>
+                </div>
+                <div class="control-item">
+                    <span><kbd>5</kbd>-<kbd>8</kbd></span>
+                    <span class="description">Select consumable</span>
+                </div>
+                <div class="control-item">
+                    <span><kbd>ENTER</kbd></span>
+                    <span class="description">Use consumable</span>
+                </div>
+                <div class="control-item">
+                    <span><kbd>X</kbd></span>
+                    <span class="description">Drop item</span>
+                </div>
+            </div>
+
+            <div class="controls-section">
+                <h3>Special</h3>
+                <div class="control-item">
+                    <span><kbd>C</kbd></span>
+                    <span class="description">Clench</span>
+                </div>
+                <div class="control-item">
+                    <span><kbd>P</kbd></span>
+                    <span class="description">Pause</span>
+                </div>
+                <div class="control-item">
+                    <span><kbd>R</kbd></span>
+                    <span class="description">Restart (on death)</span>
+                </div>
+            </div>
+
+            <div class="game-tip">
+                <p><strong>TIP:</strong> Find the bathroom at Floor 1 before desperation reaches 100%!</p>
+            </div>
+        </aside>
+
+        <!-- Game Container -->
+        <div class="game-container">
+            <div id="desperation-meter"></div>
+            <canvas id="game-canvas" width="800" height="660"></canvas>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>About</h3>
+                <p>A comedic ASCII roguelike dungeon crawler</p>
+                <p>Descend through procedurally generated floors</p>
+                <p>Fight enemies, manage desperation, reach the bathroom!</p>
+            </div>
+
+            <div class="footer-section">
+                <h3>Tech Stack</h3>
+                <p>Vanilla JavaScript • HTML5 Canvas</p>
+                <p>Web Audio API • localStorage</p>
+                <p>Procedural Generation • Roguelike Mechanics</p>
+            </div>
+
+            <div class="footer-section">
+                <h3>Credits</h3>
+                <p>Developed by <a href="https://phillipclapham.com" target="_blank">Phill Clapham</a></p>
+                <p>Built with <a href="https://claude.com/claude-code" target="_blank">Claude Code</a></p>
+                <p><a href="https://github.com/anthropics/claude-code" target="_blank">View on GitHub</a></p>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>&copy; 2025 Phill Clapham | A zero-pressure fun project</p>
+        </div>
+    </footer>
 
     <script type="module" src="src/game.js"></script>
 </body>

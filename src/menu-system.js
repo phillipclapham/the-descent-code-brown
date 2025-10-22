@@ -57,7 +57,7 @@ export class MenuSystem {
 
         // Clear screen
         ctx.fillStyle = '#1a1a1a';
-        ctx.fillRect(0, 0, 800, 600);
+        ctx.fillRect(0, 0, 800, 660);
 
         // Title
         ctx.font = 'bold 36px "Courier New", monospace';

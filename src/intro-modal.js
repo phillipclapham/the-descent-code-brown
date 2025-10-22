@@ -67,18 +67,10 @@ The desperation is real.
 
 Can you make it to The Throne?
 
-╔══════════════════════════════════════════╗
-║   CONTROLS                               ║
-╚══════════════════════════════════════════╝
-
-Arrow Keys / WASD - Move
-SPACE - Attack
-C - Clench (freeze desperation 10s)
-1-8 - Use inventory items
-E - Interact with objects
-
 Survive the descent. Find The Throne.
-Hold it like a legend.</pre>
+Hold it like a legend.
+
+(Check the controls sidebar on the left!)</pre>
                     <div class="modal-buttons">
                         <button id="start-game-btn" class="btn-primary">START GAME</button>
                         <button id="skip-intro-btn" class="btn-secondary">Skip ></button>

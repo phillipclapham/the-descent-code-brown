@@ -612,7 +612,7 @@ class Game {
 
         // Black overlay (semi-transparent)
         ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-        ctx.fillRect(0, 0, 800, 600);
+        ctx.fillRect(0, 0, 800, 660);
 
         // Main text: "GAME OVER"
         ctx.font = 'bold 48px "Courier New", monospace';
@@ -705,7 +705,7 @@ class Game {
     applyScreenTint(threshold, shakeApplied) {
         const ctx = this.renderer.ctx;
         ctx.fillStyle = `${threshold.tintColor},${threshold.tintAlpha})`;
-        ctx.fillRect(0, 0, 800, 600);
+        ctx.fillRect(0, 0, 800, 660);
 
         // Restore after shake (if shake was applied)
         if (shakeApplied) {
@@ -719,7 +719,7 @@ class Game {
 
         // Black background
         ctx.fillStyle = '#000000';
-        ctx.fillRect(0, 0, 800, 600);
+        ctx.fillRect(0, 0, 800, 660);
 
         // ASCII Art Toilet (THE THRONE)
         ctx.font = '14px "Courier New", monospace';
@@ -1011,7 +1011,7 @@ class Game {
         const slotHeight = 35;
         const slotPadding = 4;
         const inventoryBarHeight = 50;
-        const inventoryBarY = 515; // Session 14a: Moved down to avoid blocking playable area
+        const inventoryBarY = 605; // Session 15: Moved below map area (canvas extended to 660px)
 
         // Draw inventory bar background panel
         this.renderer.ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
