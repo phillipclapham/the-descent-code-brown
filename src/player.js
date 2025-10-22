@@ -32,12 +32,12 @@ export class Player {
         this.moveDelay = 200; // Current milliseconds between moves (modified by water, speed boosts, etc.)
         this.lastMoveTime = 0;
 
-        // Inventory (Session 14: Dual inventory system)
+        // Inventory (Session 14a: Unified selection system)
         this.keysCollected = 0;
         this.weaponInventory = new Array(4).fill(null); // 4 weapon slots
         this.consumableInventory = new Array(4).fill(null); // 4 consumable slots
-        this.selectedWeaponIndex = 0; // Currently selected weapon slot (0-3)
-        this.selectedConsumableIndex = 0; // Currently selected consumable slot (0-3)
+        this.selectedSlot = 0; // Currently selected slot (0-7: 0-3 weapons, 4-7 consumables)
+        this.lastWeaponSlot = 0; // Last weapon slot selected (for return after consumable use)
 
         // Combat properties
         this.health = 100;
@@ -343,9 +343,10 @@ export class Player {
         this.weaponInventory[emptySlot] = weapon;
         console.log(`Added ${weapon.name} to weapon slot ${emptySlot + 1}`);
 
-        // Auto-equip if no weapon currently equipped
+        // Auto-equip if no weapon currently equipped (Session 14a: Update selectedSlot and lastWeaponSlot)
         if (this.equippedWeapon === null) {
-            this.selectedWeaponIndex = emptySlot;
+            this.selectedSlot = emptySlot;
+            this.lastWeaponSlot = emptySlot;
             this.equippedWeapon = weapon;
             console.log(`Auto-equipped ${weapon.name}`);
         }
@@ -366,69 +367,106 @@ export class Player {
         return true;
     }
 
-    // Cycle weapon selection (Q = -1, E = +1)
-    cycleWeapon(direction) {
-        this.selectedWeaponIndex = (this.selectedWeaponIndex + direction + 4) % 4;
-        this.equippedWeapon = this.weaponInventory[this.selectedWeaponIndex];
+    // Cycle through all inventory slots (Q = -1 left, E = +1 right) - Session 14a: Unified cycling
+    cycleSlot(direction) {
+        this.selectedSlot = (this.selectedSlot + direction + 8) % 8;
 
-        const weaponName = this.equippedWeapon ? this.equippedWeapon.name : 'Empty';
-        this.setMessage(`Selected: ${weaponName}`);
-        console.log(`Cycled weapon to slot ${this.selectedWeaponIndex + 1}: ${weaponName}`);
-    }
-
-    // Drop currently selected weapon (X key)
-    dropWeapon(tileMap, combat) {
-        const weapon = this.weaponInventory[this.selectedWeaponIndex];
-        if (!weapon) {
-            this.setMessage('No weapon to drop');
-            return false;
+        // If weapon selected (0-3), auto-equip and update lastWeaponSlot
+        if (this.selectedSlot < 4) {
+            this.lastWeaponSlot = this.selectedSlot;
+            this.equippedWeapon = this.weaponInventory[this.selectedSlot];
+            const weaponName = this.equippedWeapon ? this.equippedWeapon.name : 'Empty';
+            this.setMessage(`Selected: ${weaponName}`);
+            console.log(`Cycled to weapon slot ${this.selectedSlot + 1}: ${weaponName}`);
+        } else {
+            // Consumable selected (4-7), just highlight (don't use)
+            const consumableIndex = this.selectedSlot - 4;
+            const consumable = this.consumableInventory[consumableIndex];
+            const consumableName = consumable ? consumable.name : 'Empty';
+            this.setMessage(`Selected: ${consumableName} (press ENTER to use)`);
+            console.log(`Cycled to consumable slot ${this.selectedSlot + 1}: ${consumableName}`);
         }
-
-        // Spawn weapon at player position
-        const key = `${this.x},${this.y}`;
-        combat.weapons.set(key, weapon);
-        tileMap.setTile(this.x, this.y, TILE_WEAPON);
-
-        // Remove from inventory
-        this.weaponInventory[this.selectedWeaponIndex] = null;
-        this.equippedWeapon = this.weaponInventory[this.selectedWeaponIndex]; // Now null if empty
-
-        this.setMessage(`Dropped ${weapon.name}`);
-        console.log(`Dropped ${weapon.name} at (${this.x}, ${this.y})`);
-        return true;
     }
 
-    // Equip weapon from specific slot (1-4 keys)
-    equipWeaponSlot(slotIndex) {
-        if (slotIndex < 0 || slotIndex >= 4) return;
+    // Drop currently selected item (X key) - Session 14a: Works for weapons AND consumables
+    dropItem(tileMap, combat) {
+        // Check if weapon or consumable slot
+        if (this.selectedSlot < 4) {
+            // Weapon slot
+            const weapon = this.weaponInventory[this.selectedSlot];
+            if (!weapon) {
+                this.setMessage('No weapon to drop');
+                return false;
+            }
 
-        this.selectedWeaponIndex = slotIndex;
-        this.equippedWeapon = this.weaponInventory[slotIndex];
+            // Spawn weapon at player position
+            const key = `${this.x},${this.y}`;
+            combat.weapons.set(key, weapon);
+            tileMap.setTile(this.x, this.y, TILE_WEAPON);
 
-        const weaponName = this.equippedWeapon ? this.equippedWeapon.name : 'Empty';
-        this.setMessage(`Equipped: ${weaponName}`);
-        console.log(`Equipped weapon slot ${slotIndex + 1}: ${weaponName}`);
-    }
+            // Remove from inventory
+            this.weaponInventory[this.selectedSlot] = null;
+            this.equippedWeapon = this.weaponInventory[this.selectedSlot]; // Now null if empty
 
-    // Use consumable from specific slot (5-8 keys)
-    useConsumableSlot(slotIndex, desperationMeter, game) {
-        if (slotIndex < 0 || slotIndex >= 4) return;
+            this.setMessage(`Dropped ${weapon.name}`);
+            console.log(`Dropped ${weapon.name} at (${this.x}, ${this.y})`);
+            return true;
+        } else {
+            // Consumable slot
+            const consumableIndex = this.selectedSlot - 4;
+            const consumable = this.consumableInventory[consumableIndex];
+            if (!consumable) {
+                this.setMessage('No consumable to drop');
+                return false;
+            }
 
-        const consumable = this.consumableInventory[slotIndex];
-        if (!consumable) {
-            return; // Empty slot
+            // Spawn consumable at player position
+            const key = `${this.x},${this.y}`;
+            combat.consumables.set(key, consumable);
+            tileMap.setTile(this.x, this.y, TILE_CONSUMABLE);
+
+            // Remove from inventory
+            this.consumableInventory[consumableIndex] = null;
+
+            this.setMessage(`Dropped ${consumable.name}`);
+            console.log(`Dropped ${consumable.name} at (${this.x}, ${this.y})`);
+            return true;
         }
-
-        // Use consumable
-        consumable.use(this, desperationMeter, game);
-        this.setMessage(`Used ${consumable.name}`);
-        this.consumableInventory[slotIndex] = null; // Remove after use
-        console.log(`Used ${consumable.name} from consumable slot ${slotIndex + 1}`);
     }
 
-    // Use currently selected consumable (ENTER key)
+    // Select slot directly (1-8 keys) - Session 14a: Unified selection
+    selectSlot(slotIndex) {
+        if (slotIndex < 0 || slotIndex >= 8) return;
+
+        this.selectedSlot = slotIndex;
+
+        // If weapon selected (0-3), auto-equip and update lastWeaponSlot
+        if (slotIndex < 4) {
+            this.lastWeaponSlot = slotIndex;
+            this.equippedWeapon = this.weaponInventory[slotIndex];
+            const weaponName = this.equippedWeapon ? this.equippedWeapon.name : 'Empty';
+            this.setMessage(`Equipped: ${weaponName}`);
+            console.log(`Selected weapon slot ${slotIndex + 1}: ${weaponName}`);
+        } else {
+            // Consumable selected (4-7), just highlight (don't use until ENTER)
+            const consumableIndex = slotIndex - 4;
+            const consumable = this.consumableInventory[consumableIndex];
+            const consumableName = consumable ? consumable.name : 'Empty';
+            this.setMessage(`Selected: ${consumableName} (press ENTER to use)`);
+            console.log(`Selected consumable slot ${slotIndex + 1}: ${consumableName}`);
+        }
+    }
+
+    // Use currently selected consumable (ENTER key) - Session 14a: Returns to last weapon
     useSelectedConsumable(desperationMeter, game) {
-        const consumable = this.consumableInventory[this.selectedConsumableIndex];
+        // Only works if consumable slot selected (4-7)
+        if (this.selectedSlot < 4) {
+            this.setMessage('Select a consumable first (5-8 keys)');
+            return;
+        }
+
+        const consumableIndex = this.selectedSlot - 4;
+        const consumable = this.consumableInventory[consumableIndex];
         if (!consumable) {
             this.setMessage('No consumable selected');
             return;
@@ -437,8 +475,13 @@ export class Player {
         // Use consumable
         consumable.use(this, desperationMeter, game);
         this.setMessage(`Used ${consumable.name}`);
-        this.consumableInventory[this.selectedConsumableIndex] = null; // Remove after use
-        console.log(`Used ${consumable.name} from selected slot ${this.selectedConsumableIndex + 1}`);
+        this.consumableInventory[consumableIndex] = null; // Remove after use
+        console.log(`Used ${consumable.name} from slot ${this.selectedSlot + 1}`);
+
+        // Return to last weapon slot
+        this.selectedSlot = this.lastWeaponSlot;
+        this.equippedWeapon = this.weaponInventory[this.lastWeaponSlot];
+        console.log(`Returned to weapon slot ${this.lastWeaponSlot + 1}`);
     }
 
     // ===== END INVENTORY MANAGEMENT =====

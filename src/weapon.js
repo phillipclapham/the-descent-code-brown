@@ -2,8 +2,9 @@
 // From GAME_DESIGN.md weapon specifications
 
 export class Weapon {
-    constructor(name, damageMin, damageMax, cooldownTime, char = '!') {
+    constructor(name, damageMin, damageMax, cooldownTime, char = '!', id = null) {
         this.name = name;
+        this.id = id || name.toLowerCase().replace(/\s+/g, '-'); // Session 14a: ID for save/load
         this.damageMin = damageMin;
         this.damageMax = damageMax;
         this.cooldownTime = cooldownTime; // seconds between attacks

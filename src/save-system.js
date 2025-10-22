@@ -63,8 +63,8 @@ export class SaveSystem {
                     quantity: consumable.quantity
                 };
             }),
-            selectedWeaponIndex: game.player.selectedWeaponIndex,
-            selectedConsumableIndex: game.player.selectedConsumableIndex,
+            selectedSlot: game.player.selectedSlot, // Session 14a: Unified selection (0-7)
+            lastWeaponSlot: game.player.lastWeaponSlot,
 
             // Clench state
             clenchCooldownRemaining: game.player.clenchCooldownRemaining,
@@ -149,11 +149,13 @@ export class SaveSystem {
                 return consumableObj;
             });
 
-            game.player.selectedWeaponIndex = saveData.selectedWeaponIndex || 0;
-            game.player.selectedConsumableIndex = saveData.selectedConsumableIndex || 0;
+            // Session 14a: Restore unified selection
+            game.player.selectedSlot = saveData.selectedSlot || 0;
+            game.player.lastWeaponSlot = saveData.lastWeaponSlot || 0;
 
             // Restore equipped weapon reference
-            game.player.equippedWeapon = game.player.weaponInventory[game.player.selectedWeaponIndex];
+            const weaponSlot = game.player.selectedSlot < 4 ? game.player.selectedSlot : game.player.lastWeaponSlot;
+            game.player.equippedWeapon = game.player.weaponInventory[weaponSlot];
 
         } else if (saveData.version === '1.0') {
             // V1.0: Migrate from single inventory to dual inventory
@@ -198,28 +200,29 @@ export class SaveSystem {
                 const weapon = game.getWeaponById(saveData.currentWeapon.id);
                 if (weapon) {
                     weapon.ammo = saveData.currentWeapon.ammo;
-                    // Find this weapon in inventory and select it
+                    // Find this weapon in inventory and select it (Session 14a: Use selectedSlot)
                     const weaponIndex = game.player.weaponInventory.findIndex(w => w && w.id === weapon.id);
                     if (weaponIndex !== -1) {
-                        game.player.selectedWeaponIndex = weaponIndex;
+                        game.player.selectedSlot = weaponIndex;
+                        game.player.lastWeaponSlot = weaponIndex;
                         game.player.equippedWeapon = game.player.weaponInventory[weaponIndex];
                     } else {
                         // Add to first empty slot if not found
                         const emptySlot = game.player.weaponInventory.findIndex(w => w === null);
                         if (emptySlot !== -1) {
                             game.player.weaponInventory[emptySlot] = weapon;
-                            game.player.selectedWeaponIndex = emptySlot;
+                            game.player.selectedSlot = emptySlot;
+                            game.player.lastWeaponSlot = emptySlot;
                             game.player.equippedWeapon = weapon;
                         }
                     }
                 }
             } else {
-                // No weapon equipped - select first weapon if available
-                game.player.selectedWeaponIndex = 0;
+                // No weapon equipped - select first weapon slot
+                game.player.selectedSlot = 0;
+                game.player.lastWeaponSlot = 0;
                 game.player.equippedWeapon = game.player.weaponInventory[0];
             }
-
-            game.player.selectedConsumableIndex = 0;
 
             console.log(`Migration complete: ${weapons.length} weapons, ${consumables.length} consumables`);
         }

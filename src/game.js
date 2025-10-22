@@ -466,41 +466,36 @@ class Game {
             this.combat.handlePlayerAttack();
         }
 
-        // Session 14: Weapon cycling (Q/E keys)
+        // Session 14a: Unified cycling (Q/E keys cycle through all 8 slots)
         if (this.input.isQPressed()) {
-            this.player.cycleWeapon(-1); // Cycle left
+            this.player.cycleSlot(-1); // Cycle left
             // Clear key to prevent repeat
             this.input.keys['q'] = false;
             this.input.keys['Q'] = false;
         }
         if (this.input.isEPressed()) {
-            this.player.cycleWeapon(1); // Cycle right
+            this.player.cycleSlot(1); // Cycle right
             // Clear key to prevent repeat
             this.input.keys['e'] = false;
             this.input.keys['E'] = false;
         }
 
-        // Session 14: Weapon dropping (X key)
+        // Session 14a: Item dropping (X key works for weapons AND consumables)
         if (this.input.isDropPressed()) {
-            this.player.dropWeapon(this.tileMap, this.combat);
+            this.player.dropItem(this.tileMap, this.combat);
             // Clear key to prevent repeat
             this.input.keys['x'] = false;
             this.input.keys['X'] = false;
         }
 
-        // Session 14: Inventory number key input (split 1-4 weapons, 5-8 consumables)
+        // Session 14a: Inventory number key input (1-8 select slot, doesn't auto-use consumables)
         const numberPressed = this.input.getNumberPressed();
         if (numberPressed !== null) {
-            if (numberPressed < 4) {
-                // Keys 1-4: Direct equip weapon
-                this.player.equipWeaponSlot(numberPressed);
-            } else {
-                // Keys 5-8: Use consumable (map to slots 0-3)
-                this.player.useConsumableSlot(numberPressed - 4, this.desperationMeter, this);
-            }
+            // All keys 1-8 now use selectSlot (weapons auto-equip, consumables just highlight)
+            this.player.selectSlot(numberPressed);
         }
 
-        // Session 14: Use selected consumable (ENTER key)
+        // Session 14a: Use selected consumable (ENTER key, returns to last weapon after)
         if (this.input.isEnterPressed()) {
             this.player.useSelectedConsumable(this.desperationMeter, this);
             // Clear key to prevent repeat
@@ -1016,7 +1011,7 @@ class Game {
         const slotHeight = 35;
         const slotPadding = 4;
         const inventoryBarHeight = 50;
-        const inventoryBarY = 505;
+        const inventoryBarY = 515; // Session 14a: Moved down to avoid blocking playable area
 
         // Draw inventory bar background panel
         this.renderer.ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
@@ -1043,7 +1038,7 @@ class Game {
             const slotX = weaponSlotsX + i * (slotWidth + slotPadding);
             const slotY = weaponY - 3;
 
-            const isSelected = (i === this.player.selectedWeaponIndex);
+            const isSelected = (i === this.player.selectedSlot); // Session 14a: Unified selection
             const weapon = this.player.weaponInventory[i];
 
             // Slot background
@@ -1088,7 +1083,7 @@ class Game {
             const slotX = consumableSlotsX + i * (slotWidth + slotPadding);
             const slotY = consumableY - 3;
 
-            const isSelected = (i === this.player.selectedConsumableIndex);
+            const isSelected = (i + 4 === this.player.selectedSlot); // Session 14a: Unified selection (4-7)
             const consumable = this.player.consumableInventory[i];
 
             // Slot background

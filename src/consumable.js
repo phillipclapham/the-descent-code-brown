@@ -2,8 +2,9 @@
 // From GAME_DESIGN.md consumable specifications
 
 export class Consumable {
-    constructor(name, effectFn, char, description) {
+    constructor(name, effectFn, char, description, id = null) {
         this.name = name;
+        this.id = id || name.toLowerCase().replace(/\s+/g, '-'); // Session 14a: ID for save/load
         this.effectFn = effectFn; // Function: (player, desperationMeter, game) => void
         this.char = char; // Character to display when consumable is on ground
         this.description = description;
