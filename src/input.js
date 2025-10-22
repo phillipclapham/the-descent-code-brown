@@ -72,6 +72,31 @@ export class InputHandler {
         return this.isKeyPressed('c') || this.isKeyPressed('C');
     }
 
+    // Check if cycle weapon left key (Q) is pressed (Session 14)
+    isQPressed() {
+        return this.isKeyPressed('q') || this.isKeyPressed('Q');
+    }
+
+    // Check if cycle weapon right key (E) is pressed (Session 14)
+    isEPressed() {
+        return this.isKeyPressed('e') || this.isKeyPressed('E');
+    }
+
+    // Check if drop weapon key (X) is pressed (Session 14)
+    isDropPressed() {
+        return this.isKeyPressed('x') || this.isKeyPressed('X');
+    }
+
+    // Check if Enter key is pressed (Session 14)
+    isEnterPressed() {
+        return this.isKeyPressed('Enter');
+    }
+
+    // Check if Pause key (P) is pressed (Session 14)
+    isPausePressed() {
+        return this.isKeyPressed('p') || this.isKeyPressed('P');
+    }
+
     // Get number key pressed (1-8 for inventory slots) (Session 10)
     // Returns slot index (0-7) if a number key is pressed, null otherwise
     getNumberPressed() {

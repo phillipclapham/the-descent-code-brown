@@ -3,7 +3,7 @@
 export class SaveSystem {
     static SAVE_KEY = 'save_game';
     static HIGHSCORE_KEY = 'high_score';
-    static VERSION = '1.0';
+    static VERSION = '2.0'; // Session 14: Dual inventory system
 
     // Check if a save file exists
     static hasSave() {
@@ -18,9 +18,9 @@ export class SaveSystem {
         try {
             const saveData = JSON.parse(data);
 
-            // Validate save version
-            if (saveData.version !== this.VERSION) {
-                console.warn('Save file version mismatch, deleting save');
+            // Session 14: Allow both v1.0 and v2.0 saves (will migrate v1 on load)
+            if (saveData.version !== '1.0' && saveData.version !== '2.0') {
+                console.warn('Save file version unknown, deleting save');
                 this.deleteSave();
                 return null;
             }
@@ -46,20 +46,25 @@ export class SaveSystem {
             },
             keysCollected: game.player.keysCollected,
 
-            // Inventory
-            currentWeapon: game.player.weapon ? {
-                id: game.player.weapon.id,
-                ammo: game.player.weapon.ammo
-            } : null,
-            inventory: game.player.inventory.map(item => {
-                if (!item) return null;
+            // Inventory (Session 14: Dual inventory system)
+            weaponInventory: game.player.weaponInventory.map(weapon => {
+                if (!weapon) return null;
                 return {
-                    type: item.type,
-                    id: item.id,
-                    ammo: item.ammo,
-                    quantity: item.quantity
+                    type: 'weapon',
+                    id: weapon.id,
+                    ammo: weapon.ammo
                 };
             }),
+            consumableInventory: game.player.consumableInventory.map(consumable => {
+                if (!consumable) return null;
+                return {
+                    type: 'consumable',
+                    id: consumable.id,
+                    quantity: consumable.quantity
+                };
+            }),
+            selectedWeaponIndex: game.player.selectedWeaponIndex,
+            selectedConsumableIndex: game.player.selectedConsumableIndex,
 
             // Clench state
             clenchCooldownRemaining: game.player.clenchCooldownRemaining,
@@ -123,34 +128,100 @@ export class SaveSystem {
         game.player.invincibilityEndTime = saveData.invincibilityEndTime || 0;
         game.player.crashEndTime = saveData.crashEndTime || 0;
 
-        // Restore inventory
-        game.player.inventory = saveData.inventory.map(item => {
-            if (!item) return null;
+        // Session 14: Restore inventory (handle both v1.0 and v2.0)
+        if (saveData.version === '2.0') {
+            // V2.0: Dual inventory system
+            game.player.weaponInventory = saveData.weaponInventory.map(weapon => {
+                if (!weapon) return null;
+                const weaponObj = game.getWeaponById(weapon.id);
+                if (weaponObj) {
+                    weaponObj.ammo = weapon.ammo;
+                }
+                return weaponObj;
+            });
 
-            // Import weapons and consumables
-            if (item.type === 'weapon') {
-                const weapon = game.getWeaponById(item.id);
+            game.player.consumableInventory = saveData.consumableInventory.map(consumable => {
+                if (!consumable) return null;
+                const consumableObj = game.getConsumableById(consumable.id);
+                if (consumableObj) {
+                    consumableObj.quantity = consumable.quantity;
+                }
+                return consumableObj;
+            });
+
+            game.player.selectedWeaponIndex = saveData.selectedWeaponIndex || 0;
+            game.player.selectedConsumableIndex = saveData.selectedConsumableIndex || 0;
+
+            // Restore equipped weapon reference
+            game.player.equippedWeapon = game.player.weaponInventory[game.player.selectedWeaponIndex];
+
+        } else if (saveData.version === '1.0') {
+            // V1.0: Migrate from single inventory to dual inventory
+            console.log('Migrating v1.0 save to v2.0 dual inventory system...');
+
+            const oldInventory = saveData.inventory || [];
+            const weapons = [];
+            const consumables = [];
+
+            // Split old inventory by type
+            for (const item of oldInventory) {
+                if (!item) continue;
+
+                if (item.type === 'weapon') {
+                    const weapon = game.getWeaponById(item.id);
+                    if (weapon) {
+                        weapon.ammo = item.ammo;
+                        weapons.push(weapon);
+                    }
+                } else if (item.type === 'consumable') {
+                    const consumable = game.getConsumableById(item.id);
+                    if (consumable) {
+                        consumable.quantity = item.quantity;
+                        consumables.push(consumable);
+                    }
+                }
+            }
+
+            // Place into new dual inventories (up to 4 each)
+            game.player.weaponInventory = new Array(4).fill(null);
+            game.player.consumableInventory = new Array(4).fill(null);
+
+            for (let i = 0; i < Math.min(weapons.length, 4); i++) {
+                game.player.weaponInventory[i] = weapons[i];
+            }
+            for (let i = 0; i < Math.min(consumables.length, 4); i++) {
+                game.player.consumableInventory[i] = consumables[i];
+            }
+
+            // Restore currentWeapon as equipped weapon
+            if (saveData.currentWeapon) {
+                const weapon = game.getWeaponById(saveData.currentWeapon.id);
                 if (weapon) {
-                    weapon.ammo = item.ammo;
+                    weapon.ammo = saveData.currentWeapon.ammo;
+                    // Find this weapon in inventory and select it
+                    const weaponIndex = game.player.weaponInventory.findIndex(w => w && w.id === weapon.id);
+                    if (weaponIndex !== -1) {
+                        game.player.selectedWeaponIndex = weaponIndex;
+                        game.player.equippedWeapon = game.player.weaponInventory[weaponIndex];
+                    } else {
+                        // Add to first empty slot if not found
+                        const emptySlot = game.player.weaponInventory.findIndex(w => w === null);
+                        if (emptySlot !== -1) {
+                            game.player.weaponInventory[emptySlot] = weapon;
+                            game.player.selectedWeaponIndex = emptySlot;
+                            game.player.equippedWeapon = weapon;
+                        }
+                    }
                 }
-                return weapon;
-            } else if (item.type === 'consumable') {
-                const consumable = game.getConsumableById(item.id);
-                if (consumable) {
-                    consumable.quantity = item.quantity;
-                }
-                return consumable;
+            } else {
+                // No weapon equipped - select first weapon if available
+                game.player.selectedWeaponIndex = 0;
+                game.player.equippedWeapon = game.player.weaponInventory[0];
             }
-            return null;
-        });
 
-        // Restore current weapon
-        if (saveData.currentWeapon) {
-            const weapon = game.getWeaponById(saveData.currentWeapon.id);
-            if (weapon) {
-                weapon.ammo = saveData.currentWeapon.ammo;
-                game.player.weapon = weapon;
-            }
+            game.player.selectedConsumableIndex = 0;
+
+            console.log(`Migration complete: ${weapons.length} weapons, ${consumables.length} consumables`);
         }
 
         // Restore statistics

@@ -73,6 +73,9 @@ class Game {
         this.lastTime = 0;
         this.running = true;
 
+        // Pause state (Session 14)
+        this.paused = false;
+
         // Floor transition cooldown (prevent immediate re-trigger)
         this.transitionCooldown = 0;
 
@@ -410,6 +413,20 @@ class Game {
             return;
         }
 
+        // Session 14: Pause toggle (P key) - handle even when paused
+        if (this.input.isPausePressed()) {
+            this.paused = !this.paused;
+            console.log(this.paused ? 'Game paused' : 'Game unpaused');
+            // Clear key to prevent repeat (wait for key release)
+            this.input.keys['p'] = false;
+            this.input.keys['P'] = false;
+        }
+
+        // If paused, skip all game logic (render will show pause overlay)
+        if (this.paused) {
+            return;
+        }
+
         // Update desperation meter (Session 12a: pass player for clench check)
         this.desperationMeter.update(deltaTime, this.player);
 
@@ -449,14 +466,45 @@ class Game {
             this.combat.handlePlayerAttack();
         }
 
-        // Handle inventory number key input (Session 10)
-        // Press 1-8 to select and use/equip items from inventory
-        const slotPressed = this.input.getNumberPressed();
-        if (slotPressed !== null) {
-            // Select the slot
-            this.player.selectSlot(slotPressed);
-            // Use/equip the item in that slot
-            this.player.useSlot(slotPressed, this.desperationMeter, this);
+        // Session 14: Weapon cycling (Q/E keys)
+        if (this.input.isQPressed()) {
+            this.player.cycleWeapon(-1); // Cycle left
+            // Clear key to prevent repeat
+            this.input.keys['q'] = false;
+            this.input.keys['Q'] = false;
+        }
+        if (this.input.isEPressed()) {
+            this.player.cycleWeapon(1); // Cycle right
+            // Clear key to prevent repeat
+            this.input.keys['e'] = false;
+            this.input.keys['E'] = false;
+        }
+
+        // Session 14: Weapon dropping (X key)
+        if (this.input.isDropPressed()) {
+            this.player.dropWeapon(this.tileMap, this.combat);
+            // Clear key to prevent repeat
+            this.input.keys['x'] = false;
+            this.input.keys['X'] = false;
+        }
+
+        // Session 14: Inventory number key input (split 1-4 weapons, 5-8 consumables)
+        const numberPressed = this.input.getNumberPressed();
+        if (numberPressed !== null) {
+            if (numberPressed < 4) {
+                // Keys 1-4: Direct equip weapon
+                this.player.equipWeaponSlot(numberPressed);
+            } else {
+                // Keys 5-8: Use consumable (map to slots 0-3)
+                this.player.useConsumableSlot(numberPressed - 4, this.desperationMeter, this);
+            }
+        }
+
+        // Session 14: Use selected consumable (ENTER key)
+        if (this.input.isEnterPressed()) {
+            this.player.useSelectedConsumable(this.desperationMeter, this);
+            // Clear key to prevent repeat
+            this.input.keys['Enter'] = false;
         }
 
         // Handle Clench input (Session 12a)
@@ -924,6 +972,11 @@ class Game {
         if (this.gameState === 'victory') {
             this.renderVictory();
         }
+
+        // Draw pause overlay if paused (Session 14)
+        if (this.paused) {
+            this.drawPauseOverlay();
+        }
     }
 
     // Draw all enemies
@@ -955,17 +1008,17 @@ class Game {
         }
     }
 
-    // Draw inventory UI (Session 10)
-    // Shows 8 inventory slots with items and selection highlighting
-    // Positioned at bottom of screen above status bar to avoid map overlap
+    // Draw inventory UI (Session 14: Dual Inventory System)
+    // Shows 4 weapon slots + 4 consumable slots with separate selection
+    // Positioned at bottom of screen above status bar
     drawInventoryUI() {
-        const slotWidth = 40;
-        const slotHeight = 40;
-        const slotPadding = 5;
-        const inventoryBarHeight = 50; // Total height of inventory bar
-        const inventoryBarY = 505; // Position above status bar (status bar at 560)
+        const slotWidth = 35;
+        const slotHeight = 35;
+        const slotPadding = 4;
+        const inventoryBarHeight = 50;
+        const inventoryBarY = 505;
 
-        // Draw inventory bar background panel (similar to status bar)
+        // Draw inventory bar background panel
         this.renderer.ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
         this.renderer.ctx.fillRect(0, inventoryBarY, 800, inventoryBarHeight);
 
@@ -974,66 +1027,114 @@ class Game {
         this.renderer.ctx.lineWidth = 2;
         this.renderer.ctx.strokeRect(0, inventoryBarY, 800, inventoryBarHeight);
 
-        // Calculate starting X to center the 8 slots
-        const totalSlotsWidth = (slotWidth * 8) + (slotPadding * 7);
-        const startX = (800 - totalSlotsWidth) / 2;
-        const startY = inventoryBarY + 5; // 5px padding from top of bar
+        // WEAPONS SECTION (Left side)
+        const weaponStartX = 20;
+        const weaponY = inventoryBarY + 7;
 
-        // Draw 8 inventory slots horizontally
-        for (let i = 0; i < 8; i++) {
-            const slotX = startX + i * (slotWidth + slotPadding);
-            const slotY = startY;
+        // Label
+        this.renderer.ctx.font = 'bold 11px "Courier New", monospace';
+        this.renderer.ctx.fillStyle = '#00ffff';
+        this.renderer.ctx.textAlign = 'left';
+        this.renderer.ctx.fillText('WEAPONS (Q/E, X)', weaponStartX, weaponY);
 
-            // Determine if this slot is selected
-            const isSelected = (i === this.player.selectedSlot);
+        // Draw 4 weapon slots
+        const weaponSlotsX = weaponStartX + 150;
+        for (let i = 0; i < 4; i++) {
+            const slotX = weaponSlotsX + i * (slotWidth + slotPadding);
+            const slotY = weaponY - 3;
+
+            const isSelected = (i === this.player.selectedWeaponIndex);
+            const weapon = this.player.weaponInventory[i];
 
             // Slot background
-            this.renderer.ctx.fillStyle = isSelected ? 'rgba(100, 100, 255, 0.5)' : 'rgba(50, 50, 50, 0.8)';
+            this.renderer.ctx.fillStyle = isSelected ? 'rgba(0, 255, 255, 0.3)' : 'rgba(50, 50, 50, 0.8)';
             this.renderer.ctx.fillRect(slotX, slotY, slotWidth, slotHeight);
 
             // Slot border
-            this.renderer.ctx.strokeStyle = isSelected ? '#ffff00' : '#666666';
-            this.renderer.ctx.lineWidth = isSelected ? 3 : 1;
+            this.renderer.ctx.strokeStyle = isSelected ? '#00ffff' : '#666666';
+            this.renderer.ctx.lineWidth = isSelected ? 2 : 1;
             this.renderer.ctx.strokeRect(slotX, slotY, slotWidth, slotHeight);
 
-            // Slot number (1-8)
-            this.renderer.ctx.font = '10px "Courier New", monospace';
+            // Slot number (1-4)
+            this.renderer.ctx.font = '9px "Courier New", monospace';
             this.renderer.ctx.fillStyle = '#aaaaaa';
             this.renderer.ctx.textAlign = 'left';
             this.renderer.ctx.textBaseline = 'top';
             this.renderer.ctx.fillText(String(i + 1), slotX + 2, slotY + 2);
 
-            // Item character (if slot has item)
-            const item = this.player.inventory[i];
-            if (item) {
-                this.renderer.ctx.font = 'bold 24px "Courier New", monospace';
-                this.renderer.ctx.fillStyle = item.color;
+            // Weapon character (if slot has weapon)
+            if (weapon) {
+                this.renderer.ctx.font = 'bold 20px "Courier New", monospace';
+                this.renderer.ctx.fillStyle = weapon.color;
                 this.renderer.ctx.textAlign = 'center';
                 this.renderer.ctx.textBaseline = 'middle';
-                this.renderer.ctx.fillText(item.char, slotX + slotWidth / 2, slotY + slotHeight / 2 + 4);
+                this.renderer.ctx.fillText(weapon.char, slotX + slotWidth / 2, slotY + slotHeight / 2 + 3);
             }
         }
 
-        // Item name tooltip (show name and stats of selected slot item)
-        // Display to the right of the slots
-        const selectedItem = this.player.inventory[this.player.selectedSlot];
-        if (selectedItem) {
-            let tooltipText = selectedItem.name;
-            // Add damage stats for weapons
-            if (selectedItem.damageMin !== undefined) {
-                tooltipText += ` (${Math.floor(selectedItem.damageMin)}-${Math.floor(selectedItem.damageMax)} dmg)`;
-            }
+        // CONSUMABLES SECTION (Right side)
+        const consumableStartX = 420;
+        const consumableY = inventoryBarY + 7;
 
-            // Position tooltip to the right of slots
-            const tooltipX = startX + totalSlotsWidth + 15;
-            const tooltipY = inventoryBarY + (inventoryBarHeight / 2) - 7; // Vertically centered
+        // Label
+        this.renderer.ctx.font = 'bold 11px "Courier New", monospace';
+        this.renderer.ctx.fillStyle = '#ffff00';
+        this.renderer.ctx.textAlign = 'left';
+        this.renderer.ctx.fillText('CONSUMABLES (5-8)', consumableStartX, consumableY);
 
-            this.renderer.ctx.font = '14px "Courier New", monospace';
-            this.renderer.ctx.fillStyle = '#ffff00';
+        // Draw 4 consumable slots
+        const consumableSlotsX = consumableStartX + 160;
+        for (let i = 0; i < 4; i++) {
+            const slotX = consumableSlotsX + i * (slotWidth + slotPadding);
+            const slotY = consumableY - 3;
+
+            const isSelected = (i === this.player.selectedConsumableIndex);
+            const consumable = this.player.consumableInventory[i];
+
+            // Slot background
+            this.renderer.ctx.fillStyle = isSelected ? 'rgba(255, 255, 0, 0.3)' : 'rgba(50, 50, 50, 0.8)';
+            this.renderer.ctx.fillRect(slotX, slotY, slotWidth, slotHeight);
+
+            // Slot border
+            this.renderer.ctx.strokeStyle = isSelected ? '#ffff00' : '#666666';
+            this.renderer.ctx.lineWidth = isSelected ? 2 : 1;
+            this.renderer.ctx.strokeRect(slotX, slotY, slotWidth, slotHeight);
+
+            // Slot number (5-8)
+            this.renderer.ctx.font = '9px "Courier New", monospace';
+            this.renderer.ctx.fillStyle = '#aaaaaa';
             this.renderer.ctx.textAlign = 'left';
-            this.renderer.ctx.textBaseline = 'middle';
-            this.renderer.ctx.fillText(tooltipText, tooltipX, tooltipY);
+            this.renderer.ctx.textBaseline = 'top';
+            this.renderer.ctx.fillText(String(i + 5), slotX + 2, slotY + 2);
+
+            // Consumable character (if slot has consumable)
+            if (consumable) {
+                this.renderer.ctx.font = 'bold 20px "Courier New", monospace';
+                this.renderer.ctx.fillStyle = consumable.color;
+                this.renderer.ctx.textAlign = 'center';
+                this.renderer.ctx.textBaseline = 'middle';
+                this.renderer.ctx.fillText(consumable.char, slotX + slotWidth / 2, slotY + slotHeight / 2 + 3);
+            }
         }
+    }
+
+    // Draw pause overlay (Session 14)
+    drawPauseOverlay() {
+        // Semi-transparent overlay
+        this.renderer.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        this.renderer.ctx.fillRect(0, 0, 800, 600);
+
+        // "PAUSED" text
+        this.renderer.ctx.fillStyle = '#ffff00';
+        this.renderer.ctx.font = 'bold 48px "Courier New", monospace';
+        this.renderer.ctx.textAlign = 'center';
+        this.renderer.ctx.textBaseline = 'middle';
+        this.renderer.ctx.fillText('PAUSED', 400, 280);
+
+        // Instructions
+        this.renderer.ctx.fillStyle = '#00ffff';
+        this.renderer.ctx.font = '20px "Courier New", monospace';
+        this.renderer.ctx.fillText('Press P to resume', 400, 340);
     }
 
     // Draw debug information
