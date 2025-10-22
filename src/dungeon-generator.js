@@ -50,19 +50,8 @@ class GenerationMetrics {
     }
 
     log(floorNumber) {
-        const duration = (this.endTime - this.startTime).toFixed(1);
-        console.log(`📊 Floor ${floorNumber} Metrics:`);
-        console.log(`   Rooms: ${this.roomCount} (${this.specialRoomCount} special)`);
-        if (this.specialRoomCount > 0) {
-            const types = Object.entries(this.specialRoomTypes)
-                .map(([type, count]) => `${count}x${type}`)
-                .join(', ');
-            console.log(`   Special: ${types}`);
-        }
-        console.log(`   Doors: ${this.doorCount} (${this.lockedDoorCount} locked)`);
-        console.log(`   Keys: ${this.keyCount}`);
-        console.log(`   Corridor segments: ${this.corridorSegments}`);
-        console.log(`   Generation time: ${duration}ms`);
+        // Metrics logging disabled for production
+        // Generation metrics are tracked internally but not logged
     }
 
     addSpecialRoom(type) {
@@ -89,7 +78,7 @@ export class DungeonGenerator {
 
         // Set floor theme for visual styling
         tileMap.theme = getThemeForFloor(floorNumber);
-        console.log(`🎨 Generating Floor ${floorNumber} - Theme: ${tileMap.theme.name}`);
+        // Generating floor with theme applied
 
         // Clear and fill with walls
         this.fillWithWalls(tileMap);
@@ -175,7 +164,7 @@ export class DungeonGenerator {
 
                 // Re-validate
                 if (this.validateConnectivity(tileMap, startX, startY)) {
-                    console.log('Connectivity restored!');
+                    // Connectivity restored via corridor placement
                 } else {
                     console.error('Failed to restore connectivity');
                 }
@@ -224,9 +213,7 @@ export class DungeonGenerator {
 
         // CRITICAL: Validate progression is possible (stairs reachable with available keys)
         // Now that stairs actually exist on the map!
-        console.log('🔍 Running progression validation...');
         this.validateProgression(tileMap, isLastFloor);
-        console.log('✅ Progression validation complete');
 
         // Session 12c: Mark some walls as bashable (desperation ability)
         this.markBashableWalls(tileMap, floorNumber);
@@ -239,11 +226,7 @@ export class DungeonGenerator {
         metrics.end();
         metrics.log(floorNumber);
 
-        // Log room variety
-        const roomTypes = this.rooms.map(r => r.type);
-        const shapes = this.rooms.map(r => r.shape);
-        console.log(`  Types: ${roomTypes.join(', ')}`);
-        console.log(`  Shapes: ${shapes.join(', ')}`);
+        // Room variety tracking (types and shapes generated)
     }
 
     // Fill entire map with walls
@@ -395,7 +378,7 @@ export class DungeonGenerator {
 
         // If we didn't reach target, fall back to L-shaped corridor
         if (currentX !== x2 || currentY !== y2) {
-            console.log('Drunk walk failed, using L-shaped fallback');
+            // Drunk walk failed, using L-shaped corridor fallback
             return this.createLShapedPath(x1, y1, x2, y2);
         }
 
@@ -558,7 +541,7 @@ export class DungeonGenerator {
         const x2 = connectedRoom.x + Math.floor(connectedRoom.width / 2);
         const y2 = connectedRoom.y + Math.floor(connectedRoom.height / 2);
 
-        console.log('Force connecting orphaned room with straight line');
+        // Force connecting orphaned room with straight corridor
 
         // Simple L-shaped connection (guaranteed to work)
         const path = this.createLShapedPath(x1, y1, x2, y2);
@@ -878,7 +861,7 @@ export class DungeonGenerator {
         // Find all rooms accessible from spawn WITHOUT unlocking doors
         const accessibleRooms = this.findAccessibleRooms(tileMap, spawnX, spawnY);
 
-        console.log(`Accessible rooms from spawn: ${accessibleRooms.length} of ${this.rooms.length}`);
+        // Accessible rooms calculated for key placement validation
 
         for (const lockedRoom of lockedRooms) {
             // Find eligible rooms: accessible AND not the locked room itself
@@ -909,7 +892,7 @@ export class DungeonGenerator {
                     tileMap.setTile(x, y, TILE_KEY);
                     keyPlaced = true;
                     metrics.keyCount++;
-                    console.log(`Key placed in accessible room at (${x}, ${y})`);
+                    // Key successfully placed in accessible room
                 }
             }
 
@@ -924,7 +907,7 @@ export class DungeonGenerator {
                 if (centerTile === TILE_FLOOR) {
                     tileMap.setTile(centerX, centerY, TILE_KEY);
                     metrics.keyCount++;
-                    console.log(`Key placed at room center (${centerX}, ${centerY}) as fallback`);
+                    // Key placed at room center as fallback
                 }
             }
         }
@@ -948,7 +931,7 @@ export class DungeonGenerator {
                 // Store weapon in combat system (will be set by game.js after generation)
                 // combat.weapons is a Map<"x,y", Weapon>
                 // The actual weapon instance will be set externally
-                console.log(`Weapon spawn point placed at (${pos.x}, ${pos.y})`);
+                // Weapon spawn point placed successfully
             }
         }
     }
@@ -971,7 +954,7 @@ export class DungeonGenerator {
             if (pos) {
                 // Enemy will be spawned by game.js after generation
                 // Store spawn position for external enemy creation
-                console.log(`Enemy spawn point placed at (${pos.x}, ${pos.y}), distance from upstairs: ${Math.abs(pos.x - upstairsX) + Math.abs(pos.y - upstairsY)} tiles`);
+                // Enemy spawn point placed (minimum distance from upstairs maintained)
             }
         }
 
@@ -1053,12 +1036,12 @@ export class DungeonGenerator {
             }
         }
 
-        console.log(`Progression check: ${keysCollected} keys accessible from spawn`);
+        // Progression check: validate keys accessible and stairs reachable
 
         // Check if stairs are accessible
         const stairsKey = `${stairsX},${stairsY}`;
         if (accessible.has(stairsKey)) {
-            console.log('✅ Stairs accessible without unlocking doors - progression valid');
+            // Stairs accessible - progression valid
             return; // All good!
         }
 
@@ -1071,7 +1054,7 @@ export class DungeonGenerator {
 
         for (let iteration = 0; iteration < maxIterations; iteration++) {
             if (accessible.has(stairsKey)) {
-                console.log(`✅ Stairs accessible after unlocking ${doorsUnlocked} doors`);
+                // Stairs accessible after unlocking doors (progression valid)
                 return; // Stairs now accessible!
             }
 
@@ -1109,7 +1092,7 @@ export class DungeonGenerator {
             keysCollected--;
             doorsUnlocked++;
 
-            console.log(`  Unlocking door at (${doorToUnlock.x}, ${doorToUnlock.y}), keys remaining: ${keysCollected}`);
+            // Unlocking door to restore progression
 
             // Re-calculate accessible area
             accessible = this.findAccessibleTiles(tileMap, spawnX, spawnY);
@@ -1127,14 +1110,14 @@ export class DungeonGenerator {
         // Final check
         if (!accessible.has(stairsKey)) {
             console.error('❌ SOFTLOCK DETECTED: Stairs unreachable even with all keys!');
-            console.log('   Unlocking all remaining locked doors to fix...');
+            // Emergency: Unlocking all remaining doors to prevent softlock
 
             // Emergency fix: unlock ALL locked doors
             for (let y = 0; y < this.height; y++) {
                 for (let x = 0; x < this.width; x++) {
                     if (tileMap.getTile(x, y) === TILE_DOOR_LOCKED) {
                         tileMap.setTile(x, y, TILE_DOOR_OPEN);
-                        console.log(`   Emergency unlock: (${x}, ${y})`);
+                        // Emergency unlock door to prevent softlock
                     }
                 }
             }
@@ -1144,11 +1127,11 @@ export class DungeonGenerator {
                 if (room.hasLockedDoor) {
                     room.hasLockedDoor = false;
                     room.keyRequired = false;
-                    console.log(`   Room vault status removed`);
+                    // Vault status removed to prevent item trapping
                 }
             }
 
-            console.log('✅ All locks removed - progression now guaranteed');
+            // All locks removed - progression guaranteed
         }
     }
 
@@ -1186,7 +1169,7 @@ export class DungeonGenerator {
             }
         }
 
-        console.log(`🧱 Marked ${wallsMarked}/${wallsTotal} walls as bashable (${Math.floor(bashablePercentage * 100)}%)`);
+        // Bashable walls marked based on floor theme percentage
     }
 
     // Helper: Check if a wall position is part of a vault room perimeter
@@ -1276,7 +1259,7 @@ export class DungeonGenerator {
         }
 
         if (waterPlaced > 0 || trapsPlaced > 0) {
-            console.log(`💧 Placed ${waterPlaced} water tiles, ${trapsPlaced} traps`);
+            // Environmental hazards placed (water puddles and traps)
         }
     }
 

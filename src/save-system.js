@@ -39,7 +39,7 @@ export class SaveSystem {
             floor: game.numFloors - game.currentFloor, // Display floor (10 → 1)
             playerHealth: game.player.health,
             playerMaxHealth: game.player.maxHealth,
-            playerDesperation: game.desperationMeter.desperation,
+            playerDesperation: game.desperationMeter.value,
             playerPosition: {
                 x: game.player.x,
                 y: game.player.y

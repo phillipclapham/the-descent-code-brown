@@ -143,7 +143,7 @@ export class Player {
                         // Success! Auto-equip happens in addWeapon() if needed
                         this.setMessage(`Picked up ${weapon.name} (${weapon.damageMin}-${weapon.damageMax} dmg)`);
                         if (this.game) this.game.soundSystem.playPickup(); // Session 17
-                        console.log(`Weapon picked up: ${weapon.name} at (${newX}, ${newY})`);
+                        // Weapon picked up successfully
 
                         // Remove weapon from map and combat system
                         this.tileMap.setTile(newX, newY, TILE_FLOOR);
@@ -175,7 +175,7 @@ export class Player {
                     if (this.addToInventory(consumable)) {
                         this.setMessage(`Picked up ${consumable.name}`);
                         if (this.game) this.game.soundSystem.playPickup(); // Session 17
-                        console.log(`Consumable picked up: ${consumable.name} at (${newX}, ${newY})`);
+                        // Consumable picked up successfully
 
                         // Remove consumable from map and combat system
                         this.tileMap.setTile(newX, newY, TILE_FLOOR);
@@ -246,7 +246,7 @@ export class Player {
                     const trapDamage = 5;
                     this.health -= trapDamage;
                     this.setMessage(`You trigger a trap! -${trapDamage} HP`);
-                    console.log(`Player stepped on trap: -${trapDamage} HP (now ${this.health}/${this.maxHealth})`);
+                    // Player damaged by trap
                 }
             }
 
@@ -344,19 +344,19 @@ export class Player {
     addWeapon(weapon) {
         const emptySlot = this.weaponInventory.findIndex(slot => slot === null);
         if (emptySlot === -1) {
-            console.log('Weapon inventory full! Cannot add weapon.');
+            // Weapon inventory full (message shown to player)
             return false; // Weapon inventory full
         }
 
         this.weaponInventory[emptySlot] = weapon;
-        console.log(`Added ${weapon.name} to weapon slot ${emptySlot + 1}`);
+        // Weapon added to inventory
 
         // Auto-equip if no weapon currently equipped (Session 14a: Update selectedSlot and lastWeaponSlot)
         if (this.equippedWeapon === null) {
             this.selectedSlot = emptySlot;
             this.lastWeaponSlot = emptySlot;
             this.equippedWeapon = weapon;
-            console.log(`Auto-equipped ${weapon.name}`);
+            // Weapon auto-equipped
         }
 
         return true;
@@ -366,12 +366,12 @@ export class Player {
     addConsumable(consumable) {
         const emptySlot = this.consumableInventory.findIndex(slot => slot === null);
         if (emptySlot === -1) {
-            console.log('Consumable inventory full! Cannot add consumable.');
+            // Consumable inventory full (message shown to player)
             return false; // Consumable inventory full
         }
 
         this.consumableInventory[emptySlot] = consumable;
-        console.log(`Added ${consumable.name} to consumable slot ${emptySlot + 1}`);
+        // Consumable added to inventory
         return true;
     }
 
@@ -390,14 +390,14 @@ export class Player {
                 `${this.equippedWeapon.name} (${this.equippedWeapon.damageMin}-${this.equippedWeapon.damageMax} dmg)` :
                 'Empty';
             this.setMessage(`Selected: ${weaponName}`);
-            console.log(`Cycled to weapon slot ${this.selectedSlot + 1}: ${weaponName}`);
+            // Cycled to weapon slot
         } else {
             // Consumable selected (4-7), just highlight (don't use)
             const consumableIndex = this.selectedSlot - 4;
             const consumable = this.consumableInventory[consumableIndex];
             const consumableName = consumable ? consumable.name : 'Empty';
             this.setMessage(`Selected: ${consumableName} (press ENTER to use)`);
-            console.log(`Cycled to consumable slot ${this.selectedSlot + 1}: ${consumableName}`);
+            // Cycled to consumable slot
         }
     }
 
@@ -422,7 +422,7 @@ export class Player {
             this.equippedWeapon = this.weaponInventory[this.selectedSlot]; // Now null if empty
 
             this.setMessage(`Dropped ${weapon.name}`);
-            console.log(`Dropped ${weapon.name} at (${this.x}, ${this.y})`);
+            // Weapon dropped
             return true;
         } else {
             // Consumable slot
@@ -442,7 +442,7 @@ export class Player {
             this.consumableInventory[consumableIndex] = null;
 
             this.setMessage(`Dropped ${consumable.name}`);
-            console.log(`Dropped ${consumable.name} at (${this.x}, ${this.y})`);
+            // Consumable dropped
             return true;
         }
     }
@@ -461,14 +461,14 @@ export class Player {
                 `${this.equippedWeapon.name} (${this.equippedWeapon.damageMin}-${this.equippedWeapon.damageMax} dmg)` :
                 'Empty';
             this.setMessage(`Equipped: ${weaponName}`);
-            console.log(`Selected weapon slot ${slotIndex + 1}: ${weaponName}`);
+            // Weapon slot selected
         } else {
             // Consumable selected (4-7), just highlight (don't use until ENTER)
             const consumableIndex = slotIndex - 4;
             const consumable = this.consumableInventory[consumableIndex];
             const consumableName = consumable ? consumable.name : 'Empty';
             this.setMessage(`Selected: ${consumableName} (press ENTER to use)`);
-            console.log(`Selected consumable slot ${slotIndex + 1}: ${consumableName}`);
+            // Consumable slot selected
         }
     }
 
@@ -492,7 +492,7 @@ export class Player {
         this.setMessage(`Used ${consumable.name}`);
         if (this.game) this.game.soundSystem.playUseConsumable(); // Session 17
         this.consumableInventory[consumableIndex] = null; // Remove after use
-        console.log(`Used ${consumable.name} from slot ${this.selectedSlot + 1}`);
+        // Consumable used
 
         // Return to the slot containing the currently equipped weapon
         // Find which slot has the equipped weapon
@@ -513,7 +513,7 @@ export class Player {
 
         this.selectedSlot = returnSlot;
         this.lastWeaponSlot = returnSlot; // Update lastWeaponSlot too
-        console.log(`Returned to weapon slot ${returnSlot + 1}`);
+        // Returned to equipped weapon slot
     }
 
     // ===== END INVENTORY MANAGEMENT =====

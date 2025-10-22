@@ -105,10 +105,7 @@ class Game {
         this.vaultsUnlocked = 0;
         this.keysUsed = 0;
 
-        console.log('Game initialized');
-        console.log(`Grid: ${GRID_WIDTH}x${GRID_HEIGHT}`);
-        console.log(`Generated ${this.numFloors} dungeon floors`);
-        console.log(`Player starting position: (${this.player.x}, ${this.player.y})`);
+        // Game initialization complete
     }
 
     // Generate all dungeon floors
@@ -124,7 +121,7 @@ class Game {
             this.floors.push(tileMap);
         }
 
-        console.log(`${this.numFloors} floors generated`);
+        // All dungeon floors generated
     }
 
     // Spawn enemies, weapons, and consumables for the current floor (Session 10)
@@ -136,7 +133,7 @@ class Game {
         this.combat.consumables.clear(); // Session 10
 
         const displayFloor = this.numFloors - this.currentFloor;
-        console.log(`🎲 Spawning entities for Floor ${displayFloor}...`);
+        // Spawning enemies, weapons, and consumables for current floor
 
         // Floor-based enemy spawning (Session 11)
         const enemyConfigs = this.getEnemyConfigsForFloor(displayFloor);
@@ -182,7 +179,7 @@ class Game {
                 if (spawnPos) {
                     const enemy = new Enemy(spawnPos.x, spawnPos.y, config, type);
                     this.combat.enemies.push(enemy);
-                    console.log(`  Spawned ${enemy.name} at (${spawnPos.x}, ${spawnPos.y})`);
+                    // Enemy spawned successfully
                 }
             }
         }
@@ -210,7 +207,7 @@ class Game {
                 const weaponKey = `${x},${y}`;
                 this.combat.weapons.set(weaponKey, weapon);
 
-                console.log(`  Spawned ${weapon.name} at (${x}, ${y})`);
+                // Weapon spawned successfully
                 weaponSpawned = true;
             }
         }
@@ -241,7 +238,7 @@ class Game {
                     const consumableKey = `${x},${y}`;
                     this.combat.consumables.set(consumableKey, consumable);
 
-                    console.log(`  Spawned ${consumable.name} at (${x}, ${y})`);
+                    // Consumable spawned successfully
                     consumableSpawned = true;
                 }
             }
@@ -251,7 +248,7 @@ class Game {
         if (this.tileMap.breakRooms && this.tileMap.breakRooms.length > 0) {
             for (const breakRoom of this.tileMap.breakRooms) {
                 const numBreakRoomItems = 2 + Math.floor(Math.random() * 2); // 2-3 consumables
-                console.log(`  🛋️  Spawning ${numBreakRoomItems} consumables in Break Room at (${breakRoom.x}, ${breakRoom.y})`);
+                // Spawning extra consumables in Break Room
 
                 for (let i = 0; i < numBreakRoomItems; i++) {
                     // Find random position inside break room
@@ -291,13 +288,13 @@ class Game {
                         const consumableKey = `${spawnPos.x},${spawnPos.y}`;
                         this.combat.consumables.set(consumableKey, consumable);
 
-                        console.log(`     ☕ ${consumable.name} at (${spawnPos.x}, ${spawnPos.y})`);
+                        // Break Room consumable placed
                     }
                 }
             }
         }
 
-        console.log(`✅ Floor ${displayFloor} entities spawned: ${this.combat.enemies.length} enemies, ${this.combat.weapons.size} weapons, ${this.combat.consumables.size} consumables`);
+        // Floor entity spawning complete
     }
 
     // Get random weapon from full weapon pool (Session 10)
@@ -394,7 +391,7 @@ class Game {
 
     // Initialize and start the game
     start() {
-        console.log('Game starting...');
+        // Game starting
         this.running = true;
         requestAnimationFrame((time) => this.gameLoop(time));
     }
@@ -441,7 +438,7 @@ class Game {
         // Session 14: Pause toggle (P key) - handle even when paused
         if (this.input.isPausePressed()) {
             this.paused = !this.paused;
-            console.log(this.paused ? 'Game paused' : 'Game unpaused');
+            // Pause toggled
             // Clear key to prevent repeat (wait for key release)
             this.input.keys['p'] = false;
             this.input.keys['P'] = false;
@@ -450,7 +447,7 @@ class Game {
         // Session 16: Help toggle (H key) - handle even when paused/help active
         if (this.input.isHelpPressed()) {
             this.helpSystem.toggle();
-            console.log(this.helpSystem.isActive() ? 'Help opened' : 'Help closed');
+            // Help toggled
             // Clear key to prevent repeat (wait for key release)
             this.input.keys['h'] = false;
             this.input.keys['H'] = false;
@@ -460,7 +457,7 @@ class Game {
         if (this.input.isMutePressed() && !this.muteKeyProcessed) {
             const muted = this.soundSystem.toggleMute();
             this.player.setMessage(muted ? 'Sound: OFF' : 'Sound: ON');
-            console.log(muted ? '🔇 Sound muted' : '🔊 Sound unmuted');
+            // Mute toggled
             this.muteKeyProcessed = true;
         }
         if (!this.input.isMutePressed()) {
@@ -522,7 +519,7 @@ class Game {
 
         // Session 12d: Check for game over at 100% desperation
         if (this.desperationMeter.getValue() >= 100) {
-            console.log('💀 GAME OVER! Desperation reached 100%');
+            // Game over: Desperation reached 100%
             this.gameState = 'game_over';
             // Delete save on desperation death (preserve permadeath)
             SaveSystem.deleteSave();
@@ -668,7 +665,7 @@ class Game {
         this.transitionCooldown = 100;
 
         const displayFloor = this.numFloors - this.currentFloor;
-        console.log(`⬇️  Descended to Floor ${displayFloor}`);
+        // Descended to next floor
 
         // Auto-save on floor transition (Session 12b)
         SaveSystem.save(this);
@@ -697,7 +694,7 @@ class Game {
         this.transitionCooldown = 100;
 
         const displayFloor = this.numFloors - this.currentFloor;
-        console.log(`⬆️  Ascended to Floor ${displayFloor}`);
+        // Ascended to previous floor
 
         // Auto-save on floor transition (Session 12b)
         SaveSystem.save(this);
@@ -705,7 +702,7 @@ class Game {
 
     // Handle victory condition (player reached the toilet!) (Session 12a)
     handleVictory() {
-        console.log('🎉 VICTORY! You made it to the bathroom!');
+        // Victory achieved!
         this.gameState = 'victory';
         this.saveHighScore();
 

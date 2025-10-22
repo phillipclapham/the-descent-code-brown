@@ -28,7 +28,6 @@ export const ANTACID = new Consumable(
     'Antacid Tablet',
     (player, desperationMeter) => {
         desperationMeter.reduceBy(25); // Reduce by 25 percentage points
-        console.log('Antacid used: -25% desperation');
     },
     'a',
     'Reduces desperation by 25%'
@@ -47,8 +46,6 @@ export const COFFEE = new Consumable(
 
         // Increase desperation immediately (the cost of speed)
         desperationMeter.increaseBy(15); // +15 percentage points
-
-        console.log('Coffee consumed: +30% speed for 30s, +15% desperation');
     },
     'C', // Capital C to distinguish from coffee pot weapon
     '+30% speed for 30s, +15% desperation'
@@ -65,7 +62,6 @@ export const DONUT = new Consumable(
         const oldHealth = player.health;
         player.health = Math.min(player.health + healAmount, player.maxHealth);
         const actualHeal = player.health - oldHealth;
-        console.log(`Donut consumed: +${actualHeal} HP (${oldHealth} → ${player.health})`);
     },
     'd',
     'Restores 25 HP'
@@ -87,8 +83,6 @@ export const ENERGY_DRINK = new Consumable(
 
         // Increase desperation immediately (the cost of power)
         desperationMeter.increaseBy(20); // +20 percentage points
-
-        console.log('Energy Drink consumed: Invincibility 10s, +20% desperation, 5s crash after');
     },
     'e',
     'Invincibility 10s, +20% desperation, crash after'
