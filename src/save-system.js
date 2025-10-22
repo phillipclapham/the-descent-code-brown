@@ -117,7 +117,7 @@ export class SaveSystem {
         // Restore player state
         game.player.health = saveData.playerHealth || 100;
         game.player.maxHealth = saveData.playerMaxHealth || 100;
-        game.desperationMeter.desperation = saveData.playerDesperation || 0;
+        game.desperationMeter.value = saveData.playerDesperation || 0;
         game.player.keysCollected = saveData.keysCollected || 0;
 
         // Restore clench state
@@ -245,6 +245,9 @@ export class SaveSystem {
 
         // Session 12d: Restore desperationMeter reference (needed for wall bashing & door forcing)
         game.player.desperationMeter = game.desperationMeter;
+
+        // Session 17: Restore game reference (needed for sound system access)
+        game.player.game = game;
 
         // Respawn enemies and items for this floor
         game.spawnFloorEntities();
