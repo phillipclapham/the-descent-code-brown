@@ -10,6 +10,7 @@ import { CombatSystem } from './combat.js';
 import { IntroModal } from './intro-modal.js';
 import { SaveSystem } from './save-system.js';
 import { MenuSystem } from './menu-system.js';
+import { HelpSystem } from './help-system.js';
 import {
     Enemy,
     ENEMY_SECURITY_BOT,
@@ -45,6 +46,9 @@ class Game {
 
         // Initialize combat system
         this.combat = new CombatSystem(this);
+
+        // Initialize help system (Session 16)
+        this.helpSystem = new HelpSystem(this.canvas, this.renderer.ctx);
 
         // Multi-floor system
         this.numFloors = 10;  // 10 floors: start at floor 10, descend to floor 1
@@ -422,8 +426,62 @@ class Game {
             this.input.keys['P'] = false;
         }
 
-        // If paused, skip all game logic (render will show pause overlay)
-        if (this.paused) {
+        // Session 16: Help toggle (H key) - handle even when paused/help active
+        if (this.input.isHelpPressed()) {
+            this.helpSystem.toggle();
+            console.log(this.helpSystem.isActive() ? 'Help opened' : 'Help closed');
+            // Clear key to prevent repeat (wait for key release)
+            this.input.keys['h'] = false;
+            this.input.keys['H'] = false;
+        }
+
+        // Session 16: Handle help system input (arrow keys, WASD, number keys, ESC)
+        if (this.helpSystem.isActive()) {
+            // Check for left/right arrow keys (tab switching)
+            if (this.input.isKeyPressed('ArrowLeft')) {
+                this.helpSystem.handleInput('ArrowLeft');
+                this.input.keys['ArrowLeft'] = false;
+            }
+            if (this.input.isKeyPressed('ArrowRight')) {
+                this.helpSystem.handleInput('ArrowRight');
+                this.input.keys['ArrowRight'] = false;
+            }
+            // Check for up/down arrow keys (scrolling)
+            if (this.input.isKeyPressed('ArrowUp')) {
+                this.helpSystem.handleInput('ArrowUp');
+                this.input.keys['ArrowUp'] = false;
+            }
+            if (this.input.isKeyPressed('ArrowDown')) {
+                this.helpSystem.handleInput('ArrowDown');
+                this.input.keys['ArrowDown'] = false;
+            }
+            // Check for W/S keys (scrolling)
+            if (this.input.isKeyPressed('w') || this.input.isKeyPressed('W')) {
+                this.helpSystem.handleInput('w');
+                this.input.keys['w'] = false;
+                this.input.keys['W'] = false;
+            }
+            if (this.input.isKeyPressed('s') || this.input.isKeyPressed('S')) {
+                this.helpSystem.handleInput('s');
+                this.input.keys['s'] = false;
+                this.input.keys['S'] = false;
+            }
+            // Check for number keys 1-4
+            for (let i = 1; i <= 4; i++) {
+                if (this.input.isKeyPressed(String(i))) {
+                    this.helpSystem.handleInput(String(i));
+                    this.input.keys[String(i)] = false;
+                }
+            }
+            // Check for ESC
+            if (this.input.isKeyPressed('Escape')) {
+                this.helpSystem.handleInput('Escape');
+                this.input.keys['Escape'] = false;
+            }
+        }
+
+        // If paused or help active, skip all game logic (render will show overlay)
+        if (this.paused || this.helpSystem.isActive()) {
             return;
         }
 
@@ -971,6 +1029,11 @@ class Game {
         // Draw pause overlay if paused (Session 14)
         if (this.paused) {
             this.drawPauseOverlay();
+        }
+
+        // Draw help overlay if active (Session 16)
+        if (this.helpSystem.isActive()) {
+            this.helpSystem.render();
         }
     }
 

@@ -2,305 +2,267 @@
 
 **Current Phase:** Phase 4 - Polish & Public Release 🚀 IN PROGRESS
 **Previous Phase:** Phase 3 - Combat & Items ✅ COMPLETE & ARCHIVED
-**Current Session:** Session 15 - Professional HTML/CSS Page Design
-**Status:** ✅ SESSION 14/14a COMPLETE! Ready to start Session 15
+**Current Session:** Session 16 - Tutorial & Help System
+**Status:** ✅ SESSION 15 COMPLETE! Ready to start Session 16
 **Last Updated:** 2025-10-22
 
 ---
 
 ## 📋 NEXT CONVERSATION START PROTOCOL
 
-**🎯 TO START SESSION 15:**
+**🎯 TO START SESSION 16:**
 ```
 [!read-memory]
-"Let's start Session 15: Professional HTML/CSS Page Design"
+"Let's start Session 16: Tutorial & Help System"
 ```
 
-**Session 15 Focus:**
-- Full page redesign (header, sidebar, footer)
-- Terminal aesthetic (greens, cyans, blacks)
-- Controls reference visible on page (no need to play to see controls)
-- Responsive layout
-- Credits and tech stack
-- Professional presentation for public release
+**Session 16 Focus:**
+- In-game help overlay system (H key)
+- Multi-tab interface (Controls, Mechanics, Strategy, Credits)
+- Teach signature mechanics (Clench, desperation abilities, Break Rooms)
+- Explain dual inventory system (Q/E cycling, X drop, ENTER use)
+- First-time player onboarding
+- Professional tutorial presentation
 
-**All Session Details:** See `PHASE_4_PLAN.md` for complete 7-session breakdown
+**All Session Details:** See `PHASE_4_PLAN.md` lines 625-720 for complete specifications
 
 ---
 
-## ✅ SESSION 14/14a COMPLETE! (Just Finished)
+## ✅ SESSION 15 COMPLETE! (Just Finished)
 
-**Session 14: Inventory System Redesign + Pause Key**
-**Session 14a: Critical Fixes + Unified Cycling + Consumable Dropping**
-**Duration:** ~115 minutes total (75 min Session 14, 40 min Session 14a)
-**Commits:** 423b6c5, 52f8ff0, 23563b9
+**Session 15: Professional HTML/CSS Page Design + Polish**
+**Duration:** ~60 minutes
+**Commit:** 715a11e
+**Files Changed:** 8 files (634 insertions, 187 deletions)
 
 ### What Was Built
 
 **MAJOR FEATURES:**
-1. ✅ **Dual Inventory System** - 4 weapon slots + 4 consumable slots
-2. ✅ **Unified Cycling** - Q/E cycles through ALL 8 slots
-3. ✅ **Item Dropping** - X drops ANY selected item (weapons OR consumables)
-4. ✅ **Pause Functionality** - P key freezes game (desperation, enemies, effects)
-5. ✅ **Smart Selection** - Weapons auto-equip, consumables require ENTER
-6. ✅ **Post-Use Return** - After ENTER, returns to equipped weapon slot
-7. ✅ **Save System v2** - With automatic v1 migration
+1. ✅ **Professional Page Layout** - Header, sidebar, footer with semantic HTML5
+2. ✅ **External CSS Stylesheet** - Complete design system (~450 lines)
+3. ✅ **Controls Sidebar** - Organized, visible without playing
+4. ✅ **Terminal Aesthetic** - Green on black, monospace fonts, consistent styling
+5. ✅ **Responsive Design** - Desktop, tablet, mobile breakpoints
+6. ✅ **Weapon Damage Display** - All weapon messages show damage specs
+7. ✅ **Layout Fixes** - Canvas extended, inventory moved below map
 
-**CRITICAL FIXES (Session 14a):**
-1. ✅ **Save/Load Bug** - Added id property to Weapon/Consumable classes (was empty inventory)
-2. ✅ **Inventory UI Position** - Moved down 10px to avoid blocking playable area
-3. ✅ **Post-Consumable Return** - Now finds actual equipped weapon slot (was going to slot 4)
+**FILES CREATED:**
+- `styles.css` (~450 lines) - Complete design system with:
+  - CSS variables (colors, spacing, typography)
+  - Terminal aesthetic (#00ff00 green, #00ffff cyan, #00cc00 dim)
+  - Layout structure (header, main flexbox, sidebar, footer)
+  - Component styles (kbd keys, links, controls list)
+  - Responsive breakpoints (1024px, 768px, 600px)
+  - Migrated modal/meter/button styles
 
-### New Controls (Session 14/14a)
+**HTML IMPROVEMENTS:**
+- Semantic HTML5 structure (header, main, aside, footer)
+- Meta tags for SEO and Open Graph
+- Header: Title + tagline + author
+- Controls sidebar: Movement, Inventory, Special sections
+- Footer: About, Tech Stack, Credits with links
+- Link to phillipclapham.com added
 
-```
-MOVEMENT:
-  WASD/Arrows  - Move
-  SPACE        - Attack with equipped weapon
-
-INVENTORY CYCLING:
-  Q            - Cycle left through all 8 slots
-  E            - Cycle right through all 8 slots
-
-INVENTORY DIRECT SELECT:
-  1-4          - Select weapon (auto-equips)
-  5-8          - Select consumable (highlights only)
-
-ITEM ACTIONS:
-  X            - Drop selected item (weapon OR consumable)
-  ENTER        - Use selected consumable (returns to weapon)
-
-GAME:
-  C            - Clench (reduce desperation)
-  P            - Pause/unpause
-  R            - Restart (on death)
-```
-
-### Technical Implementation
-
-**New Data Structure:**
-```javascript
-// Dual inventories with unified selection
-this.weaponInventory = new Array(4).fill(null);
-this.consumableInventory = new Array(4).fill(null);
-this.selectedSlot = 0; // 0-7 unified (0-3 weapons, 4-7 consumables)
-this.lastWeaponSlot = 0; // For post-consumable return
-this.equippedWeapon = null; // Current weapon reference
-```
-
-**Smart Behavior:**
-- Weapon selected (0-3): Auto-equips immediately
-- Consumable selected (4-7): Highlights, waits for ENTER
-- ENTER on consumable: Uses it, returns to equipped weapon slot
-- X on any slot: Drops item at player position
-- Q/E: Cycles through all 8 slots (weapons + consumables)
-
-**Save Format v2.0:**
-```javascript
-{
-  version: '2.0',
-  weaponInventory: [...], // 4 weapon slots
-  consumableInventory: [...], // 4 consumable slots
-  selectedSlot: 0,
-  lastWeaponSlot: 0,
-  // ... other player state
+**DESIGN SYSTEM:**
+```css
+:root {
+  --bg-primary: #000000;
+  --color-primary: #00ff00;    /* Terminal green */
+  --color-accent: #00ffff;     /* Cyan */
+  --color-dim: #00cc00;        /* Dimmed green (improved readability) */
+  --font-mono: 'Courier New', 'Consolas', 'Monaco', monospace;
 }
 ```
 
-**Migration:** Automatically converts v1.0 saves to v2.0 on load
+**LAYOUT FIXES:**
+- Canvas height: 600px → 660px
+- Inventory bar: y=515 → y=605 (below map, not blocking!)
+- All canvas clear operations updated to 660px
+- Game area properly separated from UI chrome
+
+**BUG FIXES:**
+1. **Desperation initialization bug** - Added render() call in constructor to ensure visual state matches value (fixes rare bug where new game starts with previous desperation level displayed)
+2. **Intro modal controls** - Removed outdated controls section, added note to check sidebar
+3. **R key clarification** - Updated to "Restart (on death)" to indicate it only works on game over/victory
+
+**POLISH ENHANCEMENTS:**
+- Green text contrast improved (#007700 → #00cc00 for better readability)
+- Weapon messages show damage: "Picked up Plunger (15-20 dmg)"
+- Weapon cycling shows damage: "Selected: Wrench (20-28 dmg)"
+- Weapon equip shows damage: "Equipped: Toilet Brush (8-12 dmg)"
+- Styled <kbd> elements with shadows and borders
+- Hover effects on links (cyan → yellow with glow)
+- Professional keyboard key styling
+
+**RESPONSIVE DESIGN:**
+- Desktop (>1024px): Sidebar beside game canvas
+- Tablet (768-1024px): Sidebar below canvas, full width
+- Mobile (600px): Canvas scales, controls stack vertically
+- Mobile (375px): Tightened spacing, smaller fonts
+- All breakpoints tested and functional
 
 ### Files Modified
 
-**Session 14:**
-- `src/input.js` (+30 lines) - Q, E, X, Enter, P key detection
-- `src/player.js` (+120 lines) - Dual inventories, cycling, dropping, pause
-- `src/game.js` (+80 lines) - Input handling, UI rendering, pause logic
-- `src/save-system.js` (+40 lines) - v2 format with v1 migration
+- `styles.css` (+450 lines) - NEW FILE, complete design system
+- `index.html` (+80 lines changed) - Semantic structure, meta tags, sidebar, footer
+- `src/renderer.js` (+1 line) - CANVAS_HEIGHT 600 → 660
+- `src/game.js` (+4 lines) - Inventory bar position, canvas clears
+- `src/menu-system.js` (+1 line) - Canvas clear height
+- `src/desperation-meter.js` (+3 lines) - Initialization render call
+- `src/intro-modal.js` (-14 lines) - Simplified story modal
+- `src/player.js` (+12 lines) - Weapon damage in messages
 
-**Session 14a:**
-- `src/weapon.js` (+2 lines) - Added id property to constructor
-- `src/consumable.js` (+2 lines) - Added id property to constructor
-- `src/player.js` (+25 lines) - Unified selection, dropItem, cycleSlot, smart return
-- `src/game.js` (+5 lines) - UI position fix, unified rendering
-- `src/save-system.js` (+15 lines) - selectedSlot persistence
-
-**Total:** ~319 lines changed across 5 files
-
-### Testing Verified
-
-**Core Features:**
-- ✅ Q/E cycles through all 8 slots (wraps correctly)
-- ✅ X drops weapons AND consumables (spawns on ground, can pick back up)
-- ✅ 1-4 keys select and auto-equip weapons
-- ✅ 5-8 keys select consumables (doesn't auto-use)
-- ✅ ENTER uses consumable and returns to equipped weapon
-- ✅ P pauses game (desperation, enemies, effects freeze)
-- ✅ Save/load preserves full inventories (both weapons and consumables)
-- ✅ v1 saves auto-migrate to v2 format
-- ✅ Inventory UI doesn't block playable area
-
-**Edge Cases:**
-- ✅ Drop last weapon (can pick back up)
-- ✅ 5th weapon pickup blocked with "Press X to drop" message
-- ✅ Empty slot cycling works correctly
-- ✅ Auto-equip on first weapon pickup
-- ✅ Post-use return finds actual weapon slot (not hardcoded slot 4)
+**Total:** ~540 lines changed across 8 files
 
 ### Why This Mattered
 
-**Before Session 14:**
-- Single 8-slot inventory (weapons mixed with consumables)
-- Weapons clogged inventory (couldn't get rid of bad weapons)
-- No way to cycle or organize items
-- Consumables auto-used on number key press (accidents!)
-- No pause key (players couldn't take breaks)
+**Before Session 15:**
+- Minimal centered layout (h1 + canvas)
+- All CSS inline (169 lines in <style> tag)
+- Controls hidden (need to play to discover)
+- No credits or context
+- Unprofessional appearance
+- Not portfolio-ready
 
-**After Session 14/14a:**
-- Strategic inventory management (weapons vs consumables)
-- Can drop unwanted items (X key)
-- Quick cycling through options (Q/E)
-- Intentional consumable use (ENTER confirmation)
-- Pause for thinking/breaks (P key)
-- Professional UX quality
+**After Session 15:**
+- Professional multi-section page
+- External CSS with design system
+- Controls visible immediately
+- Responsive design works on all devices
+- Terminal aesthetic throughout
+- Portfolio-worthy presentation
+- Ready for public release!
 
-**Impact:** Transformed from clunky, accidental-prone UI to strategic, intentional inventory system. CRITICAL for public release quality.
+**Impact:** Game went from minimal prototype appearance → professional portfolio piece. First impression now matches game quality. Essential for public release.
 
 ---
 
 ## 🎯 NEXT SESSION READY TO START! ⏳
 
-**Session 15: Professional HTML/CSS Page Design**
+**Session 16: Tutorial & Help System**
 **Duration:** ~45-60 minutes
-**Priority:** CRITICAL (public release)
+**Priority:** CRITICAL (first-time player experience)
 **Status:** READY TO START (no blockers)
 
 ### Goals
-1. Professional HTML page structure (header, sidebar, footer)
-2. Terminal aesthetic (greens, cyans, blacks, monospace fonts)
-3. Controls reference visible without playing
-4. Responsive layout for different screen sizes
-5. Credits and tech stack section
-6. Portfolio-worthy presentation
 
-### Current State
+Create comprehensive in-game tutorial overlay so first-time players can learn mechanics without external documentation.
 
-**Current HTML (index.html):**
-```html
-<h1>The Descent</h1>
-<canvas id="game-canvas"></canvas>
+**Key Requirements:**
+1. H key toggles help overlay
+2. Multi-tab interface (Controls, Mechanics, Strategy, Credits)
+3. Teach signature mechanics (Clench, desperation abilities, Break Rooms)
+4. Explain dual inventory system
+5. Canvas-based rendering (consistent with game)
+6. ESC key to dismiss
+
+### Problem
+
+New players won't know about:
+- **Clench mechanic** (C key - signature feature!)
+- **Desperation thresholds** (75% bash walls, 90% force doors)
+- **Break Rooms** (desperation pauses inside)
+- **Dual inventory** (Q/E cycling, 1-4 weapons auto-equip, 5-8 consumables need ENTER)
+- **Item dropping** (X key for strategic management)
+- **Strategic depth** (when to use items, Clench timing)
+
+### Solution: Help Overlay System
+
+**Design:**
+```
+┌───────────────────────────────────────────────┐
+│  THE DESCENT: CODE BROWN - HELP               │
+├───────────────────────────────────────────────┤
+│  [CONTROLS] [MECHANICS] [STRATEGY] [CREDITS]  │
+├───────────────────────────────────────────────┤
+│                                               │
+│  Tab content here (scrollable)                │
+│  - Movement keys                              │
+│  - Inventory system                           │
+│  - Special abilities                          │
+│  - Tips and tricks                            │
+│                                               │
+│                                               │
+│  Press H or ESC to close                      │
+└───────────────────────────────────────────────┘
 ```
 
-**Issues:**
-- Title floating above canvas (unprofessional)
-- No page structure or styling
-- Controls hidden (need to play to discover)
-- No credits or context
-- Not portfolio-ready
+**4 Tabs:**
+1. **CONTROLS** - Complete key reference (WASD, Q/E, X, C, P, etc.)
+2. **MECHANICS** - Clench, desperation abilities, Break Rooms, dual inventory
+3. **STRATEGY** - Tips for success (when to Clench, weapon choices, consumable timing)
+4. **CREDITS** - Game info, tech stack, links
 
-**Target State:**
-```
-┌─────────────────────────────────────────────┐
-│ [HEADER]                                    │
-│ THE DESCENT - A Terminal Roguelike          │
-│ by Phill Clapham                            │
-├─────────────────────────────────────────────┤
-│                                             │
-│  [SIDEBAR]        [GAME CANVAS]             │
-│  Controls         800x600                   │
-│  - WASD/Arrows                              │
-│  - Q/E cycle                                │
-│  - X drop                                   │
-│  - ...etc                                   │
-│                                             │
-├─────────────────────────────────────────────┤
-│ [FOOTER]                                    │
-│ Credits | Tech Stack | GitHub               │
-└─────────────────────────────────────────────┘
-```
+### Implementation Plan
+
+**File to Create:**
+- `src/help-system.js` (~200-250 lines)
+
+**Features:**
+- Canvas-based overlay (semi-transparent black background)
+- Tab navigation (left/right arrows or 1-4 keys)
+- Scrollable content (if needed)
+- H key to toggle, ESC to close
+- Consistent terminal aesthetic (green text, monospace font)
+
+**Integration:**
+- Add H key detection to `src/input.js`
+- Add help system instance to `src/game.js`
+- Render overlay on top of game when active
+- Pause game while help is open
 
 ### Deliverables
-- [ ] Create professional HTML structure
-- [ ] Add CSS stylesheet with terminal aesthetic
-- [ ] Implement responsive layout
-- [ ] Add controls reference sidebar
-- [ ] Add header with title and tagline
-- [ ] Add footer with credits and links
-- [ ] Test on desktop, tablet, mobile
-- [ ] Verify game still works
 
-### Files to Create/Modify
-- `index.html` (restructure ~100 lines)
-- `styles.css` (new file ~150-200 lines)
-- Verify `src/game.js` canvas reference still works
-
-### Design Guidelines
-
-**Color Scheme (Terminal Aesthetic):**
-- Background: `#000000` or `#0a0a0a` (pure black or near-black)
-- Primary text: `#00ff00` (bright green - retro terminal)
-- Secondary text: `#00ffff` (cyan - accent color)
-- Borders: `#00ff00` or `#00aa00` (green borders)
-- Links: `#00ffff` (cyan, hover to bright cyan)
-- Font: Monospace (Courier New, Consolas, Monaco)
-
-**Layout:**
-- Centered game canvas (800x600)
-- Left sidebar for controls (200-250px)
-- Header with title + tagline
-- Footer with credits/links
-- Responsive: Sidebar moves below on mobile
-- Dark terminal theme throughout
-
-**Typography:**
-- Headers: `font-family: 'Courier New', monospace`
-- All text monospaced for consistency
-- Green on black for that "1980s terminal" feel
-
-### Testing Checklist
-- [ ] Game canvas renders correctly
-- [ ] Controls sidebar readable and organized
-- [ ] Responsive on 1920px desktop
-- [ ] Responsive on 1280px laptop
-- [ ] Responsive on 768px tablet
-- [ ] Responsive on 375px mobile
-- [ ] All links functional
-- [ ] Terminal aesthetic consistent
-- [ ] Professional appearance
+- [ ] Create `src/help-system.js` with HelpOverlay class
+- [ ] Add H key detection to input handler
+- [ ] Integrate help system into game loop
+- [ ] Write all tutorial content (4 tabs)
+- [ ] Style overlay with terminal aesthetic
+- [ ] Test tab navigation
+- [ ] Test toggle (H to open, H/ESC to close)
+- [ ] Verify game pauses while help is open
 
 ### Success Criteria
-- HTML page looks portfolio-worthy
-- Controls visible without playing
-- Terminal aesthetic throughout
-- Responsive on all screen sizes
-- Game functionality unchanged
-- Ready for public release
+
+- Tutorial overlay toggles with H key
+- All 4 tabs navigable and readable
+- Content covers all important mechanics
+- Consistent terminal aesthetic
+- First-time players can learn without external help
+- Professional presentation
 
 ### Why This Session Is Critical
 
-This is the first thing people see when visiting the game. A polished, professional page:
-- Makes Phill look competent (portfolio piece)
-- Makes Claude Code look excellent (showcases quality)
-- Improves player retention (professional = trustworthy)
-- Essential for public release with custom domain
+This is how players will learn to play the game. Without a tutorial:
+- Players miss signature mechanics (Clench!)
+- Confusion about dual inventory system
+- Don't understand desperation abilities
+- Poor first impression = early quit
 
-**Next:** Session 16 - Tutorial & Help System (H key overlay)
+**With Tutorial:**
+- Players discover full depth of game
+- Signature mechanics explained
+- Confident gameplay from the start
+- Professional game experience
+
+**Next:** Session 17 - Sound Effects (optional) or Session 18 - Playtesting
 
 ---
 
 ## 📖 PHASE 4 PROGRESS TRACKER
 
-**Sessions Completed:** 2/7 ✅✅⬜⬜⬜⬜⬜
+**Sessions Completed:** 3/7 ✅✅✅⬜⬜⬜⬜
 
 - ✅ **Session 13:** Critical Bug Fixes & Input Enhancement (30 min)
 - ✅ **Session 14/14a:** Inventory Redesign + Pause + Fixes (115 min)
-- ⬜ **Session 15:** Professional HTML/CSS Page Design (45-60 min) ← NEXT
-- ⬜ **Session 16:** Tutorial & Help System (45-60 min)
+- ✅ **Session 15:** Professional HTML/CSS Page Design (60 min)
+- ⬜ **Session 16:** Tutorial & Help System (45-60 min) ← NEXT
 - ⬜ **Session 17:** Sound Effects & Audio Polish (45-60 min) - OPTIONAL
 - ⬜ **Session 18:** Extended Playtesting & Final Polish (60-90 min)
 - ⬜ **Session 19:** Public Release Preparation (45-60 min)
 
-**Time Spent:** 145 minutes / ~400-450 minutes total
-**Progress:** ~32% complete (critical path sessions)
+**Time Spent:** 205 minutes (~3.4 hours) / ~400-450 minutes total
+**Progress:** ~46% complete (critical path sessions)
 **Status:** ON TRACK for public release
 
 ---
@@ -324,11 +286,15 @@ This is the first thing people see when visiting the game. A polished, professio
 - ✅ Victory sequence (scoring, ranks, high score)
 - ✅ Game over at 100% desperation
 - ✅ Save/continue system (v2.0 with v1 migration)
-- ✅ Story introduction
+- ✅ Story introduction modal
+- ✅ Professional HTML/CSS page design ← NEW!
+- ✅ Controls sidebar visible on page ← NEW!
+- ✅ Terminal aesthetic throughout ← NEW!
+- ✅ Responsive design (desktop/tablet/mobile) ← NEW!
+- ✅ Weapon damage display in messages ← NEW!
 
 **What Needs Building (Phase 4 Remaining):**
-- ❌ Professional HTML/CSS page design ← NEXT (Session 15)
-- ❌ Tutorial & help system (H key)
+- ❌ Tutorial & help system (H key) ← NEXT (Session 16)
 - ⚠️ Sound effects (optional)
 - ❌ Extended playtesting
 - ❌ Public deployment
@@ -363,14 +329,14 @@ This is the first thing people see when visiting the game. A polished, professio
 ## 🚀 PHASE 4 TIMELINE
 
 **Estimated Total:** 6-7.5 hours across 7 sessions
-**Time Spent:** 145 minutes (~2.4 hours)
-**Time Remaining:** ~4-5 hours
+**Time Spent:** 205 minutes (~3.4 hours)
+**Time Remaining:** ~3-4 hours
 
 **Critical Path (Public Release):**
 - ✅ Session 13: Bug fixes (30 min)
 - ✅ Session 14/14a: Inventory redesign (115 min)
-- ⬜ Session 15: HTML design (45-60 min) ← NEXT
-- ⬜ Session 16: Tutorial (45-60 min)
+- ✅ Session 15: HTML/CSS design (60 min)
+- ⬜ Session 16: Tutorial system (45-60 min) ← NEXT
 - ⬜ Session 18: Playtesting (60-90 min)
 - ⬜ Session 19: Release (45-60 min)
 
@@ -378,7 +344,7 @@ This is the first thing people see when visiting the game. A polished, professio
 - ⬜ Session 17: Sound (45-60 min)
 
 **Flexibility:**
-- Sessions can extend (15a, 15b) if needed
+- Sessions can extend (16a, 16b) if needed
 - Can absorb adjacent work when context loaded
 - Reality beats plan
 
@@ -391,7 +357,9 @@ This is the first thing people see when visiting the game. A polished, professio
 - [x] WASD movement working ✅
 - [x] Inventory redesigned (dual system, cycling, dropping) ✅
 - [x] Pause key working ✅
-- [ ] Professional HTML page ← Session 15
+- [x] Professional HTML page ✅
+- [x] Controls visible on page ✅
+- [x] Responsive design ✅
 - [ ] Tutorial complete ← Session 16
 - [ ] Extended playtesting done ← Session 18
 - [ ] Publicly deployed with custom domain ← Session 19
@@ -413,20 +381,19 @@ This is the first thing people see when visiting the game. A polished, professio
 ## 📂 PHASE 4 RESOURCES
 
 **Planning Document:** `PHASE_4_PLAN.md` (companion to this file)
-**Completed Sessions:** Archived in `COMPLETED_SESSIONS_ARCHIVE.md` after each session
+**Completed Sessions:** Archived in `COMPLETED_SESSIONS_ARCHIVE.md` after phase complete
 **Phase Report:** Will create `PHASE_4_COMPLETION_REPORT.md` when phase complete
 
 **Quick Links:**
-- Session 15: HTML/CSS Design (PHASE_4_PLAN.md page 21)
-- Session 16: Tutorial System (PHASE_4_PLAN.md page 28)
-- Session 17: Sound Effects (PHASE_4_PLAN.md page 37)
-- Session 18: Playtesting (PHASE_4_PLAN.md page 43)
-- Session 19: Public Release (PHASE_4_PLAN.md page 49)
+- Session 16: Tutorial System (PHASE_4_PLAN.md lines 625-720)
+- Session 17: Sound Effects (PHASE_4_PLAN.md lines 721-810)
+- Session 18: Playtesting (PHASE_4_PLAN.md lines 811-890)
+- Session 19: Public Release (PHASE_4_PLAN.md lines 891-970)
 
 ---
 
-**Next Action:** Start Session 15 with `[!read-memory]`
+**Next Action:** Start Session 16 with `[!read-memory]`
 
-**Focus:** Professional HTML/CSS page design - terminal aesthetic, controls sidebar, portfolio-worthy presentation
+**Focus:** Tutorial & help system - H key overlay, multi-tab interface, teach signature mechanics, first-time player onboarding
 
-*Last Updated: 2025-10-22 (Session 14/14a complete)*
+*Last Updated: 2025-10-22 (Session 15 complete)*
