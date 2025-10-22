@@ -2,296 +2,336 @@
 
 **Current Phase:** Phase 4 - Polish & Public Release 🚀 IN PROGRESS
 **Previous Phase:** Phase 3 - Combat & Items ✅ COMPLETE & ARCHIVED
-**Current Session:** Session 14 - Inventory System Redesign
-**Status:** ✅ SESSION 13 COMPLETE! Ready to start Session 14
+**Current Session:** Session 15 - Professional HTML/CSS Page Design
+**Status:** ✅ SESSION 14/14a COMPLETE! Ready to start Session 15
 **Last Updated:** 2025-10-22
 
 ---
 
 ## 📋 NEXT CONVERSATION START PROTOCOL
 
-**🎯 TO START SESSION 14:**
+**🎯 TO START SESSION 15:**
 ```
 [!read-memory]
-"Let's start Session 14: Inventory System Redesign"
+"Let's start Session 15: Professional HTML/CSS Page Design"
 ```
 
-**Session 14 Focus:**
-- Separate weapon/consumable inventories (4 slots each)
-- Q/E to cycle weapons, D to drop
-- 1-4 direct equip weapons, 5-8 use consumables
-- P key to pause game (NEW - essential UX)
-- Solves weapon clogging, adds strategic depth
+**Session 15 Focus:**
+- Full page redesign (header, sidebar, footer)
+- Terminal aesthetic (greens, cyans, blacks)
+- Controls reference visible on page (no need to play to see controls)
+- Responsive layout
+- Credits and tech stack
+- Professional presentation for public release
 
 **All Session Details:** See `PHASE_4_PLAN.md` for complete 7-session breakdown
 
 ---
 
-## ✅ SESSION 13 COMPLETE! (Just Finished)
+## ✅ SESSION 14/14a COMPLETE! (Just Finished)
 
-**Session 13: Critical Bug Fixes & Input Enhancement**
-**Duration:** ~30 minutes
-**Commit:** d679e54
+**Session 14: Inventory System Redesign + Pause Key**
+**Session 14a: Critical Fixes + Unified Cycling + Consumable Dropping**
+**Duration:** ~115 minutes total (75 min Session 14, 40 min Session 14a)
+**Commits:** 423b6c5, 52f8ff0, 23563b9
 
-### What Was Fixed
+### What Was Built
 
-**1. NaN Desperation Bug** ❌→✅
-- **Problem:** Save/load showed "NaN%" for desperation meter
-- **Root Cause:** Missing fallback values when restoring undefined save data
-- **Fix:** Added `|| 0` and `|| 100` fallbacks in save-system.js
-- **Impact:** Desperation meter now displays correctly after reload
+**MAJOR FEATURES:**
+1. ✅ **Dual Inventory System** - 4 weapon slots + 4 consumable slots
+2. ✅ **Unified Cycling** - Q/E cycles through ALL 8 slots
+3. ✅ **Item Dropping** - X drops ANY selected item (weapons OR consumables)
+4. ✅ **Pause Functionality** - P key freezes game (desperation, enemies, effects)
+5. ✅ **Smart Selection** - Weapons auto-equip, consumables require ENTER
+6. ✅ **Post-Use Return** - After ENTER, returns to equipped weapon slot
+7. ✅ **Save System v2** - With automatic v1 migration
 
-**2. WASD Movement Missing** ❌→✅
-- **Problem:** Menu said "W/S" but game only supported arrow keys
-- **Fix:** Added W/A/S/D support to input.js alongside arrow keys
-- **Impact:** Both control schemes work identically in all 8 directions
+**CRITICAL FIXES (Session 14a):**
+1. ✅ **Save/Load Bug** - Added id property to Weapon/Consumable classes (was empty inventory)
+2. ✅ **Inventory UI Position** - Moved down 10px to avoid blocking playable area
+3. ✅ **Post-Consumable Return** - Now finds actual equipped weapon slot (was going to slot 4)
 
-**3. Menu Controls Text** ✅
-- Updated menu-system.js: "Arrow Keys / W/S" → "Arrow Keys / WASD"
-- Accurate control scheme display
+### New Controls (Session 14/14a)
+
+```
+MOVEMENT:
+  WASD/Arrows  - Move
+  SPACE        - Attack with equipped weapon
+
+INVENTORY CYCLING:
+  Q            - Cycle left through all 8 slots
+  E            - Cycle right through all 8 slots
+
+INVENTORY DIRECT SELECT:
+  1-4          - Select weapon (auto-equips)
+  5-8          - Select consumable (highlights only)
+
+ITEM ACTIONS:
+  X            - Drop selected item (weapon OR consumable)
+  ENTER        - Use selected consumable (returns to weapon)
+
+GAME:
+  C            - Clench (reduce desperation)
+  P            - Pause/unpause
+  R            - Restart (on death)
+```
+
+### Technical Implementation
+
+**New Data Structure:**
+```javascript
+// Dual inventories with unified selection
+this.weaponInventory = new Array(4).fill(null);
+this.consumableInventory = new Array(4).fill(null);
+this.selectedSlot = 0; // 0-7 unified (0-3 weapons, 4-7 consumables)
+this.lastWeaponSlot = 0; // For post-consumable return
+this.equippedWeapon = null; // Current weapon reference
+```
+
+**Smart Behavior:**
+- Weapon selected (0-3): Auto-equips immediately
+- Consumable selected (4-7): Highlights, waits for ENTER
+- ENTER on consumable: Uses it, returns to equipped weapon slot
+- X on any slot: Drops item at player position
+- Q/E: Cycles through all 8 slots (weapons + consumables)
+
+**Save Format v2.0:**
+```javascript
+{
+  version: '2.0',
+  weaponInventory: [...], // 4 weapon slots
+  consumableInventory: [...], // 4 consumable slots
+  selectedSlot: 0,
+  lastWeaponSlot: 0,
+  // ... other player state
+}
+```
+
+**Migration:** Automatically converts v1.0 saves to v2.0 on load
 
 ### Files Modified
-- `src/save-system.js` (+8 lines) - Fallback values for safe save/load
-- `src/input.js` (+20 lines) - WASD movement support
-- `src/menu-system.js` (+1 line) - Updated control text
 
-**Total:** ~29 lines changed across 3 files
+**Session 14:**
+- `src/input.js` (+30 lines) - Q, E, X, Enter, P key detection
+- `src/player.js` (+120 lines) - Dual inventories, cycling, dropping, pause
+- `src/game.js` (+80 lines) - Input handling, UI rendering, pause logic
+- `src/save-system.js` (+40 lines) - v2 format with v1 migration
+
+**Session 14a:**
+- `src/weapon.js` (+2 lines) - Added id property to constructor
+- `src/consumable.js` (+2 lines) - Added id property to constructor
+- `src/player.js` (+25 lines) - Unified selection, dropItem, cycleSlot, smart return
+- `src/game.js` (+5 lines) - UI position fix, unified rendering
+- `src/save-system.js` (+15 lines) - selectedSlot persistence
+
+**Total:** ~319 lines changed across 5 files
 
 ### Testing Verified
-- ✅ Save/load at 25%, 50%, 75%, 99% desperation - no NaN
-- ✅ WASD movement in all 8 directions
-- ✅ Arrow keys still work
-- ✅ No control conflicts
-- ✅ Menu text accurate
+
+**Core Features:**
+- ✅ Q/E cycles through all 8 slots (wraps correctly)
+- ✅ X drops weapons AND consumables (spawns on ground, can pick back up)
+- ✅ 1-4 keys select and auto-equip weapons
+- ✅ 5-8 keys select consumables (doesn't auto-use)
+- ✅ ENTER uses consumable and returns to equipped weapon
+- ✅ P pauses game (desperation, enemies, effects freeze)
+- ✅ Save/load preserves full inventories (both weapons and consumables)
+- ✅ v1 saves auto-migrate to v2 format
+- ✅ Inventory UI doesn't block playable area
+
+**Edge Cases:**
+- ✅ Drop last weapon (can pick back up)
+- ✅ 5th weapon pickup blocked with "Press X to drop" message
+- ✅ Empty slot cycling works correctly
+- ✅ Auto-equip on first weapon pickup
+- ✅ Post-use return finds actual weapon slot (not hardcoded slot 4)
 
 ### Why This Mattered
-These were BLOCKING bugs for public release. Players expect WASD controls (industry standard), and NaN displays look unprofessional. Both critical for launch quality.
 
-**Next:** Session 14 - Inventory System Redesign + Pause (dual system, cycling, dropping, pause key)
+**Before Session 14:**
+- Single 8-slot inventory (weapons mixed with consumables)
+- Weapons clogged inventory (couldn't get rid of bad weapons)
+- No way to cycle or organize items
+- Consumables auto-used on number key press (accidents!)
+- No pause key (players couldn't take breaks)
 
-### New Items Added to Plan (User Feedback)
+**After Session 14/14a:**
+- Strategic inventory management (weapons vs consumables)
+- Can drop unwanted items (X key)
+- Quick cycling through options (Q/E)
+- Intentional consumable use (ENTER confirmation)
+- Pause for thinking/breaks (P key)
+- Professional UX quality
 
-**1. Pause Key (P) - Added to Session 14**
-- **Why:** Essential UX for roguelike runs (5-30 min) - players need breaks
-- **Will it kill suspense?** NO! Standard in roguelikes because:
-  - Desperation pauses too (fair gameplay)
-  - Can't change game state while paused (no abuse)
-  - Adds accessibility without breaking challenge
-  - Players can think tactically (part of roguelike strategy)
-- **Implementation:** ~15-20 min, straightforward game state toggle
-
-**2. Shrine Interactions (E key) - Added to Session 17**
-- **Current State:** Blue `*` symbols (TILE_FEATURE) render but do nothing
-- **Original Plan:** Interactive lore/flavor text items
-- **Implementation:** E key to read shrine inscription (flavor text about ChromaCorp, The Descent, desperation lore)
-- **Priority:** LOW (nice to have polish, not blocking release)
-- **Estimate:** ~20-30 min (interaction code + writing 5-10 shrine texts)
+**Impact:** Transformed from clunky, accidental-prone UI to strategic, intentional inventory system. CRITICAL for public release quality.
 
 ---
 
-## 🎯 PHASE 4 PLANNING COMPLETE! ✅
+## 🎯 NEXT SESSION READY TO START! ⏳
 
-**Planning Session:** 2025-10-22
-**Duration:** ~60 minutes (planning and documentation)
-**Deliverable:** `PHASE_4_PLAN.md` (~500 lines, comprehensive session details)
-
-### What Was Planned
-
-**CRITICAL Discovery:** User planning PUBLIC RELEASE with custom domain!
-
-This changed Phase 4 from "optional polish" to "CRITICAL for public launch"
-
-**Issues Discovered:**
-1. ✅ **NaN desperation bug** - Save/load shows "NaN%" (CRITICAL) - FIXED Session 13
-2. ✅ **W/S keys don't work** - Menu says W/S but game doesn't support WASD (CRITICAL) - FIXED Session 13
-3. ❌ **Inventory UX confusing** - Weapons clog, can't drop, no cycling (HIGH)
-4. ❌ **Unprofessional page design** - Title floating above canvas, no structure (CRITICAL)
-5. ⚠️ **No tutorial** - First-time players won't understand mechanics (CRITICAL)
-6. ❌ **No pause key** - Game needs P key to pause (MEDIUM - essential UX)
-7. ❌ **Shrines do nothing** - Blue * symbols (TILE_FEATURE) have no 'E' interaction or lore (LOW - nice to have)
-
-**Phase 4 Sessions (7 total, 6-7.5 hours):**
-
-**Session 13: Critical Bug Fixes & Input Enhancement** (~30-45 min) - CRITICAL ✅ COMPLETE
-- ✅ Fix NaN desperation on save/load
-- ✅ Add WASD movement (alongside arrows)
-- ✅ Standardize controls across menu/game
-
-**Session 14: Inventory System Redesign + Pause** (~75-105 min) - HIGH
-- Separate weapon/consumable inventories (4 slots each)
-- Q/E to cycle weapons, D to drop
-- 1-4 direct equip, 5-8 use consumables, ENTER use selected
-- **NEW:** P key to pause (freezes game, desperation, effects)
-- Solves weapon clogging, adds strategic depth, essential UX
-
-**Session 15: Professional HTML/CSS Page Design** (~45-60 min) - CRITICAL
-- Full page redesign (header, sidebar, footer)
-- Terminal aesthetic (greens, cyans, blacks)
-- Controls visible on page
-- Responsive layout
-- Credits and tech stack
-
-**Session 16: Tutorial & Help System** (~45-60 min) - CRITICAL
-- H key toggles help overlay
-- 4 tabs: Controls, Mechanics, Strategy, Credits
-- Updated for new inventory/controls
-- Explains Clench, desperation thresholds, Break Rooms
-
-**Session 17: Sound Effects & Audio Polish** (~45-60 min) - MEDIUM (optional)
-- Web Audio API procedural sounds
-- Combat, items, desperation, environment, UI sounds
-- M key to mute/unmute
-- Retro/arcade aesthetic
-- **NEW:** Shrine interactions (E key for lore/flavor text on blue * symbols)
-
-**Session 18: Extended Playtesting & Final Polish** (~60-90 min) - HIGH
-- 3-5 complete runs (different playstyles)
-- Test all new systems (inventory, controls, tutorial, sound)
-- Find and fix bugs
-- Balance tuning
-- Code cleanup
-
-**Session 19: Public Release Preparation** (~45-60 min) - CRITICAL
-- Deploy to GitHub Pages or Cloudflare Pages
-- Custom domain setup
-- Public README.md with screenshots
-- Meta tags for social sharing
-- Cross-browser testing
-- Launch!
-
-### Key Design Decisions
-
-**Dual Inventory System (Session 14):**
-```
-WEAPONS (Q/E to cycle, D to drop)
-[1.Plunger*] [2.Wrench] [3.Empty] [4.Empty]
-
-CONSUMABLES (5-8 to use, ENTER for selected)
-[5.Coffee*] [6.Antacid] [7.Empty] [8.Empty]
-
-* = Currently selected
-```
-
-**Updated Control Scheme:**
-- **WASD + Arrows** = Movement
-- **SPACE** = Attack
-- **Q/E** = Cycle weapon
-- **D** = Drop weapon
-- **1-4** = Direct equip weapon
-- **5-8** = Use consumable
-- **ENTER** = Use selected consumable
-- **C** = Clench
-- **H** = Help
-- **M** = Mute
-- **ESC** = Pause
-
-**HTML Page Structure:**
-- Professional header (title, tagline)
-- Centered game container
-- Controls sidebar (visible without playing)
-- Footer (credits, links, tech stack)
-- Responsive design
-- Terminal color scheme
-
-### Why This Plan
-
-**User's Goal:** Public release with custom domain - needs professional quality
-
-**Target:** Make both Phill and Claude Code look excellent
-
-**Quality Bar:** Portfolio-worthy, shareable, polished
-
-**Not Optional:** Phase 4 is now CRITICAL for public release success
-
----
-
-## 🎯 SESSION 13 READY TO START! ⏳
-
-**Session 13: Critical Bug Fixes & Input Enhancement**
-**Duration:** ~30-45 minutes
-**Priority:** CRITICAL
+**Session 15: Professional HTML/CSS Page Design**
+**Duration:** ~45-60 minutes
+**Priority:** CRITICAL (public release)
 **Status:** READY TO START (no blockers)
 
 ### Goals
-1. Fix NaN desperation meter on save/load
-2. Add WASD movement keys
-3. Verify no other critical bugs
+1. Professional HTML page structure (header, sidebar, footer)
+2. Terminal aesthetic (greens, cyans, blacks, monospace fonts)
+3. Controls reference visible without playing
+4. Responsive layout for different screen sizes
+5. Credits and tech stack section
+6. Portfolio-worthy presentation
+
+### Current State
+
+**Current HTML (index.html):**
+```html
+<h1>The Descent</h1>
+<canvas id="game-canvas"></canvas>
+```
+
+**Issues:**
+- Title floating above canvas (unprofessional)
+- No page structure or styling
+- Controls hidden (need to play to discover)
+- No credits or context
+- Not portfolio-ready
+
+**Target State:**
+```
+┌─────────────────────────────────────────────┐
+│ [HEADER]                                    │
+│ THE DESCENT - A Terminal Roguelike          │
+│ by Phill Clapham                            │
+├─────────────────────────────────────────────┤
+│                                             │
+│  [SIDEBAR]        [GAME CANVAS]             │
+│  Controls         800x600                   │
+│  - WASD/Arrows                              │
+│  - Q/E cycle                                │
+│  - X drop                                   │
+│  - ...etc                                   │
+│                                             │
+├─────────────────────────────────────────────┤
+│ [FOOTER]                                    │
+│ Credits | Tech Stack | GitHub               │
+└─────────────────────────────────────────────┘
+```
 
 ### Deliverables
-- [ ] Fix save-system.js desperation save/restore
-- [ ] Add WASD keys to input.js
-- [ ] Update menu-system.js control text
-- [ ] Test save/load at various desperation levels
-- [ ] Test WASD movement (all 8 directions)
-- [ ] Verify no control conflicts
+- [ ] Create professional HTML structure
+- [ ] Add CSS stylesheet with terminal aesthetic
+- [ ] Implement responsive layout
+- [ ] Add controls reference sidebar
+- [ ] Add header with title and tagline
+- [ ] Add footer with credits and links
+- [ ] Test on desktop, tablet, mobile
+- [ ] Verify game still works
 
-### Files to Modify
-- `src/save-system.js` (~10 lines)
-- `src/input.js` (~20 lines)
-- `src/menu-system.js` (~5 lines)
+### Files to Create/Modify
+- `index.html` (restructure ~100 lines)
+- `styles.css` (new file ~150-200 lines)
+- Verify `src/game.js` canvas reference still works
+
+### Design Guidelines
+
+**Color Scheme (Terminal Aesthetic):**
+- Background: `#000000` or `#0a0a0a` (pure black or near-black)
+- Primary text: `#00ff00` (bright green - retro terminal)
+- Secondary text: `#00ffff` (cyan - accent color)
+- Borders: `#00ff00` or `#00aa00` (green borders)
+- Links: `#00ffff` (cyan, hover to bright cyan)
+- Font: Monospace (Courier New, Consolas, Monaco)
+
+**Layout:**
+- Centered game canvas (800x600)
+- Left sidebar for controls (200-250px)
+- Header with title + tagline
+- Footer with credits/links
+- Responsive: Sidebar moves below on mobile
+- Dark terminal theme throughout
+
+**Typography:**
+- Headers: `font-family: 'Courier New', monospace`
+- All text monospaced for consistency
+- Green on black for that "1980s terminal" feel
 
 ### Testing Checklist
-- [ ] Save at 25%, 50%, 75%, 99% desperation
-- [ ] Reload and verify correct display (no NaN)
-- [ ] Test WASD in all 8 directions
-- [ ] Verify arrow keys still work
-- [ ] No control conflicts
+- [ ] Game canvas renders correctly
+- [ ] Controls sidebar readable and organized
+- [ ] Responsive on 1920px desktop
+- [ ] Responsive on 1280px laptop
+- [ ] Responsive on 768px tablet
+- [ ] Responsive on 375px mobile
+- [ ] All links functional
+- [ ] Terminal aesthetic consistent
+- [ ] Professional appearance
 
 ### Success Criteria
-- Desperation displays correctly after reload
-- WASD and arrows both work for movement
-- Controls consistent between menu and game
-- No new bugs introduced
+- HTML page looks portfolio-worthy
+- Controls visible without playing
+- Terminal aesthetic throughout
+- Responsive on all screen sizes
+- Game functionality unchanged
+- Ready for public release
 
-### Why Start Here
-These are BLOCKING bugs for public release. Must fix before continuing with other Phase 4 work.
+### Why This Session Is Critical
 
----
+This is the first thing people see when visiting the game. A polished, professional page:
+- Makes Phill look competent (portfolio piece)
+- Makes Claude Code look excellent (showcases quality)
+- Improves player retention (professional = trustworthy)
+- Essential for public release with custom domain
 
-## 📖 PHASE 4 FULL DOCUMENTATION
-
-**See `PHASE_4_PLAN.md` for:**
-- Complete session breakdowns (13-19)
-- Detailed implementation guides
-- Testing checklists
-- Success criteria
-- Code examples
-- Time estimates
-
-**Quick Links:**
-- Session 13: Critical Bug Fixes & Input (page 7)
-- Session 14: Inventory Redesign (page 12)
-- Session 15: HTML/CSS Design (page 21)
-- Session 16: Tutorial System (page 28)
-- Session 17: Sound Effects (page 37)
-- Session 18: Playtesting (page 43)
-- Session 19: Public Release (page 49)
+**Next:** Session 16 - Tutorial & Help System (H key overlay)
 
 ---
 
-## 🎮 GAME STATE (End of Phase 3)
+## 📖 PHASE 4 PROGRESS TRACKER
+
+**Sessions Completed:** 2/7 ✅✅⬜⬜⬜⬜⬜
+
+- ✅ **Session 13:** Critical Bug Fixes & Input Enhancement (30 min)
+- ✅ **Session 14/14a:** Inventory Redesign + Pause + Fixes (115 min)
+- ⬜ **Session 15:** Professional HTML/CSS Page Design (45-60 min) ← NEXT
+- ⬜ **Session 16:** Tutorial & Help System (45-60 min)
+- ⬜ **Session 17:** Sound Effects & Audio Polish (45-60 min) - OPTIONAL
+- ⬜ **Session 18:** Extended Playtesting & Final Polish (60-90 min)
+- ⬜ **Session 19:** Public Release Preparation (45-60 min)
+
+**Time Spent:** 145 minutes / ~400-450 minutes total
+**Progress:** ~32% complete (critical path sessions)
+**Status:** ON TRACK for public release
+
+---
+
+## 🎮 GAME STATE (Current)
 
 **What's Working:**
 - ✅ Complete gameplay loop (Floor 10 → Floor 1 → Victory)
 - ✅ 7 enemy types with tactical AI
 - ✅ 10 weapons, 4 consumables
+- ✅ Dual inventory system (4 weapons + 4 consumables)
+- ✅ Unified cycling (Q/E through all 8 slots)
+- ✅ Item dropping (X for weapons AND consumables)
+- ✅ Smart selection (weapons auto-equip, consumables need ENTER)
+- ✅ Pause key (P freezes game)
+- ✅ WASD + Arrow movement
 - ✅ Clench mechanic (10s freeze, 60s cooldown)
 - ✅ Desperation visuals (shake, tint, thresholds)
 - ✅ Desperation abilities (bash walls 75%, force doors 90%)
 - ✅ Break Rooms (desperation pauses, floors 8-3)
 - ✅ Victory sequence (scoring, ranks, high score)
 - ✅ Game over at 100% desperation
-- ✅ Save/continue system
+- ✅ Save/continue system (v2.0 with v1 migration)
 - ✅ Story introduction
 
-**What Needs Fixing (Phase 4):**
-- ❌ NaN desperation bug
-- ❌ No WASD movement
-- ❌ Inventory UX issues
-- ❌ Unprofessional page design
-- ❌ No tutorial for new players
-- ⚠️ No sound effects
-- ⚠️ Needs extended playtesting
+**What Needs Building (Phase 4 Remaining):**
+- ❌ Professional HTML/CSS page design ← NEXT (Session 15)
+- ❌ Tutorial & help system (H key)
+- ⚠️ Sound effects (optional)
+- ❌ Extended playtesting
+- ❌ Public deployment
 
 ---
 
@@ -306,6 +346,7 @@ These are BLOCKING bugs for public release. Must fix before continuing with othe
 - Follow deliverables checklist
 - Test thoroughly
 - Commit with descriptive message
+- Use TodoWrite for multi-step tasks
 
 **End Session:**
 ```
@@ -322,20 +363,22 @@ These are BLOCKING bugs for public release. Must fix before continuing with othe
 ## 🚀 PHASE 4 TIMELINE
 
 **Estimated Total:** 6-7.5 hours across 7 sessions
+**Time Spent:** 145 minutes (~2.4 hours)
+**Time Remaining:** ~4-5 hours
 
 **Critical Path (Public Release):**
-- Session 13: Bug fixes (30-45 min)
-- Session 14: Inventory redesign (60-90 min)
-- Session 15: HTML design (45-60 min)
-- Session 16: Tutorial (45-60 min)
-- Session 18: Playtesting (60-90 min)
-- Session 19: Release (45-60 min)
+- ✅ Session 13: Bug fixes (30 min)
+- ✅ Session 14/14a: Inventory redesign (115 min)
+- ⬜ Session 15: HTML design (45-60 min) ← NEXT
+- ⬜ Session 16: Tutorial (45-60 min)
+- ⬜ Session 18: Playtesting (60-90 min)
+- ⬜ Session 19: Release (45-60 min)
 
 **Optional:**
-- Session 17: Sound (45-60 min)
+- ⬜ Session 17: Sound (45-60 min)
 
 **Flexibility:**
-- Sessions can extend (13a, 13b) if needed
+- Sessions can extend (15a, 15b) if needed
 - Can absorb adjacent work when context loaded
 - Reality beats plan
 
@@ -344,16 +387,17 @@ These are BLOCKING bugs for public release. Must fix before continuing with othe
 ## 🎯 SUCCESS CRITERIA (Phase 4)
 
 **Minimum (Critical Path):**
-- [ ] All bugs fixed (NaN, controls)
-- [ ] WASD movement working
-- [ ] Inventory redesigned (dual system, cycling, dropping)
-- [ ] Professional HTML page
-- [ ] Tutorial complete
-- [ ] Extended playtesting done
-- [ ] Publicly deployed with custom domain
+- [x] All bugs fixed (NaN, controls) ✅
+- [x] WASD movement working ✅
+- [x] Inventory redesigned (dual system, cycling, dropping) ✅
+- [x] Pause key working ✅
+- [ ] Professional HTML page ← Session 15
+- [ ] Tutorial complete ← Session 16
+- [ ] Extended playtesting done ← Session 18
+- [ ] Publicly deployed with custom domain ← Session 19
 
 **Recommended:**
-- [ ] Sound effects implemented
+- [ ] Sound effects implemented ← Session 17 (optional)
 - [ ] Cross-browser tested
 - [ ] Screenshots/GIF created
 - [ ] README polished
@@ -368,12 +412,21 @@ These are BLOCKING bugs for public release. Must fix before continuing with othe
 
 ## 📂 PHASE 4 RESOURCES
 
-**Planning Document:** `PHASE_4_PLAN.md` (this file's companion)
-**Completed Sessions:** Will be archived in `COMPLETED_SESSIONS_ARCHIVE.md`
-**Phase Report:** Will create `PHASE_4_COMPLETION_REPORT.md` when done
+**Planning Document:** `PHASE_4_PLAN.md` (companion to this file)
+**Completed Sessions:** Archived in `COMPLETED_SESSIONS_ARCHIVE.md` after each session
+**Phase Report:** Will create `PHASE_4_COMPLETION_REPORT.md` when phase complete
+
+**Quick Links:**
+- Session 15: HTML/CSS Design (PHASE_4_PLAN.md page 21)
+- Session 16: Tutorial System (PHASE_4_PLAN.md page 28)
+- Session 17: Sound Effects (PHASE_4_PLAN.md page 37)
+- Session 18: Playtesting (PHASE_4_PLAN.md page 43)
+- Session 19: Public Release (PHASE_4_PLAN.md page 49)
 
 ---
 
-**Next Action:** Start Session 13 with `[!read-memory]`
+**Next Action:** Start Session 15 with `[!read-memory]`
 
-*Last Updated: 2025-10-22*
+**Focus:** Professional HTML/CSS page design - terminal aesthetic, controls sidebar, portfolio-worthy presentation
+
+*Last Updated: 2025-10-22 (Session 14/14a complete)*
