@@ -178,6 +178,7 @@ export class CombatSystem {
                 console.log('Player defeated!');
                 // Trigger game over state (Session 9e)
                 this.game.gameState = 'game_over';
+                this.game.running = false; // Stop game loop (prevents multiple instances)
 
                 // Delete save on death (preserve permadeath) (Session 12b)
                 SaveSystem.deleteSave();

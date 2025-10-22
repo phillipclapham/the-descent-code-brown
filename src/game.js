@@ -521,6 +521,7 @@ class Game {
         if (this.desperationMeter.getValue() >= 100) {
             // Game over: Desperation reached 100%
             this.gameState = 'game_over';
+            this.running = false; // Stop game loop (prevents multiple instances)
             // Delete save on desperation death (preserve permadeath)
             SaveSystem.deleteSave();
             return; // Stop processing this frame
@@ -704,6 +705,7 @@ class Game {
     handleVictory() {
         // Victory achieved!
         this.gameState = 'victory';
+        this.running = false; // Stop game loop (prevents multiple instances)
         this.saveHighScore();
 
         // Delete save on victory (preserve permadeath) (Session 12b)
