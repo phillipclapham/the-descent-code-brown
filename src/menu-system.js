@@ -113,7 +113,7 @@ export class MenuSystem {
         ctx.font = '14px "Courier New", monospace';
         ctx.fillStyle = '#666666';
         ctx.textAlign = 'center';
-        ctx.fillText('Arrow Keys / W/S - Select', 400, 520);
+        ctx.fillText('Arrow Keys / WASD - Select', 400, 520);
         ctx.fillText('Enter / Space - Confirm', 400, 545);
     }
 }

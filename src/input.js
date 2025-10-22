@@ -8,8 +8,8 @@ export class InputHandler {
 
     setupListeners() {
         window.addEventListener('keydown', (e) => {
-            // Prevent default for arrow keys and space to stop page scrolling
-            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
+            // Prevent default for arrow keys, WASD, and space to stop page scrolling
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'W', 'a', 'A', 's', 'S', 'd', 'D', ' '].includes(e.key)) {
                 e.preventDefault();
             }
             this.keys[e.key] = true;
@@ -25,32 +25,36 @@ export class InputHandler {
         return !!this.keys[key];
     }
 
-    // Get movement direction based on arrow keys
+    // Get movement direction based on arrow keys or WASD
     getMovementDirection() {
         let dx = 0;
         let dy = 0;
 
-        if (this.isKeyPressed('ArrowUp')) {
+        if (this.isKeyPressed('ArrowUp') || this.isKeyPressed('w') || this.isKeyPressed('W')) {
             dy = -1;
-        } else if (this.isKeyPressed('ArrowDown')) {
+        } else if (this.isKeyPressed('ArrowDown') || this.isKeyPressed('s') || this.isKeyPressed('S')) {
             dy = 1;
         }
 
-        if (this.isKeyPressed('ArrowLeft')) {
+        if (this.isKeyPressed('ArrowLeft') || this.isKeyPressed('a') || this.isKeyPressed('A')) {
             dx = -1;
-        } else if (this.isKeyPressed('ArrowRight')) {
+        } else if (this.isKeyPressed('ArrowRight') || this.isKeyPressed('d') || this.isKeyPressed('D')) {
             dx = 1;
         }
 
         return { dx, dy };
     }
 
-    // Check if any movement key is pressed
+    // Check if any movement key is pressed (arrow keys or WASD)
     hasMovementInput() {
         return this.isKeyPressed('ArrowUp') ||
                this.isKeyPressed('ArrowDown') ||
                this.isKeyPressed('ArrowLeft') ||
-               this.isKeyPressed('ArrowRight');
+               this.isKeyPressed('ArrowRight') ||
+               this.isKeyPressed('w') || this.isKeyPressed('W') ||
+               this.isKeyPressed('a') || this.isKeyPressed('A') ||
+               this.isKeyPressed('s') || this.isKeyPressed('S') ||
+               this.isKeyPressed('d') || this.isKeyPressed('D');
     }
 
     // Check if attack key (SPACE) is pressed

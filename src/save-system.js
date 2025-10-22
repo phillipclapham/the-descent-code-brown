@@ -110,10 +110,10 @@ export class SaveSystem {
         game.tileMap = game.floors[floorIndex];
 
         // Restore player state
-        game.player.health = saveData.playerHealth;
-        game.player.maxHealth = saveData.playerMaxHealth;
-        game.desperationMeter.desperation = saveData.playerDesperation;
-        game.player.keysCollected = saveData.keysCollected;
+        game.player.health = saveData.playerHealth || 100;
+        game.player.maxHealth = saveData.playerMaxHealth || 100;
+        game.desperationMeter.desperation = saveData.playerDesperation || 0;
+        game.player.keysCollected = saveData.keysCollected || 0;
 
         // Restore clench state
         game.player.clenchCooldownRemaining = saveData.clenchCooldownRemaining || 0;
@@ -184,11 +184,11 @@ export class SaveSystem {
         if (!saveData) return null;
 
         return {
-            floor: saveData.floor,
-            health: saveData.playerHealth,
-            maxHealth: saveData.playerMaxHealth,
-            desperation: Math.floor(saveData.playerDesperation),
-            timestamp: saveData.timestamp
+            floor: saveData.floor || 10,
+            health: saveData.playerHealth || 100,
+            maxHealth: saveData.playerMaxHealth || 100,
+            desperation: Math.floor(saveData.playerDesperation || 0),
+            timestamp: saveData.timestamp || Date.now()
         };
     }
 
