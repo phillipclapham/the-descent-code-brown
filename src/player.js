@@ -457,7 +457,7 @@ export class Player {
         }
     }
 
-    // Use currently selected consumable (ENTER key) - Session 14a: Returns to last weapon
+    // Use currently selected consumable (ENTER key) - Session 14a: Returns to equipped weapon
     useSelectedConsumable(desperationMeter, game) {
         // Only works if consumable slot selected (4-7)
         if (this.selectedSlot < 4) {
@@ -478,10 +478,26 @@ export class Player {
         this.consumableInventory[consumableIndex] = null; // Remove after use
         console.log(`Used ${consumable.name} from slot ${this.selectedSlot + 1}`);
 
-        // Return to last weapon slot
-        this.selectedSlot = this.lastWeaponSlot;
-        this.equippedWeapon = this.weaponInventory[this.lastWeaponSlot];
-        console.log(`Returned to weapon slot ${this.lastWeaponSlot + 1}`);
+        // Return to the slot containing the currently equipped weapon
+        // Find which slot has the equipped weapon
+        let returnSlot = 0; // Default to first slot
+        if (this.equippedWeapon) {
+            const equippedSlot = this.weaponInventory.findIndex(w => w === this.equippedWeapon);
+            if (equippedSlot !== -1) {
+                returnSlot = equippedSlot;
+            }
+        } else {
+            // No weapon equipped, find first non-empty weapon slot
+            const firstWeapon = this.weaponInventory.findIndex(w => w !== null);
+            if (firstWeapon !== -1) {
+                returnSlot = firstWeapon;
+                this.equippedWeapon = this.weaponInventory[firstWeapon];
+            }
+        }
+
+        this.selectedSlot = returnSlot;
+        this.lastWeaponSlot = returnSlot; // Update lastWeaponSlot too
+        console.log(`Returned to weapon slot ${returnSlot + 1}`);
     }
 
     // ===== END INVENTORY MANAGEMENT =====
