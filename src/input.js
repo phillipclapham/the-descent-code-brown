@@ -102,6 +102,11 @@ export class InputHandler {
         return this.isKeyPressed('h') || this.isKeyPressed('H');
     }
 
+    // Check if Mute key (M) is pressed (Session 17)
+    isMutePressed() {
+        return this.isKeyPressed('m') || this.isKeyPressed('M');
+    }
+
     // Get number key pressed (1-8 for inventory slots) (Session 10)
     // Returns slot index (0-7) if a number key is pressed, null otherwise
     getNumberPressed() {

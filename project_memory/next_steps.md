@@ -2,267 +2,190 @@
 
 **Current Phase:** Phase 4 - Polish & Public Release 🚀 IN PROGRESS
 **Previous Phase:** Phase 3 - Combat & Items ✅ COMPLETE & ARCHIVED
-**Current Session:** Session 16 - Tutorial & Help System
-**Status:** ✅ SESSION 15 COMPLETE! Ready to start Session 16
+**Current Session:** Session 17 - Sound Effects & Audio Polish (OPTIONAL)
+**Status:** ✅ SESSION 16 COMPLETE! Ready to start Session 17 OR skip to Session 18
 **Last Updated:** 2025-10-22
 
 ---
 
 ## 📋 NEXT CONVERSATION START PROTOCOL
 
-**🎯 TO START SESSION 16:**
+**🎯 TO START SESSION 17 (OPTIONAL):**
 ```
 [!read-memory]
-"Let's start Session 16: Tutorial & Help System"
+"Let's start Session 17: Sound Effects & Audio Polish"
 ```
 
-**Session 16 Focus:**
-- In-game help overlay system (H key)
-- Multi-tab interface (Controls, Mechanics, Strategy, Credits)
-- Teach signature mechanics (Clench, desperation abilities, Break Rooms)
-- Explain dual inventory system (Q/E cycling, X drop, ENTER use)
-- First-time player onboarding
-- Professional tutorial presentation
+**OR SKIP TO SESSION 18 (RECOMMENDED):**
+```
+[!read-memory]
+"Let's skip Session 17 and start Session 18: Extended Playtesting & Final Polish"
+```
 
-**All Session Details:** See `PHASE_4_PLAN.md` lines 625-720 for complete specifications
+**Session 17 Focus (OPTIONAL):**
+- Web Audio API procedural sound effects
+- Sound design for combat, items, desperation
+- Mute/unmute toggle (M key)
+- Audio feedback for player actions
+
+**Session 18 Focus (CRITICAL PATH):**
+- Extended playtesting (30+ minute runs)
+- Balance tuning based on playtesting
+- Bug hunting and fixing
+- Final polish pass
+- Cross-browser testing
+
+**All Session Details:** See `PHASE_4_PLAN.md` lines 721-890 for complete specifications
 
 ---
 
-## ✅ SESSION 15 COMPLETE! (Just Finished)
+## ✅ SESSION 16 COMPLETE! (Just Finished)
+
+**Session 16: Tutorial & Help System**
+**Duration:** ~60 minutes
+**Commit:** a0078ac
+**Files Changed:** 5 files (634 insertions, 256 deletions)
+
+### What Was Built
+
+**MAJOR FEATURES:**
+1. ✅ **Help Overlay System** - H key toggles comprehensive in-game tutorial
+2. ✅ **4 Tabs** - Controls, Mechanics, Strategy, Credits (fully navigable)
+3. ✅ **Scrolling** - W/S or ↑/↓ keys to scroll through content
+4. ✅ **Tab Navigation** - Arrow keys (←/→) or number keys (1-4)
+5. ✅ **Game Pause** - Game pauses while help is active
+6. ✅ **Terminal Aesthetic** - Consistent green/cyan styling throughout
+
+**TAB CONTENT:**
+- **CONTROLS (38 lines)** - Complete key reference with detailed explanations
+  - Movement, combat, inventory management, special abilities, game controls
+  - Dual inventory system explained (slots 1-4 weapons, 5-8 consumables)
+  - Item dropping mechanics, interaction details
+
+- **MECHANICS (24 lines)** - Core game systems
+  - Desperation system and 6 thresholds
+  - Clench mechanic (signature feature!)
+  - Break Rooms (safe zones where desperation pauses)
+  - Desperation abilities (bash walls 75%, force doors 90%)
+
+- **STRATEGY (26 lines)** - Tips for success
+  - Desperation management tactics
+  - Combat strategies and weapon choices
+  - Exploration tips and risk/reward balance
+
+- **CREDITS (24 lines)** - Game information
+  - Creator credits (Phill Clapham + Claude Code)
+  - Tech stack (vanilla JS, Canvas, ASCII)
+  - Roguelike inspirations (NetHack, DCSS, Brogue)
+
+**SCROLLING SYSTEM:**
+- Line height: 26px (increased for breathing room)
+- Visible lines calculated dynamically based on available height
+- Scroll indicators: "↑ More above ↑" / "↓ More below ↓"
+- Scroll offset resets when switching tabs
+- Smooth scrolling with W/S or arrow keys
+
+**POLISH & UX:**
+- Tab height: 40px (increased from 35px for better spacing)
+- Perfect text centering (textBaseline = middle)
+- Padding: title → tabs (30px) → content (30px) → footer
+- Footer shows all controls: "H/ESC: Close | ←/→ or 1-4: Switch tabs | W/S or ↑/↓: Scroll"
+- Canvas-based rendering (consistent with game aesthetic)
+- Semi-transparent background (rgba(0,0,0,0.85))
+
+**FILES CREATED:**
+- `src/help-system.js` (~280 lines) - Complete HelpSystem class with:
+  - Tab navigation logic
+  - Scroll offset management
+  - Dynamic content rendering
+  - Scroll indicators
+  - Input handling
+
+**FILES MODIFIED:**
+- `src/input.js` (+4 lines) - isHelpPressed() method
+- `src/game.js` (+45 lines) - Help system integration, input handling, render
+- `index.html` (+4 lines) - H key added to controls sidebar
+
+**TECHNICAL IMPLEMENTATION:**
+- Scroll offset per tab (independent scrolling)
+- Max scroll calculation (prevents over-scrolling)
+- Visible line windowing (only renders what's needed)
+- All input properly cleared (prevents repeat triggers)
+- Game pauses while help active (no desperation increase)
+
+### Why This Mattered
+
+**Before Session 16:**
+- No in-game tutorial
+- New players had to discover mechanics through trial/error
+- Signature mechanics (Clench, desperation abilities) hidden
+- Dual inventory system confusing
+- Poor first-time player experience
+
+**After Session 16:**
+- Professional in-game help system
+- All mechanics explained clearly
+- Signature features highlighted
+- Strategic depth revealed
+- First-time players can succeed
+- Portfolio-worthy tutorial presentation
+
+**Impact:** Game went from "playable but confusing" → "fully accessible to new players." Tutorial system is critical for public release. Players can now learn all mechanics without external documentation.
+
+---
+
+## ✅ SESSION 15 COMPLETE!
 
 **Session 15: Professional HTML/CSS Page Design + Polish**
 **Duration:** ~60 minutes
 **Commit:** 715a11e
 **Files Changed:** 8 files (634 insertions, 187 deletions)
 
-### What Was Built
+### Highlights
 
-**MAJOR FEATURES:**
-1. ✅ **Professional Page Layout** - Header, sidebar, footer with semantic HTML5
-2. ✅ **External CSS Stylesheet** - Complete design system (~450 lines)
-3. ✅ **Controls Sidebar** - Organized, visible without playing
-4. ✅ **Terminal Aesthetic** - Green on black, monospace fonts, consistent styling
-5. ✅ **Responsive Design** - Desktop, tablet, mobile breakpoints
-6. ✅ **Weapon Damage Display** - All weapon messages show damage specs
-7. ✅ **Layout Fixes** - Canvas extended, inventory moved below map
+- ✅ Professional page layout (header, sidebar, footer)
+- ✅ External CSS stylesheet with design system
+- ✅ Controls sidebar visible on page
+- ✅ Terminal aesthetic throughout
+- ✅ Responsive design (desktop/tablet/mobile)
+- ✅ Weapon damage display in messages
 
-**FILES CREATED:**
-- `styles.css` (~450 lines) - Complete design system with:
-  - CSS variables (colors, spacing, typography)
-  - Terminal aesthetic (#00ff00 green, #00ffff cyan, #00cc00 dim)
-  - Layout structure (header, main flexbox, sidebar, footer)
-  - Component styles (kbd keys, links, controls list)
-  - Responsive breakpoints (1024px, 768px, 600px)
-  - Migrated modal/meter/button styles
-
-**HTML IMPROVEMENTS:**
-- Semantic HTML5 structure (header, main, aside, footer)
-- Meta tags for SEO and Open Graph
-- Header: Title + tagline + author
-- Controls sidebar: Movement, Inventory, Special sections
-- Footer: About, Tech Stack, Credits with links
-- Link to phillipclapham.com added
-
-**DESIGN SYSTEM:**
-```css
-:root {
-  --bg-primary: #000000;
-  --color-primary: #00ff00;    /* Terminal green */
-  --color-accent: #00ffff;     /* Cyan */
-  --color-dim: #00cc00;        /* Dimmed green (improved readability) */
-  --font-mono: 'Courier New', 'Consolas', 'Monaco', monospace;
-}
-```
-
-**LAYOUT FIXES:**
-- Canvas height: 600px → 660px
-- Inventory bar: y=515 → y=605 (below map, not blocking!)
-- All canvas clear operations updated to 660px
-- Game area properly separated from UI chrome
-
-**BUG FIXES:**
-1. **Desperation initialization bug** - Added render() call in constructor to ensure visual state matches value (fixes rare bug where new game starts with previous desperation level displayed)
-2. **Intro modal controls** - Removed outdated controls section, added note to check sidebar
-3. **R key clarification** - Updated to "Restart (on death)" to indicate it only works on game over/victory
-
-**POLISH ENHANCEMENTS:**
-- Green text contrast improved (#007700 → #00cc00 for better readability)
-- Weapon messages show damage: "Picked up Plunger (15-20 dmg)"
-- Weapon cycling shows damage: "Selected: Wrench (20-28 dmg)"
-- Weapon equip shows damage: "Equipped: Toilet Brush (8-12 dmg)"
-- Styled <kbd> elements with shadows and borders
-- Hover effects on links (cyan → yellow with glow)
-- Professional keyboard key styling
-
-**RESPONSIVE DESIGN:**
-- Desktop (>1024px): Sidebar beside game canvas
-- Tablet (768-1024px): Sidebar below canvas, full width
-- Mobile (600px): Canvas scales, controls stack vertically
-- Mobile (375px): Tightened spacing, smaller fonts
-- All breakpoints tested and functional
-
-### Files Modified
-
-- `styles.css` (+450 lines) - NEW FILE, complete design system
-- `index.html` (+80 lines changed) - Semantic structure, meta tags, sidebar, footer
-- `src/renderer.js` (+1 line) - CANVAS_HEIGHT 600 → 660
-- `src/game.js` (+4 lines) - Inventory bar position, canvas clears
-- `src/menu-system.js` (+1 line) - Canvas clear height
-- `src/desperation-meter.js` (+3 lines) - Initialization render call
-- `src/intro-modal.js` (-14 lines) - Simplified story modal
-- `src/player.js` (+12 lines) - Weapon damage in messages
-
-**Total:** ~540 lines changed across 8 files
-
-### Why This Mattered
-
-**Before Session 15:**
-- Minimal centered layout (h1 + canvas)
-- All CSS inline (169 lines in <style> tag)
-- Controls hidden (need to play to discover)
-- No credits or context
-- Unprofessional appearance
-- Not portfolio-ready
-
-**After Session 15:**
-- Professional multi-section page
-- External CSS with design system
-- Controls visible immediately
-- Responsive design works on all devices
-- Terminal aesthetic throughout
-- Portfolio-worthy presentation
-- Ready for public release!
-
-**Impact:** Game went from minimal prototype appearance → professional portfolio piece. First impression now matches game quality. Essential for public release.
+**Impact:** Game presentation went from prototype → portfolio-worthy!
 
 ---
 
-## 🎯 NEXT SESSION READY TO START! ⏳
+## 🎯 NEXT SESSION DECISION POINT! 🤔
 
-**Session 16: Tutorial & Help System**
-**Duration:** ~45-60 minutes
-**Priority:** CRITICAL (first-time player experience)
-**Status:** READY TO START (no blockers)
+**Session 17 (OPTIONAL): Sound Effects**
+- Adds audio feedback (combat, items, desperation)
+- Enhances experience but NOT critical for release
+- ~45-60 minutes
+- Can be added post-release
 
-### Goals
+**Session 18 (CRITICAL PATH): Playtesting & Polish**
+- Extended playtesting (30+ minute runs)
+- Balance tuning, bug hunting, final polish
+- ~60-90 minutes
+- REQUIRED for public release
 
-Create comprehensive in-game tutorial overlay so first-time players can learn mechanics without external documentation.
-
-**Key Requirements:**
-1. H key toggles help overlay
-2. Multi-tab interface (Controls, Mechanics, Strategy, Credits)
-3. Teach signature mechanics (Clench, desperation abilities, Break Rooms)
-4. Explain dual inventory system
-5. Canvas-based rendering (consistent with game)
-6. ESC key to dismiss
-
-### Problem
-
-New players won't know about:
-- **Clench mechanic** (C key - signature feature!)
-- **Desperation thresholds** (75% bash walls, 90% force doors)
-- **Break Rooms** (desperation pauses inside)
-- **Dual inventory** (Q/E cycling, 1-4 weapons auto-equip, 5-8 consumables need ENTER)
-- **Item dropping** (X key for strategic management)
-- **Strategic depth** (when to use items, Clench timing)
-
-### Solution: Help Overlay System
-
-**Design:**
-```
-┌───────────────────────────────────────────────┐
-│  THE DESCENT: CODE BROWN - HELP               │
-├───────────────────────────────────────────────┤
-│  [CONTROLS] [MECHANICS] [STRATEGY] [CREDITS]  │
-├───────────────────────────────────────────────┤
-│                                               │
-│  Tab content here (scrollable)                │
-│  - Movement keys                              │
-│  - Inventory system                           │
-│  - Special abilities                          │
-│  - Tips and tricks                            │
-│                                               │
-│                                               │
-│  Press H or ESC to close                      │
-└───────────────────────────────────────────────┘
-```
-
-**4 Tabs:**
-1. **CONTROLS** - Complete key reference (WASD, Q/E, X, C, P, etc.)
-2. **MECHANICS** - Clench, desperation abilities, Break Rooms, dual inventory
-3. **STRATEGY** - Tips for success (when to Clench, weapon choices, consumable timing)
-4. **CREDITS** - Game info, tech stack, links
-
-### Implementation Plan
-
-**File to Create:**
-- `src/help-system.js` (~200-250 lines)
-
-**Features:**
-- Canvas-based overlay (semi-transparent black background)
-- Tab navigation (left/right arrows or 1-4 keys)
-- Scrollable content (if needed)
-- H key to toggle, ESC to close
-- Consistent terminal aesthetic (green text, monospace font)
-
-**Integration:**
-- Add H key detection to `src/input.js`
-- Add help system instance to `src/game.js`
-- Render overlay on top of game when active
-- Pause game while help is open
-
-### Deliverables
-
-- [ ] Create `src/help-system.js` with HelpOverlay class
-- [ ] Add H key detection to input handler
-- [ ] Integrate help system into game loop
-- [ ] Write all tutorial content (4 tabs)
-- [ ] Style overlay with terminal aesthetic
-- [ ] Test tab navigation
-- [ ] Test toggle (H to open, H/ESC to close)
-- [ ] Verify game pauses while help is open
-
-### Success Criteria
-
-- Tutorial overlay toggles with H key
-- All 4 tabs navigable and readable
-- Content covers all important mechanics
-- Consistent terminal aesthetic
-- First-time players can learn without external help
-- Professional presentation
-
-### Why This Session Is Critical
-
-This is how players will learn to play the game. Without a tutorial:
-- Players miss signature mechanics (Clench!)
-- Confusion about dual inventory system
-- Don't understand desperation abilities
-- Poor first impression = early quit
-
-**With Tutorial:**
-- Players discover full depth of game
-- Signature mechanics explained
-- Confident gameplay from the start
-- Professional game experience
-
-**Next:** Session 17 - Sound Effects (optional) or Session 18 - Playtesting
+**RECOMMENDATION:** Skip Session 17 (sound) and proceed directly to Session 18 (playtesting). Sound can be added in a post-release update if desired.
 
 ---
 
 ## 📖 PHASE 4 PROGRESS TRACKER
 
-**Sessions Completed:** 3/7 ✅✅✅⬜⬜⬜⬜
+**Sessions Completed:** 4/7 ✅✅✅✅⬜⬜⬜
 
 - ✅ **Session 13:** Critical Bug Fixes & Input Enhancement (30 min)
 - ✅ **Session 14/14a:** Inventory Redesign + Pause + Fixes (115 min)
 - ✅ **Session 15:** Professional HTML/CSS Page Design (60 min)
-- ⬜ **Session 16:** Tutorial & Help System (45-60 min) ← NEXT
-- ⬜ **Session 17:** Sound Effects & Audio Polish (45-60 min) - OPTIONAL
-- ⬜ **Session 18:** Extended Playtesting & Final Polish (60-90 min)
+- ✅ **Session 16:** Tutorial & Help System (60 min)
+- ⬜ **Session 17:** Sound Effects & Audio Polish (45-60 min) - OPTIONAL ← SKIP?
+- ⬜ **Session 18:** Extended Playtesting & Final Polish (60-90 min) ← NEXT (CRITICAL)
 - ⬜ **Session 19:** Public Release Preparation (45-60 min)
 
-**Time Spent:** 205 minutes (~3.4 hours) / ~400-450 minutes total
-**Progress:** ~46% complete (critical path sessions)
+**Time Spent:** 265 minutes (~4.4 hours) / ~400-450 minutes total
+**Progress:** ~59% complete (critical path: 4/6 sessions)
 **Status:** ON TRACK for public release
 
 ---
@@ -287,17 +210,19 @@ This is how players will learn to play the game. Without a tutorial:
 - ✅ Game over at 100% desperation
 - ✅ Save/continue system (v2.0 with v1 migration)
 - ✅ Story introduction modal
-- ✅ Professional HTML/CSS page design ← NEW!
-- ✅ Controls sidebar visible on page ← NEW!
-- ✅ Terminal aesthetic throughout ← NEW!
-- ✅ Responsive design (desktop/tablet/mobile) ← NEW!
-- ✅ Weapon damage display in messages ← NEW!
+- ✅ Professional HTML/CSS page design
+- ✅ Controls sidebar visible on page
+- ✅ Terminal aesthetic throughout
+- ✅ Responsive design (desktop/tablet/mobile)
+- ✅ Weapon damage display in messages
+- ✅ Tutorial & help system (H key, 4 tabs, scrolling) ← NEW!
 
 **What Needs Building (Phase 4 Remaining):**
-- ❌ Tutorial & help system (H key) ← NEXT (Session 16)
-- ⚠️ Sound effects (optional)
-- ❌ Extended playtesting
-- ❌ Public deployment
+- ⚠️ Sound effects (optional) ← Session 17 (SKIP?)
+- ❌ Extended playtesting ← Session 18 (NEXT - CRITICAL)
+- ❌ Public deployment ← Session 19
+
+**CRITICAL PATH:** Sessions 18 & 19 remaining for public release!
 
 ---
 
@@ -328,23 +253,23 @@ This is how players will learn to play the game. Without a tutorial:
 
 ## 🚀 PHASE 4 TIMELINE
 
-**Estimated Total:** 6-7.5 hours across 7 sessions
-**Time Spent:** 205 minutes (~3.4 hours)
-**Time Remaining:** ~3-4 hours
+**Estimated Total:** 6-7.5 hours across 7 sessions (or 5.5-6.5 hours if skip Session 17)
+**Time Spent:** 265 minutes (~4.4 hours)
+**Time Remaining:** ~2-3 hours (critical path only)
 
 **Critical Path (Public Release):**
 - ✅ Session 13: Bug fixes (30 min)
 - ✅ Session 14/14a: Inventory redesign (115 min)
 - ✅ Session 15: HTML/CSS design (60 min)
-- ⬜ Session 16: Tutorial system (45-60 min) ← NEXT
-- ⬜ Session 18: Playtesting (60-90 min)
+- ✅ Session 16: Tutorial system (60 min)
+- ⬜ Session 18: Playtesting (60-90 min) ← NEXT
 - ⬜ Session 19: Release (45-60 min)
 
 **Optional:**
-- ⬜ Session 17: Sound (45-60 min)
+- ⬜ Session 17: Sound (45-60 min) ← RECOMMEND SKIP
 
 **Flexibility:**
-- Sessions can extend (16a, 16b) if needed
+- Sessions can extend (18a, 18b) if needed
 - Can absorb adjacent work when context loaded
 - Reality beats plan
 
@@ -360,12 +285,12 @@ This is how players will learn to play the game. Without a tutorial:
 - [x] Professional HTML page ✅
 - [x] Controls visible on page ✅
 - [x] Responsive design ✅
-- [ ] Tutorial complete ← Session 16
-- [ ] Extended playtesting done ← Session 18
+- [x] Tutorial complete ✅
+- [ ] Extended playtesting done ← Session 18 (NEXT)
 - [ ] Publicly deployed with custom domain ← Session 19
 
 **Recommended:**
-- [ ] Sound effects implemented ← Session 17 (optional)
+- [ ] Sound effects implemented ← Session 17 (OPTIONAL)
 - [ ] Cross-browser tested
 - [ ] Screenshots/GIF created
 - [ ] README polished
@@ -385,15 +310,44 @@ This is how players will learn to play the game. Without a tutorial:
 **Phase Report:** Will create `PHASE_4_COMPLETION_REPORT.md` when phase complete
 
 **Quick Links:**
-- Session 16: Tutorial System (PHASE_4_PLAN.md lines 625-720)
-- Session 17: Sound Effects (PHASE_4_PLAN.md lines 721-810)
-- Session 18: Playtesting (PHASE_4_PLAN.md lines 811-890)
+- Session 17: Sound Effects (PHASE_4_PLAN.md lines 721-810) - OPTIONAL
+- Session 18: Playtesting (PHASE_4_PLAN.md lines 811-890) - NEXT
 - Session 19: Public Release (PHASE_4_PLAN.md lines 891-970)
 
 ---
 
-**Next Action:** Start Session 16 with `[!read-memory]`
+## 🎓 SESSION 16 KEY LEARNINGS
 
-**Focus:** Tutorial & help system - H key overlay, multi-tab interface, teach signature mechanics, first-time player onboarding
+**What Worked:**
+- Canvas-based rendering consistent with game aesthetic
+- Scrolling system with indicators provides clear UX
+- Tab navigation intuitive (arrow keys + number keys)
+- Content organized by topic (Controls/Mechanics/Strategy/Credits)
+- Line height increase (26px) dramatically improved readability
+- Proper padding creates professional appearance
 
-*Last Updated: 2025-10-22 (Session 15 complete)*
+**Technical Insights:**
+- Scroll offset management per tab maintains state
+- Visible line windowing improves performance
+- Dynamic max scroll calculation prevents edge cases
+- Input clearing prevents repeat triggers
+- Game pause while help active prevents frustration
+
+**User Feedback Integration:**
+- Iterative polish based on user testing (3 rounds)
+- Tab spacing fixed (scraping issue)
+- Scrolling added for all tabs (Controls was too short)
+- Padding increased for breathing room
+- Result: Professional, polished tutorial system
+
+---
+
+**Next Action:**
+- **OPTION 1:** Skip Session 17 (sound) → Start Session 18 with `[!read-memory]`
+- **OPTION 2:** Do Session 17 (sound) → Start Session 17 with `[!read-memory]`
+
+**Recommendation:** Skip Session 17 (sound) and proceed to Session 18 (playtesting). Critical path to public release!
+
+**Focus for Session 18:** Extended playtesting (30+ min runs), balance tuning, bug hunting, final polish, cross-browser testing
+
+*Last Updated: 2025-10-22 (Session 16 complete)*

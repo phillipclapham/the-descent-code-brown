@@ -15,7 +15,7 @@ import {
 } from './tile-map.js';
 
 export class Player {
-    constructor(x, y, tileMap = null, desperationMeter = null) {
+    constructor(x, y, tileMap = null, desperationMeter = null, game = null) {
         this.x = x;
         this.y = y;
         this.char = '@';
@@ -26,6 +26,9 @@ export class Player {
 
         // Desperation meter reference (Session 12d: needed for wall bashing & door forcing)
         this.desperationMeter = desperationMeter;
+
+        // Game reference (Session 17: needed for sound system access)
+        this.game = game;
 
         // Movement timing
         this.baseMoveDelay = 200; // Base milliseconds between moves
@@ -82,6 +85,7 @@ export class Player {
                 // Open the door
                 this.tileMap.setTile(newX, newY, TILE_DOOR_OPEN);
                 this.setMessage('Door opened');
+                if (this.game) this.game.soundSystem.playDoorOpen(); // Session 17
                 this.lastMoveTime = currentTime;
                 return true; // Door opened, but don't move into it this turn
             }
@@ -94,6 +98,7 @@ export class Player {
                     // FORCE the door open (no key needed!)
                     this.tileMap.setTile(newX, newY, TILE_DOOR_OPEN);
                     this.setMessage('You FORCE the door open!');
+                    if (this.game) this.game.soundSystem.playDoorUnlock(); // Session 17 (dramatic!)
                     this.lastMoveTime = currentTime;
                     return true; // Door forced, don't move into it this turn
                 } else if (this.keysCollected > 0) {
@@ -101,6 +106,7 @@ export class Player {
                     this.tileMap.setTile(newX, newY, TILE_DOOR_OPEN);
                     this.keysCollected--;
                     this.setMessage('Door unlocked! Keys: ' + this.keysCollected);
+                    if (this.game) this.game.soundSystem.playDoorUnlock(); // Session 17
                     this.lastMoveTime = currentTime;
 
                     // Increment game stats (Session 12a)
@@ -136,6 +142,7 @@ export class Player {
                     if (this.addToInventory(weapon)) {
                         // Success! Auto-equip happens in addWeapon() if needed
                         this.setMessage(`Picked up ${weapon.name} (${weapon.damageMin}-${weapon.damageMax} dmg)`);
+                        if (this.game) this.game.soundSystem.playPickup(); // Session 17
                         console.log(`Weapon picked up: ${weapon.name} at (${newX}, ${newY})`);
 
                         // Remove weapon from map and combat system
@@ -167,6 +174,7 @@ export class Player {
                     // Try to add to inventory (Session 14: routes to consumable inventory)
                     if (this.addToInventory(consumable)) {
                         this.setMessage(`Picked up ${consumable.name}`);
+                        if (this.game) this.game.soundSystem.playPickup(); // Session 17
                         console.log(`Consumable picked up: ${consumable.name} at (${newX}, ${newY})`);
 
                         // Remove consumable from map and combat system
@@ -369,6 +377,9 @@ export class Player {
 
     // Cycle through all inventory slots (Q = -1 left, E = +1 right) - Session 14a: Unified cycling
     cycleSlot(direction) {
+        // Session 17: Play switch sound
+        if (this.game) this.game.soundSystem.playWeaponSwitch();
+
         this.selectedSlot = (this.selectedSlot + direction + 8) % 8;
 
         // If weapon selected (0-3), auto-equip and update lastWeaponSlot
@@ -479,6 +490,7 @@ export class Player {
         // Use consumable
         consumable.use(this, desperationMeter, game);
         this.setMessage(`Used ${consumable.name}`);
+        if (this.game) this.game.soundSystem.playUseConsumable(); // Session 17
         this.consumableInventory[consumableIndex] = null; // Remove after use
         console.log(`Used ${consumable.name} from slot ${this.selectedSlot + 1}`);
 

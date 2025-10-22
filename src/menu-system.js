@@ -3,9 +3,10 @@
 import { SaveSystem } from './save-system.js';
 
 export class MenuSystem {
-    constructor(canvas, renderer) {
+    constructor(canvas, renderer, game = null) {
         this.canvas = canvas;
         this.renderer = renderer;
+        this.game = game; // Session 17: For sound system access
         this.menuActive = true;
         this.selectedOption = 'new_game'; // 'new_game' or 'continue'
         this.hasSave = SaveSystem.hasSave();
@@ -21,10 +22,20 @@ export class MenuSystem {
             if (!this.menuActive) return;
 
             if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+                const oldSelection = this.selectedOption;
                 this.selectedOption = 'new_game';
+                // Session 17: Play menu click sound if selection changed
+                if (oldSelection !== this.selectedOption && this.game) {
+                    this.game.soundSystem.playMenuClick();
+                }
             } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
                 if (this.hasSave) {
+                    const oldSelection = this.selectedOption;
                     this.selectedOption = 'continue';
+                    // Session 17: Play menu click sound if selection changed
+                    if (oldSelection !== this.selectedOption && this.game) {
+                        this.game.soundSystem.playMenuClick();
+                    }
                 }
             } else if (e.key === 'Enter' || e.key === ' ') {
                 this.selectOption();
@@ -39,6 +50,11 @@ export class MenuSystem {
     }
 
     selectOption() {
+        // Session 17: Play menu select sound
+        if (this.game) {
+            this.game.soundSystem.playMenuSelect();
+        }
+
         // Menu will be closed by the callback
         this.menuActive = false;
         this.cleanup();

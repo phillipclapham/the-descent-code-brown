@@ -103,11 +103,16 @@ export class CombatSystem {
         if (!hit) {
             // Attack missed
             this.game.player.setMessage('MISS!');
+            this.game.soundSystem.playMiss(); // Session 17
             console.log(`Attack MISS! Accuracy: ${Math.floor(accuracy * 100)}%, Desperation: ${Math.floor(desperation * 100)}%`);
         } else {
             // Attack hit - calculate damage
             const baseDamage = this.game.player.equippedWeapon.rollDamage();
             const finalDamage = this.calculateDamage(baseDamage, desperation);
+
+            // Session 17: Play hit sound (pitch scales with damage)
+            const weaponMaxDamage = this.game.player.equippedWeapon.damage.max;
+            this.game.soundSystem.playHit(finalDamage, weaponMaxDamage);
 
             // Apply damage to enemy
             target.health -= finalDamage;
@@ -125,6 +130,7 @@ export class CombatSystem {
 
             // Check if enemy died
             if (target.health <= 0) {
+                this.game.soundSystem.playEnemyDeath(); // Session 17
                 console.log(`Enemy defeated! ${target.name} at (${target.x}, ${target.y})`);
             }
         }
@@ -154,6 +160,10 @@ export class CombatSystem {
         } else {
             // Enemy hit - roll damage
             const damage = enemy.rollDamage();
+
+            // Session 17: Play hit sound for player getting hit
+            const enemyMaxDamage = enemy.damage.max;
+            this.game.soundSystem.playHit(damage, enemyMaxDamage);
 
             // Apply damage to player
             const died = this.game.player.takeDamage(damage);

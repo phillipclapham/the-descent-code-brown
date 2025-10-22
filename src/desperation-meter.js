@@ -104,6 +104,7 @@ export class DesperationMeter {
             if (oldValue < 75 && this.value >= 75 && !this.bashWallsUnlocked) {
                 this.bashWallsUnlocked = true;
                 player.setMessage('DESPERATE! You can now BASH through weak walls!');
+                if (player.game) player.game.soundSystem.playThresholdAlert(); // Session 17
                 console.log('🧱 Bash walls ability unlocked at 75% desperation');
             }
 
@@ -111,6 +112,7 @@ export class DesperationMeter {
             if (oldValue < 90 && this.value >= 90 && !this.forceDoorsUnlocked) {
                 this.forceDoorsUnlocked = true;
                 player.setMessage('EXTREME! You can now FORCE locked doors open!');
+                if (player.game) player.game.soundSystem.playThresholdAlert(); // Session 17
                 console.log('🚪 Force doors ability unlocked at 90% desperation');
             }
         }

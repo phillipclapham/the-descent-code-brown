@@ -11,6 +11,7 @@ import { IntroModal } from './intro-modal.js';
 import { SaveSystem } from './save-system.js';
 import { MenuSystem } from './menu-system.js';
 import { HelpSystem } from './help-system.js';
+import { SoundSystem } from './sound-system.js';
 import {
     Enemy,
     ENEMY_SECURITY_BOT,
@@ -50,6 +51,9 @@ class Game {
         // Initialize help system (Session 16)
         this.helpSystem = new HelpSystem(this.canvas, this.renderer.ctx);
 
+        // Initialize sound system (Session 17)
+        this.soundSystem = new SoundSystem();
+
         // Multi-floor system
         this.numFloors = 10;  // 10 floors: start at floor 10, descend to floor 1
         this.currentFloor = 0;
@@ -67,7 +71,8 @@ class Game {
             spawnPos.x,
             spawnPos.y,
             this.tileMap,
-            this.desperationMeter  // Session 12d: Pass reference for desperation abilities
+            this.desperationMeter,  // Session 12d: Pass reference for desperation abilities
+            this  // Session 17: Pass game reference for sound system access
         );
 
         // Spawn enemies and weapons for starting floor
@@ -79,6 +84,12 @@ class Game {
 
         // Pause state (Session 14)
         this.paused = false;
+
+        // Sound system state flags (Session 17)
+        this.muteKeyProcessed = false;
+        this.victorySoundPlayed = false;
+        this.defeatSoundPlayed = false;
+        this.previousClenchActive = false;
 
         // Floor transition cooldown (prevent immediate re-trigger)
         this.transitionCooldown = 0;
@@ -410,6 +421,16 @@ class Game {
     update(currentTime, deltaTime) {
         // Stop updates if game over or victory (Session 9e)
         if (this.gameState !== 'playing') {
+            // Session 17: Play victory/defeat sounds (once)
+            if (this.gameState === 'victory' && !this.victorySoundPlayed) {
+                this.soundSystem.playVictory();
+                this.victorySoundPlayed = true;
+            }
+            if (this.gameState === 'game_over' && !this.defeatSoundPlayed) {
+                this.soundSystem.playDefeat();
+                this.defeatSoundPlayed = true;
+            }
+
             // Check for restart input
             if (this.input.isRestartPressed()) {
                 location.reload(); // Restart game by reloading page
@@ -433,6 +454,17 @@ class Game {
             // Clear key to prevent repeat (wait for key release)
             this.input.keys['h'] = false;
             this.input.keys['H'] = false;
+        }
+
+        // Session 17: Mute toggle (M key) - handle even when paused/help active
+        if (this.input.isMutePressed() && !this.muteKeyProcessed) {
+            const muted = this.soundSystem.toggleMute();
+            this.player.setMessage(muted ? 'Sound: OFF' : 'Sound: ON');
+            console.log(muted ? '🔇 Sound muted' : '🔊 Sound unmuted');
+            this.muteKeyProcessed = true;
+        }
+        if (!this.input.isMutePressed()) {
+            this.muteKeyProcessed = false;
         }
 
         // Session 16: Handle help system input (arrow keys, WASD, number keys, ESC)
@@ -560,13 +592,24 @@ class Game {
             this.input.keys['Enter'] = false;
         }
 
-        // Handle Clench input (Session 12a)
+        // Handle Clench input (Session 12a + Session 17 sound)
         if (this.input.isClenchPressed()) {
+            const wasActive = this.player.clenchActive;
             this.player.activateClench();
+            // Play sound only if clench was just activated (not already active)
+            if (!wasActive && this.player.clenchActive) {
+                this.soundSystem.playClenchActivate();
+            }
         }
 
         // Update player state
         this.player.update(deltaTime);
+
+        // Session 17: Detect clench deactivation (play sound)
+        if (this.previousClenchActive && !this.player.clenchActive) {
+            this.soundSystem.playClenchDeactivate();
+        }
+        this.previousClenchActive = this.player.clenchActive;
 
         // Update combat system
         this.combat.update(deltaTime);
@@ -604,6 +647,9 @@ class Game {
 
     // Descend to the next floor
     descendToNextFloor() {
+        // Session 17: Play floor transition sound
+        this.soundSystem.playFloorTransition();
+
         this.currentFloor++;
         this.tileMap = this.floors[this.currentFloor];
 
@@ -630,6 +676,9 @@ class Game {
 
     // Ascend to the previous floor
     ascendToPreviousFloor() {
+        // Session 17: Play floor transition sound
+        this.soundSystem.playFloorTransition();
+
         this.currentFloor--;
         this.tileMap = this.floors[this.currentFloor];
 
@@ -1284,7 +1333,9 @@ window.addEventListener('DOMContentLoaded', () => {
 function showMenu() {
     const canvas = document.getElementById('game-canvas');
     const tempRenderer = new Renderer(canvas);
-    const menu = new MenuSystem(canvas, tempRenderer);
+    // Session 17: Create temporary game-like object with sound system for menu
+    const tempGame = { soundSystem: new SoundSystem() };
+    const menu = new MenuSystem(canvas, tempRenderer, tempGame);
 
     // Menu loop
     function menuLoop() {
