@@ -124,13 +124,6 @@ export class CombatSystem {
             // Show message to player
             this.game.player.setMessage(`Hit! ${finalDamage} damage`);
 
-            // Console log for debugging
-                `Attack HIT! Target: (${target.x}, ${target.y}), ` +
-                `Damage: ${finalDamage} (base: ${Math.floor(baseDamage)}, ` +
-                `rage: ${Math.floor((desperation * 0.8) * 100)}% bonus, ` +
-                `desperation: ${Math.floor(desperation * 100)}%)`
-            );
-
             // Check if enemy died
             if (target.health <= 0) {
                 this.game.soundSystem.playEnemyDeath(); // Session 17
