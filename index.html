@@ -135,6 +135,13 @@
       </div>
     </main>
 
+    <!-- Story Button -->
+    <div class="story-button-container">
+      <button id="view-story-btn" class="story-button">
+        📖 View Story
+      </button>
+    </div>
+
     <!-- Footer -->
     <footer>
       <div class="footer-content">
@@ -183,6 +190,19 @@
     <script type="module">
       import { initBootSequence } from "./src/boot-sequence.js";
       initBootSequence();
+    </script>
+
+    <!-- Story Button -->
+    <script type="module">
+      import { IntroModal } from "./src/intro-modal.js";
+
+      // Wire up "View Story" button
+      document.getElementById('view-story-btn').addEventListener('click', () => {
+        const modal = new IntroModal();
+        modal.forceShow(() => {
+          // Do nothing on dismiss - just close modal
+        });
+      });
     </script>
 
     <!-- Main Game -->

@@ -397,6 +397,40 @@ main {
   font-weight: bold;
 }
 
+/* === Story Button === */
+.story-button-container {
+  text-align: center;
+  margin: var(--spacing-xl) 0;
+  padding: var(--spacing-md);
+}
+
+.story-button {
+  background: var(--bg-component);
+  color: var(--color-primary);
+  border: var(--border-width) solid var(--color-primary);
+  padding: var(--spacing-md) var(--spacing-xl);
+  font-family: var(--font-mono);
+  font-size: 20px;
+  cursor: pointer;
+  border-radius: 4px;
+  text-shadow: var(--glow-primary);
+  box-shadow: var(--glow-primary);
+  transition: all 0.2s ease;
+}
+
+.story-button:hover {
+  background: var(--color-primary);
+  color: var(--bg-primary);
+  text-shadow: none;
+  box-shadow: var(--glow-strong);
+  transform: translateY(-2px);
+}
+
+.story-button:active {
+  transform: translateY(0);
+  box-shadow: var(--glow-primary);
+}
+
 /* === Footer === */
 footer {
   background: var(--bg-secondary);
