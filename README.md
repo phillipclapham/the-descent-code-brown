@@ -6,7 +6,7 @@
 
 ## 🎮 Play Now
 
-**Browser-based** - No installation required. Just open `index.html` in your browser!
+**[▶️ PLAY ONLINE](https://gottapoop.phillipclapham.com)** ← Live game!
 
 Race through 10 floors of ChromaCorp Tower to reach the only working bathroom. Manage your rising desperation, fight enemies, find items, and use your "Clench" ability strategically. Can you make it before time runs out?
 
@@ -102,9 +102,11 @@ Race through 10 floors of ChromaCorp Tower to reach the only working bathroom. M
 
 ## 🚀 Local Development
 
+**Want to fork or modify the code?** Here's how to run it locally:
+
 ```bash
 # Clone repository
-git clone https://github.com/[your-username]/the-descent-code-brown.git
+git clone https://github.com/phillipclapham/the-descent-code-brown.git
 cd the-descent-code-brown
 
 # Serve locally (ES6 modules require HTTP server)
