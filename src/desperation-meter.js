@@ -17,15 +17,28 @@ export class DesperationMeter {
         // Create DOM element for the meter
         this.element = this.createMeterElement();
 
-        // Session 18.5: Force width to 0% immediately (bypass CSS transition on init)
+        // Session 18.5d: AGGRESSIVE fix - disable transition entirely, set to 0%, re-enable after delay
         if (this.element && this.element.bar) {
+            // Completely disable transition
+            this.element.bar.style.transition = 'none';
+            // Force width to 0%
             this.element.bar.style.width = '0%';
+            // Update text
+            if (this.element.percentage) {
+                this.element.percentage.textContent = '0%';
+            }
+            // Re-enable transition after a delay to ensure 0% is applied first
+            setTimeout(() => {
+                if (this.element && this.element.bar) {
+                    this.element.bar.style.transition = '';
+                }
+            }, 100);
         }
 
         // Session 15: Force initial render to ensure visual state matches value (fixes rare bug)
         this.render();
 
-        console.log('Desperation meter initialized at 0%');
+        console.log('Desperation meter initialized at 0% (transition disabled temporarily)');
     }
 
     // Create the meter UI element
@@ -171,20 +184,23 @@ export class DesperationMeter {
         // Session 12d: Reset break room state
         this.inBreakRoom = false;
 
-        // Session 18.5: Force immediate DOM update (bypass CSS transition)
+        // Session 18.5d: AGGRESSIVE reset - disable transition, force to 0%, re-enable after delay
         if (this.element && this.element.bar) {
             this.element.bar.style.transition = 'none';
             this.element.bar.style.width = '0%';
-            // Re-enable transition after a frame
-            requestAnimationFrame(() => {
+            if (this.element.percentage) {
+                this.element.percentage.textContent = '0%';
+            }
+            // Re-enable transition after ensuring 0% is applied
+            setTimeout(() => {
                 if (this.element && this.element.bar) {
                     this.element.bar.style.transition = '';
                 }
-            });
+            }, 100);
         }
 
         this.render();
-        console.log('Desperation meter reset to 0%');
+        console.log('Desperation meter RESET to 0% (transition disabled temporarily)');
     }
 
     // Get current value (for gameplay effects in future sessions)
