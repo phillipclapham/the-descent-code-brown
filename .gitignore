@@ -1,5 +1,6 @@
 # Project memory (internal development process)
 project_memory/
+project_memory/next_steps.md
 
 # Node modules if we add any tooling later
 node_modules/
@@ -17,4 +18,3 @@ node_modules/
 *.swp
 *.swo
 *~
-project_memory/next_steps.md
