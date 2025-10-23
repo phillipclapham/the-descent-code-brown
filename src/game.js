@@ -629,8 +629,16 @@ class Game {
             this.input.keys['Q'] = false;
         }
 
-        // Session 18: E key is context-sensitive (shrine interaction takes priority)
+        // Session 14a: E key cycles inventory right
         if (this.input.isEPressed()) {
+            this.player.cycleSlot(1); // Cycle right
+            // Clear key to prevent repeat
+            this.input.keys['e'] = false;
+            this.input.keys['E'] = false;
+        }
+
+        // Session 18: R key for shrine interaction (Restore)
+        if (this.input.isRestartPressed()) {
             const playerTile = this.tileMap.getTile(this.player.x, this.player.y);
 
             // Check if player is standing on shrine
@@ -641,10 +649,14 @@ class Game {
                 if (this.usedShrines.has(shrineKey)) {
                     this.player.setMessage('This shrine has already been used');
                 } else {
-                    // Use shrine: -30% desperation
+                    // Use shrine: -30% desperation + 30 HP
                     const currentDesp = this.desperationMeter.getValue();
                     const newDesp = Math.max(0, currentDesp - 30);
                     this.desperationMeter.value = newDesp;
+
+                    const currentHP = this.player.health;
+                    const newHP = Math.min(this.player.maxHealth, currentHP + 30);
+                    this.player.health = newHP;
 
                     // Mark as used
                     this.usedShrines.add(shrineKey);
@@ -653,23 +665,17 @@ class Game {
                     this.tileMap.setTile(this.player.x, this.player.y, TILE_SHRINE_USED);
 
                     // Show message
-                    this.player.setMessage('You pray at the altar... -30% Desperation!');
+                    this.player.setMessage(`You pray at the altar... +${newHP - currentHP} HP, -30% Desperation!`);
 
                     // Play sound
                     this.soundSystem.playPickup(); // Peaceful sound
 
-                    console.log(`Shrine used at (${this.player.x}, ${this.player.y}): ${currentDesp.toFixed(1)}% → ${newDesp.toFixed(1)}%`);
+                    console.log(`Shrine used at (${this.player.x}, ${this.player.y}): HP ${currentHP} → ${newHP}, Desperation ${currentDesp.toFixed(1)}% → ${newDesp.toFixed(1)}%`);
                 }
 
                 // Clear key to prevent repeat
-                this.input.keys['e'] = false;
-                this.input.keys['E'] = false;
-            } else {
-                // Not on shrine, use E for inventory cycling (default behavior)
-                this.player.cycleSlot(1); // Cycle right
-                // Clear key to prevent repeat
-                this.input.keys['e'] = false;
-                this.input.keys['E'] = false;
+                this.input.keys['r'] = false;
+                this.input.keys['R'] = false;
             }
         }
 
