@@ -18,7 +18,6 @@ export class SoundSystem {
             try {
                 this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 this.initialized = true;
-                console.log('🔊 Sound system initialized');
             } catch (e) {
                 console.warn('Web Audio API not supported:', e);
                 this.muted = true; // Fallback to muted if no support

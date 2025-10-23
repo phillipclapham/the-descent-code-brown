@@ -49,7 +49,6 @@ export class TileMap {
         // Array of {x, y} for shrine altar positions
         this.shrines = [];
 
-        console.log(`TileMap initialized: ${width}x${height}`);
     }
 
     // Get tile type at position
@@ -114,7 +113,6 @@ export class TileMap {
     // Session 12d: Add break room bounds for desperation pause detection
     addBreakRoom(x, y, width, height) {
         this.breakRooms.push({ x, y, width, height });
-        console.log(`   🛋️  Break Room registered at (${x}, ${y}) size ${width}x${height}`);
     }
 
     // Session 12d: Check if position is inside any break room
@@ -128,7 +126,6 @@ export class TileMap {
     // Session 18: Add shrine altar position for consumable spawning
     addShrine(x, y) {
         this.shrines.push({ x, y });
-        console.log(`   🕊️  Shrine registered at (${x}, ${y})`);
     }
 
     // Fill a rectangular area with a tile type
@@ -276,13 +273,11 @@ export class TileMap {
 
             for (const pos of adjacent) {
                 if (this.isWalkable(pos.x, pos.y)) {
-                    console.log(`Spawning near upstairs at (${pos.x}, ${pos.y})`);
                     return pos;
                 }
             }
 
             // No adjacent walkable, spawn ON upstairs
-            console.log(`Spawning ON upstairs at (${upstairs.x}, ${upstairs.y})`);
             return upstairs;
         }
 
@@ -298,13 +293,11 @@ export class TileMap {
 
             for (const pos of adjacent) {
                 if (this.isWalkable(pos.x, pos.y)) {
-                    console.log(`Spawning near downstairs at (${pos.x}, ${pos.y})`);
                     return pos;
                 }
             }
 
             // No adjacent walkable, spawn ON downstairs (rare, but safe)
-            console.log(`Spawning ON downstairs at (${downstairs.x}, ${downstairs.y})`);
             return downstairs;
         }
 
@@ -411,7 +404,6 @@ export class TileMap {
         if (walkableAdjacent.length > 0) {
             // Pick a random adjacent walkable tile
             const spawn = walkableAdjacent[Math.floor(Math.random() * walkableAdjacent.length)];
-            console.log(`Spawning adjacent to upstairs at (${spawn.x}, ${spawn.y}), upstairs at (${upstairs.x}, ${upstairs.y})`);
             return spawn;
         }
 

@@ -647,7 +647,6 @@ class Game {
 
                 // Session 18: Check for trap death
                 if (this.player.diedFromTrap) {
-                    console.log('Player died from trap!');
                     this.gameState = 'game_over';
                     this.player.setMessage("You died from a trap! Should've watched your step...");
 
@@ -714,7 +713,6 @@ class Game {
                     // Play sound
                     this.soundSystem.playPickup(); // Peaceful sound
 
-                    console.log(`Shrine used at (${this.player.x}, ${this.player.y}): HP ${currentHP} → ${newHP}, Desperation ${currentDesp.toFixed(1)}% → ${newDesp.toFixed(1)}%`);
                 }
 
                 // Clear key to prevent repeat
@@ -733,7 +731,6 @@ class Game {
                 // Play sound (subtle acknowledgment)
                 this.soundSystem.playPickup();
 
-                console.log(`Feature read at (${this.player.x}, ${this.player.y}) on Floor ${displayFloor}: "${loreMessage}"`);
 
                 // Clear key to prevent repeat
                 this.input.keys['r'] = false;
@@ -773,7 +770,6 @@ class Game {
             this.player.setMessage('🎮 CHEAT ACTIVATED! Health and Desperation restored! 🎮');
             this.soundSystem.playPickup(); // Victory-ish sound
 
-            console.log('🎮 KONAMI CODE: HP restored to 100, Desperation reset to 0%');
         }
 
         // Handle Clench input (Session 12a + Session 17 sound)

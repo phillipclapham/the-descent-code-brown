@@ -89,7 +89,6 @@ export class SaveSystem {
 
         try {
             localStorage.setItem(this.SAVE_KEY, JSON.stringify(saveData));
-            console.log(`Game saved! Floor ${saveData.floor}, ${saveData.playerHealth}HP, ${Math.floor(saveData.playerDesperation)}% desperation`);
             return true;
         } catch (error) {
             console.error('Failed to save game:', error);
@@ -100,12 +99,10 @@ export class SaveSystem {
     // Delete save file (on death/victory)
     static deleteSave() {
         localStorage.removeItem(this.SAVE_KEY);
-        console.log('Save file deleted');
     }
 
     // Continue from save (restore player state, regenerate floor)
     static continue(game, saveData) {
-        console.log(`Continuing from Floor ${saveData.floor}...`);
 
         // Calculate floor index (display floor 10 → 1 maps to index 0 → 9)
         const floorIndex = game.numFloors - saveData.floor;
@@ -136,7 +133,6 @@ export class SaveSystem {
         } else {
             game.desperationMeter.render();
         }
-        console.log(`✅ CONTINUE: Restored desperation to ${Math.floor(game.desperationMeter.value)}%`);
         game.player.keysCollected = saveData.keysCollected || 0;
 
         // Restore clench state
@@ -178,7 +174,6 @@ export class SaveSystem {
 
         } else if (saveData.version === '1.0') {
             // V1.0: Migrate from single inventory to dual inventory
-            console.log('Migrating v1.0 save to v2.0 dual inventory system...');
 
             const oldInventory = saveData.inventory || [];
             const weapons = [];
@@ -243,7 +238,6 @@ export class SaveSystem {
                 game.player.equippedWeapon = game.player.weaponInventory[0];
             }
 
-            console.log(`Migration complete: ${weapons.length} weapons, ${consumables.length} consumables`);
         }
 
         // Restore statistics
@@ -271,7 +265,6 @@ export class SaveSystem {
         // Respawn enemies and items for this floor
         game.spawnFloorEntities();
 
-        console.log(`Continued at Floor ${saveData.floor}, position (${game.player.x}, ${game.player.y})`);
     }
 
     // Get save data preview (for Continue button display)
@@ -292,7 +285,6 @@ export class SaveSystem {
     static saveHighScore(scoreData) {
         try {
             localStorage.setItem(this.HIGHSCORE_KEY, JSON.stringify(scoreData));
-            console.log(`New high score: ${scoreData.score} (${scoreData.rank})`);
         } catch (error) {
             console.error('Failed to save high score:', error);
         }

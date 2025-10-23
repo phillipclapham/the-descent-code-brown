@@ -143,7 +143,6 @@ export function placeVaultTemplate(tileMap, room, template) {
     const entranceX = offsetX + template.entrance.x;
     const entranceY = offsetY + template.entrance.y;
 
-    console.log(`Placed vault template: ${template.name} at (${offsetX}, ${offsetY}), entrance at (${entranceX}, ${entranceY})`);
 
     return {
         x: entranceX,

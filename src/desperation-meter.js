@@ -23,7 +23,6 @@ export class DesperationMeter {
         // Session 15: Force initial render to ensure visual state matches value (fixes rare bug)
         this.render();
 
-        console.log('Desperation meter initialized (value: ' + Math.floor(this.value) + '%)');
     }
 
     // Create the meter UI element
@@ -77,9 +76,7 @@ export class DesperationMeter {
             // Entry/exit messages
             if (nowInBreakRoom && !this.inBreakRoom) {
                 player.setMessage('BREAK ROOM - Desperation paused');
-                console.log('🛋️  Entered break room (desperation paused)');
             } else if (!nowInBreakRoom && this.inBreakRoom) {
-                console.log('🚪 Left break room (desperation resuming)');
             }
 
             this.inBreakRoom = nowInBreakRoom;
@@ -108,7 +105,6 @@ export class DesperationMeter {
                 this.bashWallsUnlocked = true;
                 player.setMessage('DESPERATE! You can now BASH through weak walls!');
                 if (player.game) player.game.soundSystem.playThresholdAlert(); // Session 17
-                console.log('🧱 Bash walls ability unlocked at 75% desperation');
             }
 
             // Force doors unlock at 90%
@@ -116,7 +112,6 @@ export class DesperationMeter {
                 this.forceDoorsUnlocked = true;
                 player.setMessage('EXTREME! You can now FORCE locked doors open!');
                 if (player.game) player.game.soundSystem.playThresholdAlert(); // Session 17
-                console.log('🚪 Force doors ability unlocked at 90% desperation');
             }
         }
 
@@ -185,7 +180,6 @@ export class DesperationMeter {
         }
 
         this.render();
-        console.log('✅ NEW GAME: Desperation meter RESET to 0%');
     }
 
     // Get current value (for gameplay effects in future sessions)
@@ -212,7 +206,6 @@ export class DesperationMeter {
         }
 
         this.render();
-        console.log(`Desperation reduced by ${amount}% (now ${Math.floor(this.value)}%)`);
     }
 
     // Increase desperation by percentage points (Session 10: consumables)
@@ -220,7 +213,6 @@ export class DesperationMeter {
     increaseBy(amount) {
         this.value = Math.min(this.value + amount, this.maxValue);
         this.render();
-        console.log(`Desperation increased by ${amount}% (now ${Math.floor(this.value)}%)`);
     }
 
     // Get current desperation threshold for visual effects (Session 12a)

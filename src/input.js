@@ -21,7 +21,6 @@ export class InputHandler {
 
                 // Check if sequence is complete
                 if (this.konamiProgress === this.konamiSequence.length) {
-                    console.log('🎮 KONAMI CODE ACTIVATED! 🎮');
                     this.konamiActivated = true;
                     this.konamiProgress = 0; // Reset for next activation
                 }

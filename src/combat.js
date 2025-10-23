@@ -109,7 +109,6 @@ export class CombatSystem {
             // Attack missed
             this.game.player.setMessage('MISS!');
             this.game.soundSystem.playMiss(); // Session 17
-            console.log(`Attack MISS! Accuracy: ${Math.floor(accuracy * 100)}%, Desperation: ${Math.floor(desperation * 100)}%`);
         } else {
             // Attack hit - calculate damage
             const baseDamage = this.game.player.equippedWeapon.rollDamage();
@@ -126,7 +125,6 @@ export class CombatSystem {
             this.game.player.setMessage(`Hit! ${finalDamage} damage`);
 
             // Console log for debugging
-            console.log(
                 `Attack HIT! Target: (${target.x}, ${target.y}), ` +
                 `Damage: ${finalDamage} (base: ${Math.floor(baseDamage)}, ` +
                 `rage: ${Math.floor((desperation * 0.8) * 100)}% bonus, ` +
@@ -136,7 +134,6 @@ export class CombatSystem {
             // Check if enemy died
             if (target.health <= 0) {
                 this.game.soundSystem.playEnemyDeath(); // Session 17
-                console.log(`Enemy defeated! ${target.name} at (${target.x}, ${target.y})`);
             }
         }
 
@@ -161,7 +158,6 @@ export class CombatSystem {
 
         if (!hit) {
             // Enemy missed
-            console.log(`${enemy.name} MISS! (adjacent to player)`);
         } else {
             // Enemy hit - roll damage
             const damage = enemy.rollDamage();
@@ -174,13 +170,11 @@ export class CombatSystem {
             const died = this.game.player.takeDamage(damage);
 
             // Console log
-            console.log(
                 `${enemy.name} HIT player! Damage: ${damage}, ` +
                 `Player HP: ${this.game.player.health}/${this.game.player.maxHealth}`
             );
 
             if (died) {
-                console.log('Player defeated!');
                 // Trigger game over state (Session 9e)
                 this.game.gameState = 'game_over';
 
@@ -245,7 +239,6 @@ export class CombatSystem {
             const drop = deadEnemy.dropItem();
             if (drop) {
                 this.spawnDrop(deadEnemy.x, deadEnemy.y, drop);
-                console.log(`  💰 ${deadEnemy.name} dropped ${drop.name}!`);
             }
 
             // Increment game stats (Session 12a)
