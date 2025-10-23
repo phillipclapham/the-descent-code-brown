@@ -17,28 +17,13 @@ export class DesperationMeter {
         // Create DOM element for the meter
         this.element = this.createMeterElement();
 
-        // Session 18.5d: AGGRESSIVE fix - disable transition entirely, set to 0%, re-enable after delay
-        if (this.element && this.element.bar) {
-            // Completely disable transition
-            this.element.bar.style.transition = 'none';
-            // Force width to 0%
-            this.element.bar.style.width = '0%';
-            // Update text
-            if (this.element.percentage) {
-                this.element.percentage.textContent = '0%';
-            }
-            // Re-enable transition after a delay to ensure 0% is applied first
-            setTimeout(() => {
-                if (this.element && this.element.bar) {
-                    this.element.bar.style.transition = '';
-                }
-            }, 100);
-        }
+        // Session 18.5e: DON'T force 0% in constructor (breaks CONTINUE)
+        // Let reset() handle NEW GAME, and restore() handle CONTINUE
 
         // Session 15: Force initial render to ensure visual state matches value (fixes rare bug)
         this.render();
 
-        console.log('Desperation meter initialized at 0% (transition disabled temporarily)');
+        console.log('Desperation meter initialized (value: ' + Math.floor(this.value) + '%)');
     }
 
     // Create the meter UI element
@@ -200,7 +185,7 @@ export class DesperationMeter {
         }
 
         this.render();
-        console.log('Desperation meter RESET to 0% (transition disabled temporarily)');
+        console.log('✅ NEW GAME: Desperation meter RESET to 0%');
     }
 
     // Get current value (for gameplay effects in future sessions)

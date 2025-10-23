@@ -117,20 +117,26 @@ export class SaveSystem {
         // Restore player state
         game.player.health = saveData.playerHealth || 100;
         game.player.maxHealth = saveData.playerMaxHealth || 100;
+        // Session 18.5e: Restore desperation value and force immediate visual update
         game.desperationMeter.value = saveData.playerDesperation || 0;
-        // Session 18.5d: Force render AND bypass transition to ensure visual updates immediately
+
         if (game.desperationMeter.element && game.desperationMeter.element.bar) {
+            // Disable transition to prevent animation from 0% to saved value
             game.desperationMeter.element.bar.style.transition = 'none';
+            // Update visual immediately
             game.desperationMeter.render();
-            setTimeout(() => {
-                if (game.desperationMeter.element && game.desperationMeter.element.bar) {
-                    game.desperationMeter.element.bar.style.transition = '';
-                }
-            }, 100);
+            // Re-enable transition after browser has painted
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    if (game.desperationMeter.element && game.desperationMeter.element.bar) {
+                        game.desperationMeter.element.bar.style.transition = '';
+                    }
+                });
+            });
         } else {
             game.desperationMeter.render();
         }
-        console.log(`Restored desperation: ${Math.floor(game.desperationMeter.value)}%`);
+        console.log(`✅ CONTINUE: Restored desperation to ${Math.floor(game.desperationMeter.value)}%`);
         game.player.keysCollected = saveData.keysCollected || 0;
 
         // Restore clench state
