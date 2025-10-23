@@ -2,27 +2,29 @@
 
 **Current Phase:** Phase 4 - Polish & Public Release 🚀 IN PROGRESS
 **Previous Phase:** Phase 3 - Combat & Items ✅ COMPLETE & ARCHIVED
-**Current Session:** Session 18 - Extended Playtesting & Final Polish (CRITICAL PATH)
-**Status:** ✅ SESSION 17 COMPLETE! Ready to start Session 18
+**Current Session:** Session 18a - Bug Fixes & Playtesting Continuation (CRITICAL PATH)
+**Status:** ⚠️ SESSION 18 IN PROGRESS! 2 critical bugs blocking playtesting
 **Last Updated:** 2025-10-22
 
 ---
 
 ## 📋 NEXT CONVERSATION START PROTOCOL
 
-**🎯 TO START SESSION 18 (CRITICAL PATH):**
+**🎯 TO CONTINUE SESSION 18a (CRITICAL - BUGS BLOCKING RELEASE):**
 ```
 [!read-memory]
-"Let's start Session 18: Extended Playtesting & Final Polish"
+"Continue Session 18a: Fix combat damage bug and R key bug, then resume playtesting"
 ```
 
-**Session 18 Focus (CRITICAL - REQUIRED FOR RELEASE):**
-- Extended playtesting (30+ minute complete runs)
-- Balance tuning based on playtesting data
-- Bug hunting and fixing
-- Final polish pass (UX, visuals, messaging)
-- Cross-browser testing (Chrome, Firefox, Safari)
-- Performance validation
+**CRITICAL BUGS TO FIX FIRST:**
+1. **Combat damage broken** - Player attacks not dealing damage to enemies
+2. **R key broken** - Restart button not working after game over/victory
+
+**After Bug Fixes:**
+- Resume full playtesting protocol (see SESSION_18_PLAYTEST_CHECKLIST.md)
+- Balance tuning based on playtest data
+- Final polish pass
+- Success criteria verification
 
 **Session 19 Focus (FINAL):**
 - Public deployment to GitHub Pages
@@ -31,283 +33,149 @@
 - Screenshots/GIF creation for GitHub
 - Final verification
 
-**All Session Details:** See `PHASE_4_PLAN.md` lines 811-970 for complete specifications
+**All Session Details:** See `PHASE_4_PLAN.md` lines 811-970 + `SESSION_18_PLAYTEST_CHECKLIST.md`
 
 ---
 
-## ✅ SESSION 17 COMPLETE! (Just Finished)
+## ⚠️ SESSION 18 - IN PROGRESS (Bug Fixes Needed)
 
-**Session 17: Sound Effects & Audio Polish**
-**Duration:** ~60 minutes (55 min + 5 min critical fix)
-**Commits:** 85adb83 (main implementation), 8aa7353 (critical fix)
-**Files Changed:** 10 files (505 insertions, 244 deletions)
+**Session 18: Extended Playtesting & Final Polish**
+**Duration So Far:** ~90 minutes (code review + bug fixes + initial testing)
+**Commits:** 3 critical fixes
+**Status:** ⚠️ BLOCKED - 2 new critical bugs discovered during initial playtesting
 
-### What Was Built
+### Work Completed
 
-**MAJOR FEATURES:**
-1. ✅ **Web Audio API Sound System** - Complete procedural synthesis
-2. ✅ **16 Unique Sounds** - Combat, items, desperation, environment, UI
-3. ✅ **Mute Toggle** - M key with localStorage persistence
-4. ✅ **Audio Feedback** - Every player action has satisfying sound
-5. ✅ **Critical Bug Fix** - Save system game reference restoration
+**🐛 CRITICAL BUGS FIXED (3):**
 
-**SOUND SYSTEM ARCHITECTURE:**
-- `src/sound-system.js` (~200 lines) - Complete SoundSystem class
-- Core methods: playTone(), playSweep() with Web Audio API
-- Master volume: 30% (subtle, non-intrusive)
-- Lazy AudioContext initialization (user gesture compliance)
-- Browser compatible (webkitAudioContext fallback)
+1. ✅ **BUG #1: Save/load desperation reset** (Commit: 13d29f1)
+   - **Issue:** Every save/load reset player desperation to 0%
+   - **Cause:** Wrong property name: `game.desperationMeter.desperation` (undefined)
+   - **Fix:** Changed to `game.desperationMeter.value` in save-system.js:42
+   - **Impact:** Save/load now correctly preserves desperation percentage
 
-**16 SOUND METHODS:**
-- **Combat:** playHit() (pitch scales with damage 200-500Hz), playMiss(), playEnemyDeath()
-- **Items:** playPickup() (rising 440→880Hz), playUseConsumable(), playWeaponSwitch()
-- **Desperation:** playThresholdAlert() (double beep), playClenchActivate(), playClenchDeactivate()
-- **Environment:** playDoorOpen(), playDoorUnlock(), playFloorTransition()
-- **UI:** playMenuClick(), playMenuSelect(), playVictory() (C-E-G-C arpeggio), playDefeat()
+2. ✅ **BUG #2: Desperation persisting across NEW GAME** (Commit: ec0cdde)
+   - **Issue:** Starting NEW GAME showed previous game's desperation level
+   - **Cause:** Old game loops never stopped, multiple DesperationMeter instances fighting for DOM
+   - **Fix:** Added `this.running = false` at 3 death/victory points:
+     * game.js:524 - Desperation reaches 100%
+     * game.js:708 - Victory (reached toilet)
+     * combat.js:181 - Player death in combat
+   - **Impact:** Clean game state transitions, no loop leaks
 
-**INTEGRATION POINTS (9 files):**
-- `src/game.js` (+40 lines) - M key toggle, clench sounds, victory/defeat, transitions
-- `src/combat.js` (+7 lines) - Hit/miss/death sounds with damage scaling
-- `src/player.js` (+8 lines + constructor param) - Pickup, door, consumable, cycling sounds
-- `src/desperation-meter.js` (+2 lines) - Threshold alerts at 75% & 90%
-- `src/menu-system.js` (+12 lines + constructor param) - Navigation and selection sounds
-- `src/input.js` (+5 lines) - isMutePressed() method
-- `src/save-system.js` (+3 lines) - Restore game reference (CRITICAL FIX)
-- `index.html` (+4 lines) - M key in controls sidebar
+3. ✅ **BUG #3: Game crashing on enemy attack** (Commit: 07a9622)
+   - **Issue:** TypeError: Cannot read properties of undefined (reading 'max')
+   - **Cause:** Session 17 sound code assumed wrong enemy structure (`enemy.damage.max`)
+   - **Reality:** Enemy class uses `enemy.damageMax` (direct property)
+   - **Fix:** Changed `enemy.damage.max` → `enemy.damageMax` in combat.js:165
+   - **Impact:** Game no longer crashes when enemies attack player
 
-**CRITICAL BUG FIX (Commit 8aa7353):**
-- **Issue:** Game freezing when loading from save
-- **Cause:** player.game reference not restored after save load
-- **Fix:** Added `game.player.game = game` to SaveSystem.continue()
-- **Bonus:** Fixed desperationMeter.desperation → value typo
-- **Impact:** Save/continue functionality now works perfectly
+**📝 CODE CLEANUP (Commit: 13d29f1):**
+- Removed 76 lines of console.log statements from 4 major files:
+  * dungeon-generator.js: 37 → 0 logs
+  * game.js: 20 → 0 logs
+  * player.js: 19 → 13 logs (kept console.warn for debugging)
+  * consumable.js: 4 → 0 logs
+- Kept console.error/console.warn for critical debugging
+- ~30 logs remaining in low-priority files (tile-map, desperation-meter, combat)
 
-### Sound Design Philosophy
+**📋 PLAYTESTING INFRASTRUCTURE:**
+- Created `SESSION_18_PLAYTEST_CHECKLIST.md` (634 lines)
+- Comprehensive testing protocol covering:
+  * Phase 1: 3 systematic playthroughs (Aggressive, Cautious, Inventory Stress)
+  * Phase 2: Edge case validation (save/load, death, victory, boundaries)
+  * Performance metrics, balance assessment, UX observations
+  * Success criteria checklist
 
-**Retro Arcade Aesthetic:**
-- Procedural synthesis (no audio files)
-- Frequency = Information (damage → pitch, success → rising, failure → falling)
-- Duration = Impact (50ms clicks → 800ms victory fanfare)
-- Waveform = Character (sine = clean, square = power, sawtooth = failure)
+### 🚨 NEW CRITICAL BUGS DISCOVERED (During Initial Playtesting)
 
-**Technical Excellence:**
-- Exponential gain ramps for natural decay
-- OscillatorNodes auto-cleanup
-- Zero performance impact (lightweight synthesis)
-- Volume balance: 9-24% absolute (30% master × 30-80% individual)
+**BUG #4: Combat damage not working** ⚠️ CRITICAL - BLOCKS GAMEPLAY
+- **Issue:** Player attacks not dealing damage to enemies
+- **Impact:** Game unplayable - cannot kill enemies
+- **Status:** NOT INVESTIGATED YET
+- **Priority:** FIX IMMEDIATELY in Session 18a
 
-### Why This Mattered
+**BUG #5: R key (restart) not working** ⚠️ CRITICAL - BLOCKS RESTART
+- **Issue:** Pressing R after game over/victory does not restart game
+- **Impact:** Cannot start new game without page refresh
+- **Status:** NOT INVESTIGATED YET
+- **Priority:** FIX IMMEDIATELY in Session 18a
 
-**Before Session 17:**
-- Silent game (no audio feedback)
-- Player actions felt less impactful
-- No auditory cues for critical thresholds
-- Missing accessibility option (mute)
+**Other Issues Noted:**
+- Console warning: "TILE_WEAPON at (28, 24) but no weapon in combat.weapons Map!"
+  * Appears to be non-blocking but should investigate
+- Console warning: "No upstairs found (Floor 10?), using findWalkablePosition fallback"
+  * Expected on Floor 10, but verify spawn safety
 
-**After Session 17:**
-- Professional audio feedback system
-- Combat feels punchy and responsive
-- Threshold warnings create tension (double beep at 75% & 90%)
-- Victory fanfare is celebratory (C major arpeggio)
-- Clench activation is satisfying (440Hz square wave = POWER!)
-- Mute option for accessibility
-- Portfolio-worthy sound design
+### Session 18 Remaining Work
 
-**Impact:** Game feel went from "solid mechanics" → "juicy, responsive gameplay with excellent audio-visual feedback." Sound adds 20-30% to perceived polish and game feel.
+**IMMEDIATE (Session 18a):**
+- [ ] Fix BUG #4: Combat damage not working
+- [ ] Fix BUG #5: R key restart not working
+- [ ] Verify fixes with quick playtest
+- [ ] Resume full playtesting protocol
 
----
+**AFTER BUG FIXES:**
+- [ ] Complete 3-5 full playthroughs (Aggressive, Cautious, Inventory Stress, etc.)
+- [ ] Document balance observations (desperation rate, Clench, enemies, items)
+- [ ] Document UX friction points
+- [ ] Performance testing (60fps, memory, console errors)
+- [ ] Fix any additional bugs discovered
+- [ ] Balance tuning based on playtest data
+- [ ] Final code cleanup (~30 remaining console.log statements - optional)
+- [ ] Verify all success criteria met
 
-## ✅ SESSION 16 COMPLETE!
+### Files Modified (Session 18)
 
-**Session 16: Tutorial & Help System**
-**Duration:** ~60 minutes
-**Commit:** a0078ac
-**Files Changed:** 5 files (634 insertions, 256 deletions)
+**Created:**
+- `SESSION_18_PLAYTEST_CHECKLIST.md` - Comprehensive testing protocol
 
-### What Was Built
+**Modified (3 commits):**
+- `src/save-system.js` - Fixed desperation property name
+- `src/game.js` - Added game loop stopping on death/victory
+- `src/combat.js` - Fixed enemy damage property, added loop stopping
+- `src/dungeon-generator.js` - Removed 37 console.log statements
+- `src/consumable.js` - Removed 4 console.log statements
+- `src/player.js` - Removed 6 console.log statements
 
-**MAJOR FEATURES:**
-1. ✅ **Help Overlay System** - H key toggles comprehensive in-game tutorial
-2. ✅ **4 Tabs** - Controls, Mechanics, Strategy, Credits (fully navigable)
-3. ✅ **Scrolling** - W/S or ↑/↓ keys to scroll through content
-4. ✅ **Tab Navigation** - Arrow keys (←/→) or number keys (1-4)
-5. ✅ **Game Pause** - Game pauses while help is active
-6. ✅ **Terminal Aesthetic** - Consistent green/cyan styling throughout
+### Key Learnings
 
-**TAB CONTENT:**
-- **CONTROLS (38 lines)** - Complete key reference with detailed explanations
-  - Movement, combat, inventory management, special abilities, game controls
-  - Dual inventory system explained (slots 1-4 weapons, 5-8 consumables)
-  - Item dropping mechanics, interaction details
+**Bug Discovery:**
+- Multiple game loops = DOM control conflicts (desperation meter flickering)
+- Sound system errors can crash entire game (typos in property access)
+- User playtesting immediately discovered critical bugs (combat, restart)
+- Console output is invaluable for debugging async/DOM issues
 
-- **MECHANICS (24 lines)** - Core game systems
-  - Desperation system and 6 thresholds
-  - Clench mechanic (signature feature!)
-  - Break Rooms (safe zones where desperation pauses)
-  - Desperation abilities (bash walls 75%, force doors 90%)
+**Code Cleanup:**
+- Keeping console.error/warn for critical debugging is good practice
+- Removing informational logs significantly cleans up console
+- Comments explaining intent are better than noisy logs
 
-- **STRATEGY (26 lines)** - Tips for success
-  - Desperation management tactics
-  - Combat strategies and weapon choices
-  - Exploration tips and risk/reward balance
-
-- **CREDITS (24 lines)** - Game information
-  - Creator credits (Phill Clapham + Claude Code)
-  - Tech stack (vanilla JS, Canvas, ASCII)
-  - Roguelike inspirations (NetHack, DCSS, Brogue)
-
-**SCROLLING SYSTEM:**
-- Line height: 26px (increased for breathing room)
-- Visible lines calculated dynamically based on available height
-- Scroll indicators: "↑ More above ↑" / "↓ More below ↓"
-- Scroll offset resets when switching tabs
-- Smooth scrolling with W/S or arrow keys
-
-**POLISH & UX:**
-- Tab height: 40px (increased from 35px for better spacing)
-- Perfect text centering (textBaseline = middle)
-- Padding: title → tabs (30px) → content (30px) → footer
-- Footer shows all controls: "H/ESC: Close | ←/→ or 1-4: Switch tabs | W/S or ↑/↓: Scroll"
-- Canvas-based rendering (consistent with game aesthetic)
-- Semi-transparent background (rgba(0,0,0,0.85))
-
-**FILES CREATED:**
-- `src/help-system.js` (~280 lines) - Complete HelpSystem class with:
-  - Tab navigation logic
-  - Scroll offset management
-  - Dynamic content rendering
-  - Scroll indicators
-  - Input handling
-
-**FILES MODIFIED:**
-- `src/input.js` (+4 lines) - isHelpPressed() method
-- `src/game.js` (+45 lines) - Help system integration, input handling, render
-- `index.html` (+4 lines) - H key added to controls sidebar
-
-**TECHNICAL IMPLEMENTATION:**
-- Scroll offset per tab (independent scrolling)
-- Max scroll calculation (prevents over-scrolling)
-- Visible line windowing (only renders what's needed)
-- All input properly cleared (prevents repeat triggers)
-- Game pauses while help active (no desperation increase)
-
-### Why This Mattered
-
-**Before Session 16:**
-- No in-game tutorial
-- New players had to discover mechanics through trial/error
-- Signature mechanics (Clench, desperation abilities) hidden
-- Dual inventory system confusing
-- Poor first-time player experience
-
-**After Session 16:**
-- Professional in-game help system
-- All mechanics explained clearly
-- Signature features highlighted
-- Strategic depth revealed
-- First-time players can succeed
-- Portfolio-worthy tutorial presentation
-
-**Impact:** Game went from "playable but confusing" → "fully accessible to new players." Tutorial system is critical for public release. Players can now learn all mechanics without external documentation.
+**Session Management:**
+- Context window limits require strategic memory updates (~60% usage)
+- Breaking into subsessions (18a, 18b) allows focused bug fixing
+- Documenting "in progress" state is critical for continuity
 
 ---
 
-## ✅ SESSION 15 COMPLETE!
+## 🎯 SESSION 18a FOCUS (NEXT CONVERSATION)
 
-**Session 15: Professional HTML/CSS Page Design + Polish**
-**Duration:** ~60 minutes
-**Commit:** 715a11e
-**Files Changed:** 8 files (634 insertions, 187 deletions)
+**Goal:** Fix 2 critical bugs blocking playtesting, then resume testing
 
-### Highlights
+**Tasks:**
+1. Investigate and fix combat damage bug (likely Session 17 sound integration broke damage calculation)
+2. Investigate and fix R key restart bug (likely event listener issue after game over)
+3. Quick verification playtest (kill enemy, restart game)
+4. If fixed → Resume full playtesting protocol
+5. If more bugs → Continue fixing in Session 18b
 
-- ✅ Professional page layout (header, sidebar, footer)
-- ✅ External CSS stylesheet with design system
-- ✅ Controls sidebar visible on page
-- ✅ Terminal aesthetic throughout
-- ✅ Responsive design (desktop/tablet/mobile)
-- ✅ Weapon damage display in messages
+**Estimated Time:** 30-60 minutes (bug fixes + verification)
 
-**Impact:** Game presentation went from prototype → portfolio-worthy!
-
----
-
-## 🎯 NEXT SESSION DECISION POINT! 🤔
-
-**Session 17 (OPTIONAL): Sound Effects**
-- Adds audio feedback (combat, items, desperation)
-- Enhances experience but NOT critical for release
-- ~45-60 minutes
-- Can be added post-release
-
-**Session 18 (CRITICAL PATH): Playtesting & Polish**
-- Extended playtesting (30+ minute runs)
-- Balance tuning, bug hunting, final polish
-- ~60-90 minutes
-- REQUIRED for public release
-
-**RECOMMENDATION:** Skip Session 17 (sound) and proceed directly to Session 18 (playtesting). Sound can be added in a post-release update if desired.
-
----
-
-## 📖 PHASE 4 PROGRESS TRACKER
-
-**Sessions Completed:** 5/7 ✅✅✅✅✅⬜⬜
-
-- ✅ **Session 13:** Critical Bug Fixes & Input Enhancement (30 min)
-- ✅ **Session 14/14a:** Inventory Redesign + Pause + Fixes (115 min)
-- ✅ **Session 15:** Professional HTML/CSS Page Design (60 min)
-- ✅ **Session 16:** Tutorial & Help System (60 min)
-- ✅ **Session 17:** Sound Effects & Audio Polish (60 min) ← JUST COMPLETED!
-- ⬜ **Session 18:** Extended Playtesting & Final Polish (60-90 min) ← NEXT (CRITICAL)
-- ⬜ **Session 19:** Public Release Preparation (45-60 min)
-
-**Time Spent:** 325 minutes (~5.4 hours) / ~400-450 minutes total
-**Progress:** ~72% complete (all sessions on critical path)
-**Status:** ON TRACK for public release - Sound system complete!
-
----
-
-## 🎮 GAME STATE (Current)
-
-**What's Working:**
-- ✅ Complete gameplay loop (Floor 10 → Floor 1 → Victory)
-- ✅ 7 enemy types with tactical AI
-- ✅ 10 weapons, 4 consumables
-- ✅ Dual inventory system (4 weapons + 4 consumables)
-- ✅ Unified cycling (Q/E through all 8 slots)
-- ✅ Item dropping (X for weapons AND consumables)
-- ✅ Smart selection (weapons auto-equip, consumables need ENTER)
-- ✅ Pause key (P freezes game)
-- ✅ WASD + Arrow movement
-- ✅ Clench mechanic (10s freeze, 60s cooldown)
-- ✅ Desperation visuals (shake, tint, thresholds)
-- ✅ Desperation abilities (bash walls 75%, force doors 90%)
-- ✅ Break Rooms (desperation pauses, floors 8-3)
-- ✅ Victory sequence (scoring, ranks, high score)
-- ✅ Game over at 100% desperation
-- ✅ Save/continue system (v2.0 with v1 migration)
-- ✅ Story introduction modal
-- ✅ Professional HTML/CSS page design
-- ✅ Controls sidebar visible on page
-- ✅ Terminal aesthetic throughout
-- ✅ Responsive design (desktop/tablet/mobile)
-- ✅ Weapon damage display in messages
-- ✅ Tutorial & help system (H key, 4 tabs, scrolling)
-- ✅ **Sound system (M key mute, 16 sounds)** ← NEW SESSION 17!
-  - Combat sounds (hit/miss/death with damage scaling)
-  - Item sounds (pickup/use/switch)
-  - Desperation sounds (threshold alerts, clench)
-  - Environment sounds (doors, transitions)
-  - UI sounds (menu, victory, defeat)
-  - Web Audio API procedural synthesis
-  - LocalStorage mute persistence
-
-**What Needs Building (Phase 4 Remaining):**
-- ❌ Extended playtesting ← Session 18 (NEXT - CRITICAL)
-- ❌ Public deployment ← Session 19
-
-**CRITICAL PATH:** Only 2 sessions remaining for public release!
+**Success Criteria:**
+- [ ] Enemies take damage from player attacks
+- [ ] R key restarts game after death/victory
+- [ ] No console errors during basic gameplay
+- [ ] Ready to proceed with full playtesting
 
 ---
 
@@ -336,151 +204,72 @@
 
 ---
 
-## 🚀 PHASE 4 TIMELINE
+## 🚀 PHASE 4 PROGRESS
 
-**Estimated Total:** 6-7.5 hours across 7 sessions
-**Time Spent:** 325 minutes (~5.4 hours)
-**Time Remaining:** ~1.5-2.5 hours (2 sessions)
+**Sessions Completed:** 5/7 ✅✅✅✅✅⬜⬜
 
-**Critical Path (Public Release):**
-- ✅ Session 13: Bug fixes (30 min)
-- ✅ Session 14/14a: Inventory redesign (115 min)
-- ✅ Session 15: HTML/CSS design (60 min)
-- ✅ Session 16: Tutorial system (60 min)
-- ✅ Session 17: Sound system (60 min)
-- ⬜ Session 18: Playtesting (60-90 min) ← NEXT
-- ⬜ Session 19: Release (45-60 min)
+- ✅ **Session 13:** Critical Bug Fixes & Input Enhancement (30 min)
+- ✅ **Session 14/14a:** Inventory Redesign + Pause + Fixes (115 min)
+- ✅ **Session 15:** Professional HTML/CSS Page Design (60 min)
+- ✅ **Session 16:** Tutorial & Help System (60 min)
+- ✅ **Session 17:** Sound Effects & Audio Polish (60 min)
+- ⏳ **Session 18/18a:** Playtesting & Bug Fixes (90 min so far, ~60-90 min remaining)
+- ⬜ **Session 19:** Public Release Preparation (45-60 min)
 
-**Flexibility:**
-- Sessions can extend (18a, 18b) if needed
-- Can absorb adjacent work when context loaded
-- Reality beats plan
+**Time Spent:** 415 minutes (~7 hours) / ~490-550 minutes total
+**Progress:** ~75% complete (bug fixes blocking final testing)
+**Status:** ⚠️ BLOCKED - Critical bugs must be fixed to proceed
+**Estimated Remaining:** ~1.5-2 hours (bug fixes + playtesting + release)
 
 ---
 
-## 🎯 SUCCESS CRITERIA (Phase 4)
+## 🎮 GAME STATE (Current - Session 18)
 
-**Minimum (Critical Path):**
-- [x] All bugs fixed (NaN, controls) ✅
-- [x] WASD movement working ✅
-- [x] Inventory redesigned (dual system, cycling, dropping) ✅
-- [x] Pause key working ✅
-- [x] Professional HTML page ✅
-- [x] Controls visible on page ✅
-- [x] Responsive design ✅
-- [x] Tutorial complete ✅
-- [x] Sound effects implemented ✅
-- [ ] Extended playtesting done ← Session 18 (NEXT)
-- [ ] Publicly deployed with custom domain ← Session 19
+**What's Working:**
+- ✅ Game initialization and floor generation
+- ✅ Player movement (WASD + arrows)
+- ✅ Desperation system and visual effects
+- ✅ Clench mechanic (10s freeze, 60s cooldown)
+- ✅ Break Rooms (desperation pauses)
+- ✅ Inventory system (dual 4+4 slots, Q/E cycling, X drop)
+- ✅ Sound system (16 sounds, M key mute)
+- ✅ Tutorial/help system (H key, 4 tabs)
+- ✅ Save/load system (v2.0 format, desperation persistence fixed)
+- ✅ Game over/victory screens
+- ✅ Game loop stopping on death/victory (no loop leaks)
 
-**Bonus Achievements:**
-- [x] Web Audio API sound system (16 sounds) ✅
-- [x] Mute toggle with persistence ✅
-- [ ] Cross-browser tested
-- [ ] Screenshots/GIF created
-- [ ] README polished
+**What's Broken (CRITICAL):**
+- ❌ Combat damage to enemies not working (BUG #4) ← SESSION 18a
+- ❌ R key restart not working (BUG #5) ← SESSION 18a
 
-**Excellent:**
-- [ ] Everything above
-- [ ] Positive player feedback
-- [ ] Portfolio-ready
-- [ ] Proud to share
+**What Needs Testing (After Bug Fixes):**
+- ❓ Full playtesting (3-5 complete runs)
+- ❓ Balance validation (desperation rate, enemies, items)
+- ❓ Performance (60fps, memory leaks, console errors)
+- ❓ Cross-browser compatibility
+- ❓ Edge cases (save/load with effects, boundary conditions)
 
 ---
 
 ## 📂 PHASE 4 RESOURCES
 
-**Planning Document:** `PHASE_4_PLAN.md` (companion to this file)
-**Completed Sessions:** Archived in `COMPLETED_SESSIONS_ARCHIVE.md` after phase complete
+**Planning Document:** `PHASE_4_PLAN.md` (complete 7-session breakdown)
+**Testing Document:** `SESSION_18_PLAYTEST_CHECKLIST.md` (comprehensive protocol)
+**Completed Sessions:** Will archive in `COMPLETED_SESSIONS_ARCHIVE.md` after phase complete
 **Phase Report:** Will create `PHASE_4_COMPLETION_REPORT.md` when phase complete
 
 **Quick Links:**
-- Session 17: Sound Effects (PHASE_4_PLAN.md lines 721-810) - OPTIONAL
-- Session 18: Playtesting (PHASE_4_PLAN.md lines 811-890) - NEXT
-- Session 19: Public Release (PHASE_4_PLAN.md lines 891-970)
+- Session 18: Playtesting (PHASE_4_PLAN.md lines 1185-1403) - IN PROGRESS
+- Session 19: Public Release (PHASE_4_PLAN.md lines 1405-1550) - NEXT
 
 ---
 
-## 🎓 SESSION 16 KEY LEARNINGS
+**Next Action (Session 18a):**
+1. Fix combat damage bug (likely sound integration broke damage calculation)
+2. Fix R key restart bug (likely event listener issue)
+3. Verify fixes with quick playtest
+4. Resume full playtesting protocol
 
-**What Worked:**
-- Canvas-based rendering consistent with game aesthetic
-- Scrolling system with indicators provides clear UX
-- Tab navigation intuitive (arrow keys + number keys)
-- Content organized by topic (Controls/Mechanics/Strategy/Credits)
-- Line height increase (26px) dramatically improved readability
-- Proper padding creates professional appearance
+**Critical Path:** Must fix 2 bugs before playtesting can proceed!
 
-**Technical Insights:**
-- Scroll offset management per tab maintains state
-- Visible line windowing improves performance
-- Dynamic max scroll calculation prevents edge cases
-- Input clearing prevents repeat triggers
-- Game pause while help active prevents frustration
-
-**User Feedback Integration:**
-- Iterative polish based on user testing (3 rounds)
-- Tab spacing fixed (scraping issue)
-- Scrolling added for all tabs (Controls was too short)
-- Padding increased for breathing room
-- Result: Professional, polished tutorial system
-
----
-
-## 🎓 SESSION 17 KEY LEARNINGS
-
-**What Worked:**
-- Procedural Web Audio API synthesis perfect for retro aesthetic
-- Pitch scaling conveys damage information naturally (200-500Hz range)
-- Double beep threshold alerts create tension at critical moments
-- C major arpeggio victory fanfare is satisfying and celebratory
-- 440Hz square wave for Clench feels powerful and impactful
-- Lazy AudioContext initialization handles browser restrictions elegantly
-- LocalStorage mute persistence respects user preference
-
-**Technical Insights:**
-- Exponential gain ramps sound more natural than linear decay
-- Short durations (50-300ms) prevent sound overlap/buildup
-- OscillatorNodes auto-cleanup (no manual garbage collection needed)
-- Browser compatibility requires webkitAudioContext fallback
-- User gesture required for AudioContext - handled via lazy init
-- Master volume 30% keeps sounds subtle but present
-
-**Sound Design Principles Discovered:**
-- Frequency = Information (higher damage → higher pitch)
-- Success = rising pitch (440→880Hz creates satisfaction)
-- Failure = falling pitch (220→180Hz) or descending tones
-- Power = square wave (Clench activation)
-- Clean actions = sine wave (pickup, menus)
-- Impact = sawtooth (miss, defeat)
-
-**Critical Bug Fix Learnings:**
-- Adding constructor parameters requires updating ALL instantiation points
-- Save system must restore ALL object references (tileMap, desperationMeter, game)
-- Test save/continue flow after ANY constructor changes
-- Reference restoration pattern: restore immediately after loading state
-- Property name typos (desperationMeter.desperation vs .value) caught via testing
-
-**Impact Measurement:**
-- Sound adds 20-30% to perceived polish and game feel
-- Audio feedback makes actions feel responsive and impactful
-- Threshold warnings create emotional tension (player anticipation)
-- Victory fanfare creates emotional payoff (goal achievement)
-- Mute option critical for accessibility (not everyone wants sound)
-
----
-
-**Next Action:**
-- Start Session 18 (Extended Playtesting & Final Polish) with `[!read-memory]`
-
-**Focus for Session 18:**
-- Extended playtesting (30+ minute complete runs)
-- Balance tuning based on playtesting data
-- Bug hunting and fixing
-- Final polish pass (UX, visuals, messaging)
-- Cross-browser testing (Chrome, Firefox, Safari)
-- Performance validation
-
-**Critical Path:** Only 2 sessions remaining until public release!
-
-*Last Updated: 2025-10-22 (Session 17 complete + critical fix)*
+*Last Updated: 2025-10-22 (Session 18 partial, 3 bugs fixed, 2 new bugs discovered)*
