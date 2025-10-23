@@ -143,29 +143,18 @@ export class BootSequence {
 
 /**
  * Initialize boot sequence on page load
- * Shows once per session (optional: can be set to always show)
+ * Always shows (like turning on a game console every time)
  */
 export function initBootSequence() {
-    // Check if we should show boot sequence
-    const sessionKey = 'boot_sequence_shown_session';
-    const sessionId = sessionStorage.getItem('session_id') || Date.now();
-    sessionStorage.setItem('session_id', sessionId);
-
-    const shownThisSession = sessionStorage.getItem(sessionKey);
-
-    // Always show on first load of session (can change to localStorage for once-ever)
-    if (!shownThisSession) {
-        sessionStorage.setItem(sessionKey, 'true');
-
-        // Wait for DOM to be ready
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                const boot = new BootSequence();
-                boot.show();
-            });
-        } else {
+    // Always show boot sequence (removed session check per user feedback)
+    // Wait for DOM to be ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
             const boot = new BootSequence();
             boot.show();
-        }
+        });
+    } else {
+        const boot = new BootSequence();
+        boot.show();
     }
 }

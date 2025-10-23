@@ -489,6 +489,9 @@ class Game {
 
     // Initialize and start the game
     start() {
+        // Ensure desperation meter is reset for new game (bug fix Session 18.5)
+        this.desperationMeter.reset();
+
         // Game starting
         this.running = true;
         requestAnimationFrame((time) => this.gameLoop(time));
