@@ -3,8 +3,8 @@
 **Current Phase:** Phase 4 - Polish & Public Release 🚀 IN PROGRESS
 **Previous Phase:** Phase 3 - Combat & Items ✅ COMPLETE & ARCHIVED
 **Current Session:** Session 19 - Public Release Preparation
-**Status:** ⏳ READY TO START - Session 18b complete, all features implemented
-**Last Updated:** 2025-10-23
+**Status:** ⏳ READY TO START - Session 18.5 complete, ALL BUGS FIXED, production-ready!
+**Last Updated:** 2025-10-23 (Session 18.5 Complete)
 
 ---
 
@@ -41,6 +41,153 @@
 - index.html (meta tags, production ready)
 - README.md (needs live link)
 - All src/*.js files (optional console cleanup)
+
+---
+
+## ✅ SESSION 18.5 - COMPLETE! 🎨✨
+
+**Session 18.5: Professional Visual Polish + Critical Bug Fixes (Pre-Launch)**
+**Duration:** ~120 minutes (extended debugging session)
+**Commits:** 8 commits (9293aac → 644273c)
+**Files Modified:** 9 files, ~700 lines added/modified
+**Status:** ✅ PRODUCTION READY - All visual polish applied, all bugs fixed!
+
+### Work Completed
+
+**🎨 PART 1: Professional CRT Visual Polish** (Commits: 9293aac, cd5d791)
+
+**CRT Authenticity Package:**
+- ✅ Scanline overlay with subtle flicker animation (visible horizontal lines)
+- ✅ Subtle screen curvature (3px border-radius on canvas)
+- ✅ Enhanced multi-layer phosphor glow effects (reduced from cheesy to subtle)
+- ✅ Vignette overlay (reduced darkness from 0.7 → 0.3 for comfortable brightness)
+- ✅ Noise/grain texture (increased opacity 0.03 → 0.15 for visibility)
+
+**Terminal Font Upgrade:**
+- ✅ Integrated Google Fonts VT323 (authentic terminal font)
+- ✅ All text increased to 18px minimum (was 16px)
+- ✅ Header spacing tightened (0.25rem between tagline/subtitle/author)
+
+**Authentic Phosphor Color Palette:**
+- ✅ Primary green: #00ff00 → #33ff33 (true phosphor)
+- ✅ Dim green: #22cc22 → #66ff66 (much brighter, readable at top/bottom)
+- ✅ Multi-layer glow system reduced (subtle, professional)
+
+**Enhanced Interactivity:**
+- ✅ Focus-visible states for keyboard navigation accessibility
+- ✅ Improved hover effects (scale, glow, transform)
+- ✅ Tactile button feedback (translateY on press)
+- ✅ kbd element depth with lift effect
+- ✅ Smooth transitions (0.15s for snappiness)
+
+**Visual Depth System:**
+- ✅ Header with subtle glow pulse animation
+- ✅ Sidebar with layered shadows and gradient overlay
+- ✅ Canvas with enhanced glow + hover reflection effect
+
+**Professional Boot Sequence:**
+- ✅ ASCII art "THE DESCENT" logo with phosphor glow
+- ✅ 6 boot messages with staggered animation
+- ✅ Animated progress bar with shimmer effect
+- ✅ Skippable with any key/click
+- ✅ Shows EVERY page load (like game console powering on)
+
+**Bonus Features:**
+- ✅ Subtitle added: "But I just have to poop!" (yellow italic, 22px)
+- ✅ ASCII box in intro modal fixed (horizontal lines, no broken borders)
+
+**🐛 PART 2: Critical Bug Fixes** (Commits: 6fbd1c6 → 644273c)
+
+**BUG #1: Desperation Visual Persistence (NEW GAME)**
+- **Problem:** NEW GAME showing previous game's desperation (e.g., 90%)
+- **Root Cause:** CSS transition was animating from old value to new value
+- **Attempts:** 7 different fixes tried (setTimeout, requestAnimationFrame, forcing width, etc.)
+- **FINAL FIX:** Moved reset() out of start() method, call explicitly in startNewGame() only
+- **Files:** desperation-meter.js, game.js, save-system.js
+- **Result:** NEW GAME shows 0%, CONTINUE shows saved value
+
+**BUG #2: CONTINUE Loading 0% Instead of Saved Desperation**
+- **Problem:** CONTINUE always showed 0% instead of saved value (e.g., 45%)
+- **Root Cause:** game.start() was calling reset() for BOTH NEW GAME and CONTINUE
+- **Flow:** Constructor (0%) → restore() (45%) → start() → reset() (0%) ❌
+- **Fix:** Remove reset() from start(), call only in startNewGame()
+- **Result:** CONTINUE now correctly shows saved desperation
+
+**BUG #3: Combat Attack "Not Registering"**
+- **Problem:** Mashing Space with weapon equipped, no console output
+- **Root Cause:** Cooldown check returned silently (not a bug, just poor UX)
+- **Fix:** Show "Cooldown: X.Xs" message when Space pressed during cooldown
+- **Throttle:** 500ms to prevent spam
+- **Result:** User now understands WHY attack isn't happening
+
+**Key Debugging Insights:**
+- We fixed the VISUAL (CSS transitions) 7 times before finding the VALUE was being reset
+- The bug was in game flow, not rendering
+- Separation of concerns: reset() for NEW GAME, restore() for CONTINUE
+- Never assume a function is only called in one place!
+
+### Files Modified (Session 18.5)
+
+**Visual Polish:**
+- index.html: Google Fonts link, subtitle, boot sequence integration
+- styles.css: ~150 lines (CRT effects, font sizes, colors, animations, depth)
+- src/boot-sequence.js: NEW 180-line professional boot system
+
+**Bug Fixes:**
+- src/desperation-meter.js: Constructor logic, reset() aggressive forcing
+- src/game.js: Moved reset() from start() to startNewGame()
+- src/save-system.js: Added render() call after restore, double rAF
+- src/combat.js: Added cooldown feedback message with throttling
+
+### Key Learnings (Session 18.5)
+
+**Visual Polish:**
+- CRT effects need balance: authentic but not overwhelming
+- VT323 font needs 18px minimum (not 16px) for readability
+- Scanlines/noise must be visible but not distracting
+- Glow effects: less is more (subtle = professional)
+- User feedback critical for tuning (too dark → lighter, too cheesy → subtle)
+
+**Debugging Desperation Bug:**
+- CSS transition timing was red herring (visual symptom, not root cause)
+- Always trace through ENTIRE flow (NEW GAME vs CONTINUE are different paths)
+- Separation of concerns: start() should just start game loop, not initialize state
+- 7 attempts taught us: fix the root cause, not the symptoms
+- User saying "still broken" was invaluable feedback
+
+**Combat Feedback:**
+- Silent failures confuse users
+- Cooldown is working correctly, just needs visibility
+- Throttled messages prevent spam while maintaining feedback
+- UX transparency > "clean" console
+
+### Production Readiness Status (Session 18.5 Complete)
+
+**✅ VISUAL POLISH COMPLETE:**
+- Professional CRT aesthetic (scanlines, vignette, phosphor glow)
+- VT323 terminal font (18px minimum throughout)
+- Boot sequence on every load
+- Subtitle: "But I just have to poop!"
+- All text readable and properly sized
+- Colors lightened for top/bottom screen visibility
+- Glow effects subtle and professional
+
+**✅ ALL BUGS FIXED:**
+- NEW GAME shows 0% desperation ✅
+- CONTINUE shows saved desperation ✅
+- Combat cooldown feedback visible ✅
+- No visual lag or persistence ✅
+- Save/load working perfectly ✅
+
+**✅ READY FOR LAUNCH:**
+- Game is 100% playable
+- All features implemented and polished
+- All bugs fixed
+- Professional presentation
+- User feedback incorporated
+- Performance smooth (60fps)
+
+**🚀 NEXT: Session 19 - Public Release!**
 
 ---
 
@@ -281,7 +428,7 @@
 
 ## 🚀 PHASE 4 PROGRESS
 
-**Sessions Completed:** 6.5/7 ✅✅✅✅✅✅⏳
+**Sessions Completed:** 7/8 ✅✅✅✅✅✅✅⏳
 
 - ✅ **Session 13:** Critical Bug Fixes & Input Enhancement (30 min)
 - ✅ **Session 14/14a:** Inventory Redesign + Pause + Fixes (115 min)
@@ -289,39 +436,70 @@
 - ✅ **Session 16:** Tutorial & Help System (60 min)
 - ✅ **Session 17:** Sound Effects & Audio Polish (60 min)
 - ✅ **Session 18:** Playtesting & Bug Fixes + Shrines + Konami Code (180 min)
-- ✅ **Session 18b:** Environmental Features + Help Updates (90 min) - COMPLETE!
+- ✅ **Session 18b:** Environmental Features + Help Updates (90 min)
+- ✅ **Session 18.5:** Professional Visual Polish + Critical Bug Fixes (120 min) - COMPLETE!
 - ⏳ **Session 19:** Public Release Preparation (45-60 min) - NEXT
 
-**Time Spent:** 685 minutes (~11.4 hours) / ~730-805 minutes total
-**Progress:** ~93% complete (all features implemented, text polished!)
+**Time Spent:** 805 minutes (~13.4 hours) / ~850-920 minutes total
+**Progress:** ~97% complete (all features done, all bugs fixed, visual polish complete!)
 **Estimated Remaining:** ~45-60 minutes (final checks + deployment + release)
 
 ---
 
-## 🎮 GAME STATE (Current - Session 18b Complete)
+## 🎮 GAME STATE (Current - Session 18.5 Complete)
 
-**What's Working (ALL FEATURES IMPLEMENTED!):**
+**What's Working (100% COMPLETE - PRODUCTION READY!):**
+
+**Core Gameplay:**
 - ✅ Game initialization and floor generation
 - ✅ Player movement (WASD + arrows)
-- ✅ Combat system (damage calculation, enemy AI)
+- ✅ Combat system (damage calculation, enemy AI, cooldown feedback)
 - ✅ Desperation system and visual effects
 - ✅ Clench mechanic (10s freeze, 60s cooldown)
 - ✅ Break Rooms (desperation pauses)
 - ✅ Shrines (R key: +30 HP, -30% desperation)
-- ✅ **Environmental features (R key: lore system, re-readable)** ⭐ NEW!
-- ✅ **Multi-line text wrapping (700px, word boundaries)** ⭐ NEW!
+- ✅ Environmental features (R key: lore system, re-readable)
 - ✅ Konami Code (↑↑↓↓←→←→BA: full heal + desperation reset)
+
+**Systems:**
 - ✅ Inventory system (dual 4+4 slots, Q/E cycling, X drop)
 - ✅ Sound system (16 sounds, M key mute)
 - ✅ Tutorial/help system (H key, 4 tabs, fully updated)
-- ✅ Save/load system (v2.0 format, desperation persistence)
+- ✅ Save/load system (v2.0 format, desperation persistence WORKING)
 - ✅ Game over/victory screens + R key restart
-- ✅ Trap death detection working
+
+**Visual Polish (Session 18.5):**
+- ✅ Professional CRT effects (scanlines, vignette, noise, phosphor glow)
+- ✅ VT323 terminal font (18px minimum)
+- ✅ Boot sequence (shows every load)
+- ✅ Subtitle: "But I just have to poop!"
+- ✅ Tighter header spacing
+- ✅ Lightened colors (readable top/bottom)
+- ✅ Subtle glow effects (professional, not cheesy)
+
+**Critical Bugs Fixed (Session 18.5):**
+- ✅ NEW GAME shows 0% desperation (not previous game's value)
+- ✅ CONTINUE shows saved desperation (not 0%)
+- ✅ Combat cooldown feedback visible
+- ✅ No visual lag or persistence
+- ✅ Multi-line text wrapping
+- ✅ Trap death detection
 - ✅ No console errors, no loop leaks
-- ✅ **All help text production-ready (shrines, features documented)** ⭐ NEW!
+
+**Production Status:**
+- ✅ All features implemented
+- ✅ All bugs fixed
+- ✅ Visual polish complete
+- ✅ Performance smooth (60fps)
+- ✅ User tested and approved
+- ✅ **READY FOR PUBLIC RELEASE!**
 
 **Ready for Session 19:**
-- ⏳ Final production checks + deployment + public release
+- ⏳ Final production checklist
+- ⏳ Deployment to GitHub Pages
+- ⏳ Custom domain (optional)
+- ⏳ README update with live link
+- ⏳ **LAUNCH!** 🚀
 
 ---
 
@@ -403,4 +581,4 @@
 
 **Game is 100% playable and ready for public release!**
 
-*Last Updated: 2025-10-23 (Session 18b COMPLETE - environmental features, help polish, production-ready!)*
+*Last Updated: 2025-10-23 (Session 18.5 COMPLETE - Professional visual polish + all bugs fixed + PRODUCTION READY!)*
