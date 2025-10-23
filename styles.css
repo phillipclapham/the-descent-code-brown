@@ -575,14 +575,41 @@ footer {
   margin-bottom: var(--spacing-xl);
 }
 
-.ascii-logo {
+.boot-divider {
   font-family: var(--font-mono);
-  font-size: 10px;
-  line-height: 1.2;
+  color: var(--color-primary);
+  opacity: 0.5;
+  margin: var(--spacing-md) 0;
+  font-size: 14px;
+}
+
+.boot-title {
+  font-family: var(--font-mono);
+  font-size: 48px;
+  font-weight: bold;
+  color: var(--color-primary);
+  text-shadow: var(--glow-strong);
+  margin: var(--spacing-lg) 0;
+  letter-spacing: 0.3em;
+  animation: logoGlow 2s ease-in-out infinite alternate;
+}
+
+.boot-subtitle {
+  font-family: var(--font-mono);
+  font-size: 32px;
+  font-weight: bold;
   color: var(--color-primary);
   text-shadow: var(--glow-primary);
-  margin: 0;
-  animation: logoGlow 2s ease-in-out infinite alternate;
+  margin: var(--spacing-md) 0;
+  letter-spacing: 0.4em;
+}
+
+.boot-system {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--color-dim);
+  margin-top: var(--spacing-lg);
+  letter-spacing: 0.05em;
 }
 
 @keyframes logoGlow {

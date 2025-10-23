@@ -2,45 +2,113 @@
 
 **Current Phase:** Phase 4 - Polish & Public Release 🚀 IN PROGRESS
 **Previous Phase:** Phase 3 - Combat & Items ✅ COMPLETE & ARCHIVED
-**Current Session:** Session 19 - Public Release Preparation
-**Status:** ⏳ READY TO START - Session 18.5 complete, ALL BUGS FIXED, production-ready!
-**Last Updated:** 2025-10-23 (Session 18.5 Complete)
+**Current Session:** Session 19a - Visual Assets & Documentation (START HERE!)
+**Status:** ⏳ READY TO START - Complete strategy documented in SESSION_19_PLAN.md
+**Last Updated:** 2025-10-23 (Session 19 Strategy Documented)
 
 ---
 
 ## 📋 NEXT CONVERSATION START PROTOCOL
 
-**🎯 TO START SESSION 19 (PUBLIC RELEASE PREPARATION):**
+**🚀 TO START SESSION 19a (VISUAL ASSETS & DOCUMENTATION):**
 ```
 [!read-memory]
-"Start Session 19: Final production checks, deployment preparation, and public release"
+"Start Session 19a per SESSION_19_PLAN.md: Visual Assets & Documentation - Creating screenshots, GIF, README rewrite, and console cleanup"
 ```
 
-**Session 19 Primary Tasks:**
-1. **Final Production Checklist**
-   - Final playtesting pass (all mechanics working)
-   - Console cleanup (remove debug logs if desired)
-   - Performance check (smooth 60fps)
-   - Browser compatibility test
+**Session 19 Overview** (Flexible 3-part session: 19a + 19b + 19c)
 
-2. **Deployment Preparation**
-   - GitHub Pages setup (if not already done)
-   - Custom domain configuration (optional)
-   - README.md update with live link
-   - Open graph meta tags verification
+### Session 19a: Visual Assets & Documentation (~60-75 min)
+1. **Create 5 Screenshots** (25 min)
+   - menu.png (main menu)
+   - gameplay.png (core gameplay) ← **CRITICAL** (used for og:image)
+   - inventory.png (inventory UI)
+   - combat.png (combat action)
+   - victory.png (victory screen)
 
-3. **Public Release**
-   - Deploy to production
-   - Test live version
-   - Create release notes
-   - Celebrate! 🎉
+2. **Create Animated GIF** (15 min)
+   - gameplay.gif (10-15 sec loop)
 
-**Estimated Time:** 45-60 minutes
+3. **Rewrite README.md** (25 min)
+   - Complete professional rewrite with screenshots
+   - Add LICENSE file (MIT)
+   - Remove test-enemies.html
 
-**Key Files to Check:**
-- index.html (meta tags, production ready)
-- README.md (needs live link)
-- All src/*.js files (optional console cleanup)
+4. **Console.log Cleanup** (10 min)
+   - Remove 38 debug statements from 8 files
+
+### Session 19b: Deployment & Testing (~45-60 min)
+- Add social meta tags (og:image, Twitter Cards)
+- Deploy to GitHub Pages with custom domain
+- Configure DNS (A records + CNAME)
+- Browser compatibility testing
+- Live version verification
+
+### Session 19c: Announcement & Wrap (~15-30 min)
+- Verify social preview works
+- Draft launch announcement
+- Update memory and archive Phase 4
+
+**Total Estimated Time:** 120-165 minutes (2-2.75 hours)
+
+**📘 COMPLETE STRATEGY:** See `SESSION_19_PLAN.md` for detailed instructions, templates, and checklists
+
+---
+
+## 🎯 USER PREFERENCES (Captured 2025-10-23)
+
+- **Session Structure:** Flexible (organic subsessions based on momentum)
+- **Deployment:** Custom domain (user has one ready)
+- **Code Quality:** Clean up all 38 console.log statements
+- **Launch Comms:** Create launch announcement as part of session
+
+---
+
+## 🚨 CRITICAL GAPS IDENTIFIED
+
+### Launch Blockers ❌
+1. **README.md outdated** (says "Phase 1" but game is complete)
+2. **Zero screenshots** (no /screenshots directory)
+3. **No animated GIF** (can't share on social effectively)
+4. **Missing og:image meta tag** (social preview won't work)
+5. **Not deployed** (no live URL)
+6. **No LICENSE** (legal gap)
+7. **38 console.log statements** (unprofessional)
+
+### Current State ✅
+- Game 100% functional (7,181 lines)
+- All bugs fixed (Session 18.5)
+- Visual polish complete (CRT effects, boot sequence)
+- Professional UI/UX
+
+**Gap:** Production-ready code, NOT public-ready presentation
+
+---
+
+## 📂 KEY FILES FOR SESSION 19a
+
+**To Create:**
+- `/screenshots/menu.png`
+- `/screenshots/gameplay.png` ← **Most important (og:image)**
+- `/screenshots/inventory.png`
+- `/screenshots/combat.png`
+- `/screenshots/victory.png`
+- `/screenshots/gameplay.gif`
+- `LICENSE` (MIT template in SESSION_19_PLAN.md)
+
+**To Modify:**
+- `README.md` (complete rewrite - template in SESSION_19_PLAN.md)
+- `src/save-system.js` (remove 8 console.log)
+- `src/tile-map.js` (remove 8 console.log)
+- `src/desperation-meter.js` (remove 8 console.log)
+- `src/combat.js` (remove 7 console.log)
+- `src/game.js` (remove 4 console.log)
+- `src/input.js` (remove 1 console.log)
+- `src/sound-system.js` (remove 1 console.log)
+- `src/vault-library.js` (remove 1 console.log)
+
+**To Remove:**
+- `test-enemies.html` (move to /dev or delete)
 
 ---
 

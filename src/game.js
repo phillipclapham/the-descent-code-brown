@@ -99,6 +99,7 @@ class Game {
 
         // Statistics tracking (Session 12a)
         this.startTime = Date.now();
+        this.victoryTime = null; // Session 19a: Store final time when victory happens
         this.enemiesDefeated = 0;
         this.itemsCollected = 0;
         this.specialRoomsFound = new Set(); // Track unique rooms
@@ -890,6 +891,10 @@ class Game {
     handleVictory() {
         // Victory achieved!
         this.gameState = 'victory';
+
+        // Session 19a: Freeze timer at victory moment
+        this.victoryTime = (Date.now() - this.startTime) / 1000;
+
         this.saveHighScore();
 
         // Delete save on victory (preserve permadeath) (Session 12b)
@@ -1031,75 +1036,76 @@ class Game {
             "      * THE THRONE *       "
         ];
 
-        let y = 60;
+        let y = 50;
         toilet.forEach(line => {
             ctx.fillText(line, 400, y);
-            y += 18;
+            y += 16;
         });
 
         // Victory Text
-        y += 20;
-        ctx.font = 'bold 32px "Courier New", monospace';
+        y += 15;
+        ctx.font = 'bold 28px "Courier New", monospace';
         ctx.fillStyle = '#00ff00';
         ctx.fillText('YOU MADE IT!', 400, y);
 
-        y += 40;
-        ctx.font = 'italic 20px "Courier New", monospace';
+        y += 30;
+        ctx.font = 'italic 16px "Courier New", monospace';
         ctx.fillStyle = '#888888';
         ctx.fillText('"Relief at last..."', 400, y);
 
         // Statistics
-        y += 50;
+        y += 35;
         ctx.font = '16px "Courier New", monospace';
         ctx.fillStyle = '#ffff00';
         ctx.fillText('========== RUN STATISTICS ==========', 400, y);
 
-        const elapsedTime = (Date.now() - this.startTime) / 1000;
+        // Session 19a: Use frozen victory time (timer stops at victory)
+        const elapsedTime = this.victoryTime || 0;
         const minutes = Math.floor(elapsedTime / 60);
         const seconds = Math.floor(elapsedTime % 60);
 
         ctx.fillStyle = '#ffffff';
-        y += 30;
+        y += 25;
         ctx.fillText(`Time Taken:          ${minutes}m ${seconds}s`, 400, y);
-        y += 20;
+        y += 18;
         ctx.fillText(`Final Desperation:   ${Math.floor(this.desperationMeter.value)}%`, 400, y);
-        y += 20;
+        y += 18;
         ctx.fillText(`Floors Explored:     10/10`, 400, y);
-        y += 30;
+        y += 25;
         ctx.fillText(`Enemies Defeated:    ${this.enemiesDefeated}`, 400, y);
-        y += 20;
+        y += 18;
         ctx.fillText(`Items Collected:     ${this.itemsCollected}`, 400, y);
-        y += 20;
+        y += 18;
         ctx.fillText(`Special Rooms:       ${this.specialRoomsFound.size}`, 400, y);
-        y += 20;
+        y += 18;
         ctx.fillText(`Keys Used:           ${this.keysUsed}`, 400, y);
-        y += 20;
+        y += 18;
         ctx.fillText(`Vaults Unlocked:     ${this.vaultsUnlocked}`, 400, y);
 
         // Scoring
-        y += 40;
+        y += 30;
         ctx.fillStyle = '#ffff00';
         ctx.fillText('===================================', 400, y);
 
         const score = this.calculateScore(elapsedTime);
 
         ctx.fillStyle = '#00ff00';
-        y += 30;
+        y += 25;
         ctx.fillText(`Base Score:                   1000`, 400, y);
-        y += 20;
+        y += 18;
         ctx.fillText(`Time Bonus (${minutes}:${seconds.toString().padStart(2, '0')}):          +${score.timeBonus}`, 400, y);
-        y += 20;
+        y += 18;
         ctx.fillText(`Desperation Bonus (${Math.floor(this.desperationMeter.value)}%):    +${score.desperationBonus}`, 400, y);
-        y += 20;
+        y += 18;
         ctx.fillText(`Combat Bonus (${this.enemiesDefeated} enemies):  +${score.combatBonus}`, 400, y);
-        y += 20;
+        y += 18;
         ctx.fillText(`Exploration Bonus (${this.specialRoomsFound.size} rooms):+${score.explorationBonus}`, 400, y);
-        y += 20;
+        y += 18;
         ctx.fillText(`Item Bonus (${this.itemsCollected} items):      +${score.itemBonus}`, 400, y);
-        y += 20;
+        y += 18;
         ctx.fillStyle = '#ffff00';
         ctx.fillText('                          ______', 400, y);
-        y += 20;
+        y += 18;
         ctx.font = 'bold 18px "Courier New", monospace';
         ctx.fillStyle = '#00ff00';
         ctx.fillText(`FINAL SCORE:                ${score.finalScore}`, 400, y);
@@ -1107,33 +1113,34 @@ class Game {
         // High Score Comparison
         const highScore = this.loadHighScore();
         if (highScore && score.finalScore > highScore.score) {
-            y += 30;
+            y += 25;
             ctx.fillStyle = '#ffff00';
+            ctx.font = 'bold 16px "Courier New", monospace';
             ctx.fillText('** NEW HIGH SCORE! **', 400, y);
-            y += 20;
+            y += 18;
             ctx.fillStyle = '#888888';
             ctx.font = '14px "Courier New", monospace';
             ctx.fillText(`Previous Best: ${highScore.score}`, 400, y);
         } else if (highScore) {
-            y += 30;
+            y += 25;
             ctx.fillStyle = '#888888';
             ctx.font = '14px "Courier New", monospace';
             ctx.fillText(`High Score: ${highScore.score}`, 400, y);
         }
 
         // Rank
-        y += 40;
+        y += 30;
         const rank = this.getRank(score.finalScore);
-        ctx.font = 'bold 20px "Courier New", monospace';
+        ctx.font = 'bold 18px "Courier New", monospace';
         ctx.fillStyle = '#00ffff';
         ctx.fillText(`Rank: ${rank.name}`, 400, y);
-        y += 25;
+        y += 22;
         ctx.font = 'italic 14px "Courier New", monospace';
         ctx.fillStyle = '#888888';
         ctx.fillText(`"${rank.flavor}"`, 400, y);
 
         // Options
-        y += 50;
+        y += 40;
         ctx.font = '16px "Courier New", monospace';
         ctx.fillStyle = '#ffffff';
         ctx.fillText('[R] Play Again', 400, y);
@@ -1182,7 +1189,8 @@ class Game {
 
     // Save high score to localStorage (Session 12a)
     saveHighScore() {
-        const elapsedTime = (Date.now() - this.startTime) / 1000;
+        // Session 19a: Use frozen victory time
+        const elapsedTime = this.victoryTime || 0;
         const score = this.calculateScore(elapsedTime);
         const rank = this.getRank(score.finalScore);
 
@@ -1518,7 +1526,8 @@ class Game {
             'keyboard': KEYBOARD,
             'ceremonial-plunger': CEREMONIAL_PLUNGER
         };
-        return weaponMap[id] ? { ...weaponMap[id] } : null;
+        // Return actual weapon instance (not spread copy) to preserve methods
+        return weaponMap[id] || null;
     }
 
     // Helper: Get consumable by ID (for save/load)
@@ -1529,7 +1538,8 @@ class Game {
             'donut': DONUT,
             'energy-drink': ENERGY_DRINK
         };
-        return consumableMap[id] ? { ...consumableMap[id] } : null;
+        // Return actual consumable instance (not spread copy) to preserve methods
+        return consumableMap[id] || null;
     }
 }
 

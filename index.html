@@ -1,144 +1,173 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="The Descent: Code Brown - An ASCII roguelike where you desperately need to reach the bathroom at the bottom of a dungeon. Built with vanilla JavaScript.">
-    <meta property="og:title" content="The Descent: Code Brown">
-    <meta property="og:description" content="ASCII roguelike dungeon crawler with a comedic twist">
-    <meta property="og:type" content="website">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="The Descent: Code Brown - An ASCII roguelike where you desperately need to reach the bathroom at the bottom of a dungeon. Built with vanilla JavaScript."
+    />
+    <meta property="og:title" content="The Descent: Code Brown" />
+    <meta
+      property="og:description"
+      content="ASCII roguelike dungeon crawler with a comedic twist"
+    />
+    <meta property="og:type" content="website" />
 
     <title>The Descent: Code Brown</title>
     <!-- Google Fonts: VT323 (Authentic Terminal Font) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=VT323&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
     <!-- Header -->
     <header>
-        <h1>THE DESCENT: CODE BROWN</h1>
-        <p class="tagline">An ASCII Roguelike Terminal Adventure</p>
-        <p class="subtitle">But I just have to poop!</p>
-        <p class="author">by Phill Clapham</p>
+      <h1>THE DESCENT: CODE BROWN</h1>
+      <p class="tagline">An ASCII Roguelike Terminal Adventure</p>
+      <p class="subtitle">"But I just have to poop!"</p>
+      <p class="author">by Phill Clapham</p>
     </header>
 
     <!-- Main Content -->
     <main>
-        <!-- Controls Sidebar -->
-        <aside class="controls-sidebar">
-            <h2>Controls</h2>
+      <!-- Controls Sidebar -->
+      <aside class="controls-sidebar">
+        <h2>Controls</h2>
 
-            <div class="controls-section">
-                <h3>Movement</h3>
-                <div class="control-item">
-                    <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or <kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd></span>
-                    <span class="description">Move</span>
-                </div>
-                <div class="control-item">
-                    <span><kbd>SPACE</kbd></span>
-                    <span class="description">Attack</span>
-                </div>
-            </div>
-
-            <div class="controls-section">
-                <h3>Inventory</h3>
-                <div class="control-item">
-                    <span><kbd>Q</kbd> / <kbd>E</kbd></span>
-                    <span class="description">Cycle slots</span>
-                </div>
-                <div class="control-item">
-                    <span><kbd>1</kbd>-<kbd>4</kbd></span>
-                    <span class="description">Select weapon</span>
-                </div>
-                <div class="control-item">
-                    <span><kbd>5</kbd>-<kbd>8</kbd></span>
-                    <span class="description">Select consumable</span>
-                </div>
-                <div class="control-item">
-                    <span><kbd>ENTER</kbd></span>
-                    <span class="description">Use consumable</span>
-                </div>
-                <div class="control-item">
-                    <span><kbd>X</kbd></span>
-                    <span class="description">Drop item</span>
-                </div>
-            </div>
-
-            <div class="controls-section">
-                <h3>Special</h3>
-                <div class="control-item">
-                    <span><kbd>C</kbd></span>
-                    <span class="description">Clench</span>
-                </div>
-                <div class="control-item">
-                    <span><kbd>R</kbd></span>
-                    <span class="description">Shrine/Lore/Restart</span>
-                </div>
-                <div class="control-item">
-                    <span><kbd>P</kbd></span>
-                    <span class="description">Pause</span>
-                </div>
-                <div class="control-item">
-                    <span><kbd>H</kbd></span>
-                    <span class="description">Help</span>
-                </div>
-                <div class="control-item">
-                    <span><kbd>M</kbd></span>
-                    <span class="description">Mute/Unmute</span>
-                </div>
-            </div>
-
-            <div class="game-tip">
-                <p><strong>TIP:</strong> Press <kbd>H</kbd> in-game for full controls. Find shrines (Ω) to restore HP!</p>
-            </div>
-        </aside>
-
-        <!-- Game Container -->
-        <div class="game-container">
-            <div id="desperation-meter"></div>
-            <canvas id="game-canvas" width="800" height="660"></canvas>
+        <div class="controls-section">
+          <h3>Movement</h3>
+          <div class="control-item">
+            <span
+              ><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or <kbd>↑</kbd
+              ><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd></span
+            >
+            <span class="description">Move</span>
+          </div>
+          <div class="control-item">
+            <span><kbd>SPACE</kbd></span>
+            <span class="description">Attack</span>
+          </div>
         </div>
+
+        <div class="controls-section">
+          <h3>Inventory</h3>
+          <div class="control-item">
+            <span><kbd>Q</kbd> / <kbd>E</kbd></span>
+            <span class="description">Cycle slots</span>
+          </div>
+          <div class="control-item">
+            <span><kbd>1</kbd>-<kbd>4</kbd></span>
+            <span class="description">Select weapon</span>
+          </div>
+          <div class="control-item">
+            <span><kbd>5</kbd>-<kbd>8</kbd></span>
+            <span class="description">Select consumable</span>
+          </div>
+          <div class="control-item">
+            <span><kbd>ENTER</kbd></span>
+            <span class="description">Use consumable</span>
+          </div>
+          <div class="control-item">
+            <span><kbd>X</kbd></span>
+            <span class="description">Drop item</span>
+          </div>
+        </div>
+
+        <div class="controls-section">
+          <h3>Special</h3>
+          <div class="control-item">
+            <span><kbd>C</kbd></span>
+            <span class="description">Clench</span>
+          </div>
+          <div class="control-item">
+            <span><kbd>R</kbd></span>
+            <span class="description">Shrine/Lore/Restart</span>
+          </div>
+          <div class="control-item">
+            <span><kbd>P</kbd></span>
+            <span class="description">Pause</span>
+          </div>
+          <div class="control-item">
+            <span><kbd>H</kbd></span>
+            <span class="description">Help</span>
+          </div>
+          <div class="control-item">
+            <span><kbd>M</kbd></span>
+            <span class="description">Mute/Unmute</span>
+          </div>
+        </div>
+
+        <div class="game-tip">
+          <p>
+            <strong>TIP:</strong> Press <kbd>H</kbd> in-game for full controls.
+            Find shrines (Ω) to restore HP!
+          </p>
+        </div>
+      </aside>
+
+      <!-- Game Container -->
+      <div class="game-container">
+        <div id="desperation-meter"></div>
+        <canvas id="game-canvas" width="800" height="660"></canvas>
+      </div>
     </main>
 
     <!-- Footer -->
     <footer>
-        <div class="footer-content">
-            <div class="footer-section">
-                <h3>About</h3>
-                <p>A comedic ASCII roguelike dungeon crawler</p>
-                <p>Descend through procedurally generated floors</p>
-                <p>Fight enemies, manage desperation, reach the bathroom!</p>
-            </div>
-
-            <div class="footer-section">
-                <h3>Tech Stack</h3>
-                <p>Vanilla JavaScript • HTML5 Canvas</p>
-                <p>Web Audio API • localStorage</p>
-                <p>Procedural Generation • Roguelike Mechanics</p>
-            </div>
-
-            <div class="footer-section">
-                <h3>Credits</h3>
-                <p>Developed by <a href="https://phillipclapham.com" target="_blank">Phill Clapham</a></p>
-                <p>Built with <a href="https://claude.com/claude-code" target="_blank">Claude Code</a></p>
-                <p><a href="https://github.com/anthropics/claude-code" target="_blank">View on GitHub</a></p>
-            </div>
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3>About</h3>
+          <p>A comedic ASCII roguelike dungeon crawler</p>
+          <p>Descend through procedurally generated floors</p>
+          <p>Fight enemies, manage desperation, reach the bathroom!</p>
         </div>
 
-        <div class="footer-bottom">
-            <p>&copy; 2025 Phill Clapham | A zero-pressure fun project</p>
+        <div class="footer-section">
+          <h3>Tech Stack</h3>
+          <p>Vanilla JavaScript • HTML5 Canvas</p>
+          <p>Web Audio API • localStorage</p>
+          <p>Procedural Generation • Roguelike Mechanics</p>
         </div>
+
+        <div class="footer-section">
+          <h3>Credits</h3>
+          <p>
+            Developed by
+            <a href="https://phillipclapham.com" target="_blank"
+              >Phill Clapham</a
+            >
+          </p>
+          <p>
+            Built with
+            <a href="https://claude.com/claude-code" target="_blank"
+              >Claude Code</a
+            >
+          </p>
+          <p>
+            <a href="https://github.com/anthropics/claude-code" target="_blank"
+              >View on GitHub</a
+            >
+          </p>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2025 Phill Clapham | A zero-pressure fun project</p>
+      </div>
     </footer>
 
     <!-- Boot Sequence -->
     <script type="module">
-        import { initBootSequence } from './src/boot-sequence.js';
-        initBootSequence();
+      import { initBootSequence } from "./src/boot-sequence.js";
+      initBootSequence();
     </script>
 
     <!-- Main Game -->
     <script type="module" src="src/game.js"></script>
-</body>
+  </body>
 </html>
