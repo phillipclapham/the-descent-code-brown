@@ -4,7 +4,7 @@ import { Renderer, GRID_WIDTH, GRID_HEIGHT } from './renderer.js';
 import { Player } from './player.js';
 import { InputHandler } from './input.js';
 import { DesperationMeter } from './desperation-meter.js';
-import { TileMap, TILE_FLOOR, TILE_STAIRS, TILE_STAIRS_UP, TILE_TOILET, TILE_WEAPON, TILE_CONSUMABLE } from './tile-map.js';
+import { TileMap, TILE_FLOOR, TILE_STAIRS, TILE_STAIRS_UP, TILE_TOILET, TILE_WEAPON, TILE_CONSUMABLE, TILE_SHRINE, TILE_SHRINE_USED } from './tile-map.js';
 import { DungeonGenerator } from './dungeon-generator.js';
 import { CombatSystem } from './combat.js';
 import { IntroModal } from './intro-modal.js';
@@ -104,6 +104,9 @@ class Game {
         this.specialRoomsFound = new Set(); // Track unique rooms
         this.vaultsUnlocked = 0;
         this.keysUsed = 0;
+
+        // Session 18: Track used shrines (set of "x,y" coordinate strings)
+        this.usedShrines = new Set();
 
         // Game initialization complete
     }
@@ -289,6 +292,58 @@ class Game {
                         this.combat.consumables.set(consumableKey, consumable);
 
                         // Break Room consumable placed
+                    }
+                }
+            }
+        }
+
+        // Session 18: Spawn consumables around shrine altars
+        if (this.tileMap.shrines && this.tileMap.shrines.length > 0) {
+            for (const shrine of this.tileMap.shrines) {
+                const numShrineItems = 2 + Math.floor(Math.random() * 2); // 2-3 consumables
+                // Spawning consumables around Shrine
+
+                for (let i = 0; i < numShrineItems; i++) {
+                    // Find random position near shrine (within 2 tiles)
+                    let spawnPos = null;
+                    let attempts = 0;
+
+                    while (attempts < 30 && !spawnPos) {
+                        attempts++;
+                        const offsetX = -2 + Math.floor(Math.random() * 5); // -2 to +2
+                        const offsetY = -2 + Math.floor(Math.random() * 5); // -2 to +2
+                        const x = shrine.x + offsetX;
+                        const y = shrine.y + offsetY;
+
+                        const tile = this.tileMap.getTile(x, y);
+
+                        // Only spawn on plain floor (not on shrine itself or other items)
+                        if (tile === TILE_FLOOR) {
+                            spawnPos = { x, y };
+                        }
+                    }
+
+                    if (spawnPos) {
+                        // Weighted probabilities for shrine consumables
+                        // Antacid (50%), Donut (30%), Coffee (20%)
+                        const roll = Math.random();
+                        let consumable;
+                        if (roll < 0.50) {
+                            consumable = ANTACID;
+                        } else if (roll < 0.80) {
+                            consumable = DONUT;
+                        } else {
+                            consumable = COFFEE;
+                        }
+
+                        // Place on map
+                        this.tileMap.setTile(spawnPos.x, spawnPos.y, TILE_CONSUMABLE);
+
+                        // Store in combat system
+                        const consumableKey = `${spawnPos.x},${spawnPos.y}`;
+                        this.combat.consumables.set(consumableKey, consumable);
+
+                        // Shrine consumable placed
                     }
                 }
             }
@@ -573,11 +628,49 @@ class Game {
             this.input.keys['q'] = false;
             this.input.keys['Q'] = false;
         }
+
+        // Session 18: E key is context-sensitive (shrine interaction takes priority)
         if (this.input.isEPressed()) {
-            this.player.cycleSlot(1); // Cycle right
-            // Clear key to prevent repeat
-            this.input.keys['e'] = false;
-            this.input.keys['E'] = false;
+            const playerTile = this.tileMap.getTile(this.player.x, this.player.y);
+
+            // Check if player is standing on shrine
+            if (playerTile === TILE_SHRINE) {
+                const shrineKey = `${this.player.x},${this.player.y}`;
+
+                // Check if shrine has already been used
+                if (this.usedShrines.has(shrineKey)) {
+                    this.player.setMessage('This shrine has already been used');
+                } else {
+                    // Use shrine: -30% desperation
+                    const currentDesp = this.desperationMeter.getValue();
+                    const newDesp = Math.max(0, currentDesp - 30);
+                    this.desperationMeter.value = newDesp;
+
+                    // Mark as used
+                    this.usedShrines.add(shrineKey);
+
+                    // Change tile to used shrine (visual feedback: cyan → gray)
+                    this.tileMap.setTile(this.player.x, this.player.y, TILE_SHRINE_USED);
+
+                    // Show message
+                    this.player.setMessage('You pray at the altar... -30% Desperation!');
+
+                    // Play sound
+                    this.soundSystem.playPickup(); // Peaceful sound
+
+                    console.log(`Shrine used at (${this.player.x}, ${this.player.y}): ${currentDesp.toFixed(1)}% → ${newDesp.toFixed(1)}%`);
+                }
+
+                // Clear key to prevent repeat
+                this.input.keys['e'] = false;
+                this.input.keys['E'] = false;
+            } else {
+                // Not on shrine, use E for inventory cycling (default behavior)
+                this.player.cycleSlot(1); // Cycle right
+                // Clear key to prevent repeat
+                this.input.keys['e'] = false;
+                this.input.keys['E'] = false;
+            }
         }
 
         // Session 14a: Item dropping (X key works for weapons AND consumables)

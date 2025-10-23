@@ -18,6 +18,8 @@ export const TILE_CHASM = 12;      // Chasm - non-walkable, visual danger
 export const TILE_TRAP = 13;       // Trap - walkable, visual hazard (Phase 3: damage)
 export const TILE_WEAPON = 14;     // Weapon pickup - walkable
 export const TILE_CONSUMABLE = 15; // Consumable item pickup - walkable
+export const TILE_SHRINE = 16;     // Shrine altar - walkable, reduces desperation (Session 18)
+export const TILE_SHRINE_USED = 17; // Used shrine altar - walkable, no longer functional (Session 18)
 
 export class TileMap {
     constructor(width, height) {
@@ -41,6 +43,10 @@ export class TileMap {
         // Session 12d: Break room safe zones (desperation pauses inside)
         // Array of {x, y, width, height} for room bounds checking
         this.breakRooms = [];
+
+        // Session 18: Shrine altars (for consumable spawning and interaction tracking)
+        // Array of {x, y} for shrine altar positions
+        this.shrines = [];
 
         console.log(`TileMap initialized: ${width}x${height}`);
     }
@@ -79,7 +85,9 @@ export class TileMap {
                tile === TILE_WEAPON ||      // Walkable (can walk over to pick up)
                tile === TILE_CONSUMABLE ||  // Walkable (can walk over to pick up)
                tile === TILE_WATER ||       // Walkable (Phase 3: slow movement)
-               tile === TILE_TRAP;          // Walkable (Phase 3: damage)
+               tile === TILE_TRAP ||        // Walkable (Phase 3: damage)
+               tile === TILE_SHRINE ||      // Walkable (Session 18: interact to reduce desperation)
+               tile === TILE_SHRINE_USED;   // Walkable (Session 18: already used)
         // Note: TILE_DOOR_CLOSED, TILE_DOOR_LOCKED, and TILE_CHASM are NOT walkable
         // Player interaction will open/unlock doors first
         // Chasms are impassable visual hazards
@@ -113,6 +121,12 @@ export class TileMap {
             x >= room.x && x < room.x + room.width &&
             y >= room.y && y < room.y + room.height
         );
+    }
+
+    // Session 18: Add shrine altar position for consumable spawning
+    addShrine(x, y) {
+        this.shrines.push({ x, y });
+        console.log(`   🕊️  Shrine registered at (${x}, ${y})`);
     }
 
     // Fill a rectangular area with a tile type
@@ -174,6 +188,10 @@ export class TileMap {
                 return ' ';  // Chasm (empty space)
             case TILE_TRAP:
                 return '^';  // Trap
+            case TILE_SHRINE:
+                return 'Ω';  // Shrine altar (Session 18)
+            case TILE_SHRINE_USED:
+                return 'Ω';  // Used shrine altar (Session 18 - same symbol, different color)
             default:
                 return '?';
         }
@@ -215,6 +233,10 @@ export class TileMap {
                 return '#000000';     // Black (chasm/void)
             case TILE_TRAP:
                 return '#ff4444';     // Red (trap)
+            case TILE_SHRINE:
+                return '#00ffff';     // Cyan (shrine altar - Session 18)
+            case TILE_SHRINE_USED:
+                return '#666666';     // Gray (used shrine altar - Session 18)
             default:
                 return '#ff0000';     // Red (error)
         }

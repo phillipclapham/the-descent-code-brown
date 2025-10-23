@@ -17,7 +17,8 @@ import {
     TILE_FEATURE,
     TILE_PILLAR,
     TILE_WATER,
-    TILE_TRAP
+    TILE_TRAP,
+    TILE_SHRINE
 } from './tile-map.js';
 import {
     categorizeRoomBySize,
@@ -604,6 +605,15 @@ export class DungeonGenerator {
             // Session 12d: Register break room bounds for desperation pause detection
             if (specialType === 'break_room') {
                 tileMap.addBreakRoom(room.x, room.y, room.width, room.height);
+            }
+
+            // Session 18: Place shrine altar in shrine rooms
+            if (specialType === 'shrine') {
+                // Place altar at room center
+                const centerX = room.x + Math.floor(room.width / 2);
+                const centerY = room.y + Math.floor(room.height / 2);
+                tileMap.setTile(centerX, centerY, TILE_SHRINE);
+                tileMap.addShrine(centerX, centerY);
             }
         }
     }
