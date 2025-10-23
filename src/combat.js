@@ -162,7 +162,7 @@ export class CombatSystem {
             const damage = enemy.rollDamage();
 
             // Session 17: Play hit sound for player getting hit
-            const enemyMaxDamage = enemy.damage.max;
+            const enemyMaxDamage = enemy.damageMax; // Fixed: enemy uses damageMax not damage.max
             this.game.soundSystem.playHit(damage, enemyMaxDamage);
 
             // Apply damage to player
