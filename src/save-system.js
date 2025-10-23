@@ -118,6 +118,9 @@ export class SaveSystem {
         game.player.health = saveData.playerHealth || 100;
         game.player.maxHealth = saveData.playerMaxHealth || 100;
         game.desperationMeter.value = saveData.playerDesperation || 0;
+        // Session 18.5: Force render to update visual after restoring value
+        game.desperationMeter.render();
+        console.log(`Restored desperation: ${Math.floor(game.desperationMeter.value)}%`);
         game.player.keysCollected = saveData.keysCollected || 0;
 
         // Restore clench state
