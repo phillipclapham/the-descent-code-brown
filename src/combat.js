@@ -162,11 +162,6 @@ export class CombatSystem {
             // Apply damage to player
             const died = this.game.player.takeDamage(damage);
 
-            // Console log
-                `${enemy.name} HIT player! Damage: ${damage}, ` +
-                `Player HP: ${this.game.player.health}/${this.game.player.maxHealth}`
-            );
-
             if (died) {
                 // Trigger game over state (Session 9e)
                 this.game.gameState = 'game_over';
