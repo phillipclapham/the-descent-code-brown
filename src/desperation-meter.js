@@ -17,10 +17,15 @@ export class DesperationMeter {
         // Create DOM element for the meter
         this.element = this.createMeterElement();
 
+        // Session 18.5: Force width to 0% immediately (bypass CSS transition on init)
+        if (this.element && this.element.bar) {
+            this.element.bar.style.width = '0%';
+        }
+
         // Session 15: Force initial render to ensure visual state matches value (fixes rare bug)
         this.render();
 
-        console.log('Desperation meter initialized');
+        console.log('Desperation meter initialized at 0%');
     }
 
     // Create the meter UI element

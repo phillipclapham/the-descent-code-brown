@@ -81,8 +81,13 @@ export class CombatSystem {
         if (!this.game.player.canAttack()) {
             if (!this.game.player.equippedWeapon) {
                 this.game.player.setMessage('Need a weapon!');
+                return;
             }
-            // If on cooldown, silently ignore (no spam messages)
+            // On cooldown - show message occasionally (not every frame to prevent spam)
+            if (!this.lastCooldownMessageTime || Date.now() - this.lastCooldownMessageTime > 500) {
+                this.game.player.setMessage(`Cooldown: ${this.game.player.attackCooldown.toFixed(1)}s`);
+                this.lastCooldownMessageTime = Date.now();
+            }
             return;
         }
 
