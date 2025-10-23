@@ -111,7 +111,7 @@ export class CombatSystem {
             const finalDamage = this.calculateDamage(baseDamage, desperation);
 
             // Session 17: Play hit sound (pitch scales with damage)
-            const weaponMaxDamage = this.game.player.equippedWeapon.damage.max;
+            const weaponMaxDamage = this.game.player.equippedWeapon.damageMax;
             this.game.soundSystem.playHit(finalDamage, weaponMaxDamage);
 
             // Apply damage to enemy
@@ -178,7 +178,6 @@ export class CombatSystem {
                 console.log('Player defeated!');
                 // Trigger game over state (Session 9e)
                 this.game.gameState = 'game_over';
-                this.game.running = false; // Stop game loop (prevents multiple instances)
 
                 // Delete save on death (preserve permadeath) (Session 12b)
                 SaveSystem.deleteSave();
