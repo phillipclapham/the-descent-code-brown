@@ -695,6 +695,19 @@ class Game {
             this.input.keys['Enter'] = false;
         }
 
+        // Session 18: Konami code cheat (↑↑↓↓←→←→BA)
+        if (this.input.isKonamiActivated()) {
+            // Cheat effects: Full heal + Desperation reset
+            this.player.health = this.player.maxHealth;
+            this.desperationMeter.value = 0;
+
+            // Visual/audio feedback
+            this.player.setMessage('🎮 CHEAT ACTIVATED! Health and Desperation restored! 🎮');
+            this.soundSystem.playPickup(); // Victory-ish sound
+
+            console.log('🎮 KONAMI CODE: HP restored to 100, Desperation reset to 0%');
+        }
+
         // Handle Clench input (Session 12a + Session 17 sound)
         if (this.input.isClenchPressed()) {
             const wasActive = this.player.clenchActive;

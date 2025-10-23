@@ -3,11 +3,38 @@
 export class InputHandler {
     constructor() {
         this.keys = {};
+
+        // Session 18: Konami code cheat detection
+        this.konamiSequence = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', ' ', 'Enter'];
+        this.konamiProgress = 0;
+        this.konamiActivated = false; // Set to true when sequence is completed
+
         this.setupListeners();
     }
 
     setupListeners() {
         window.addEventListener('keydown', (e) => {
+            // Session 18: Konami code sequence detection
+            if (e.key === this.konamiSequence[this.konamiProgress]) {
+                // Correct key in sequence
+                this.konamiProgress++;
+
+                // Check if sequence is complete
+                if (this.konamiProgress === this.konamiSequence.length) {
+                    console.log('🎮 KONAMI CODE ACTIVATED! 🎮');
+                    this.konamiActivated = true;
+                    this.konamiProgress = 0; // Reset for next activation
+                }
+            } else {
+                // Wrong key, reset sequence
+                // BUT: Check if this key is the START of the sequence (allows retry)
+                if (e.key === this.konamiSequence[0]) {
+                    this.konamiProgress = 1;
+                } else {
+                    this.konamiProgress = 0;
+                }
+            }
+
             // Prevent default for arrow keys, WASD, and space to stop page scrolling
             if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'W', 'a', 'A', 's', 'S', 'd', 'D', ' '].includes(e.key)) {
                 e.preventDefault();
@@ -116,5 +143,14 @@ export class InputHandler {
             }
         }
         return null; // No number key pressed
+    }
+
+    // Session 18: Check if Konami code was just activated (consumes flag)
+    isKonamiActivated() {
+        if (this.konamiActivated) {
+            this.konamiActivated = false; // Reset flag after checking
+            return true;
+        }
+        return false;
     }
 }
