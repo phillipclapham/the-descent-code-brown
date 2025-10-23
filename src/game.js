@@ -489,10 +489,7 @@ class Game {
 
     // Initialize and start the game
     start() {
-        // Ensure desperation meter is reset for new game (bug fix Session 18.5)
-        this.desperationMeter.reset();
-
-        // Game starting
+        // Game starting (desperation already initialized by caller)
         this.running = true;
         requestAnimationFrame((time) => this.gameLoop(time));
     }
@@ -1578,6 +1575,10 @@ function showMenu() {
 // Start a new game
 function startNewGame() {
     const game = new Game();
+
+    // Reset desperation to 0% for new game (Session 18.5f)
+    game.desperationMeter.reset();
+
     game.start();
 
     // Make game globally accessible for console testing
