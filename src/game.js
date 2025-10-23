@@ -545,6 +545,19 @@ class Game {
             // Only move if no enemy at target position
             if (!enemyAtTarget) {
                 this.player.move(movement.dx, movement.dy, currentTime, this.combat);
+
+                // Session 18: Check for trap death
+                if (this.player.diedFromTrap) {
+                    console.log('Player died from trap!');
+                    this.gameState = 'game_over';
+                    this.player.setMessage("You died from a trap! Should've watched your step...");
+
+                    // Delete save on death (preserve permadeath)
+                    SaveSystem.deleteSave();
+
+                    // Reset flag
+                    this.player.diedFromTrap = false;
+                }
             }
         }
 
@@ -724,10 +737,11 @@ class Game {
         ctx.textAlign = 'center';
         ctx.fillText('GAME OVER', 400, 250);
 
-        // Subtext: "You didn't make it..."
+        // Subtext: Custom message or default (Session 18: Show trap death message if available)
         ctx.font = '24px "Courier New", monospace';
         ctx.fillStyle = '#888888';
-        ctx.fillText("You didn't make it...", 400, 300);
+        const deathMessage = this.player.message || "You didn't make it...";
+        ctx.fillText(deathMessage, 400, 300);
 
         // Restart instruction: "Press R to Restart"
         ctx.font = '20px "Courier New", monospace';

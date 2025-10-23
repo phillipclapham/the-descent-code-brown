@@ -47,6 +47,7 @@ export class Player {
         this.maxHealth = 100;
         this.attackCooldown = 0; // seconds
         this.equippedWeapon = null;
+        this.diedFromTrap = false; // Session 18: Track trap deaths for special message
 
         // Consumable effect timers (Session 10)
         this.speedBoostEndTime = 0;      // Coffee: +30% speed for 30 seconds
@@ -241,12 +242,16 @@ export class Player {
                     this.moveDelay = this.baseMoveDelay;
                 }
 
-                // Traps deal damage
+                // Traps deal damage (Session 18: Now checks for death)
                 if (movedTile === TILE_TRAP) {
                     const trapDamage = 5;
-                    this.health -= trapDamage;
+                    const died = this.takeDamage(trapDamage);
                     this.setMessage(`You trigger a trap! -${trapDamage} HP`);
-                    // Player damaged by trap
+
+                    // Store death flag for game.js to check
+                    if (died) {
+                        this.diedFromTrap = true;
+                    }
                 }
             }
 
