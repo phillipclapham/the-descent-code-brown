@@ -25,10 +25,10 @@ export class IntroModal {
             <div class="modal-overlay">
                 <div class="modal-content">
                     <h2>THE DESCENT: CODE BROWN</h2>
-                    <pre class="modal-story">╔══════════════════════════════════════════╗
-║   CHROMACORP CORPORATE TOWER             ║
-║   Management Directive 2847-B            ║
-╚══════════════════════════════════════════╝
+                    <pre class="modal-story">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ CHROMACORP CORPORATE TOWER
+ Management Directive 2847-B
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 You're an office worker at ChromaCorp Tower.
 After an ill-advised lunch at the sketchy

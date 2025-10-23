@@ -58,7 +58,7 @@ body {
   background-color: var(--bg-primary);
   color: var(--color-primary);
   font-family: var(--font-mono);
-  font-size: 16px; /* VT323 needs slightly larger base size */
+  font-size: 18px; /* Increased from 16px per user feedback */
   line-height: 1.6;
   min-height: 100vh;
   position: relative;
@@ -211,24 +211,24 @@ header h1 {
 }
 
 .tagline {
-  font-size: 18px; /* Increased */
+  font-size: 20px; /* Increased to 20px */
   color: var(--color-accent);
-  margin: var(--spacing-sm) 0;
+  margin: 0.25rem 0; /* Reduced spacing */
   letter-spacing: 1px;
 }
 
 .subtitle {
-  font-size: 20px;
+  font-size: 22px; /* Increased to 22px */
   color: var(--color-warning);
-  margin: var(--spacing-xs) 0;
+  margin: 0.25rem 0; /* Reduced spacing */
   font-style: italic;
   text-shadow: 0 0 5px var(--color-warning);
 }
 
 .author {
-  font-size: 16px; /* Increased from 14px */
+  font-size: 18px; /* Increased to 18px */
   color: var(--color-dim);
-  margin: var(--spacing-xs) 0 0 0;
+  margin: 0.25rem 0 0 0; /* Reduced spacing */
 }
 
 /* === Main Layout === */
@@ -307,7 +307,7 @@ main {
   color: var(--color-accent);
   border-bottom: 1px solid var(--color-dim);
   padding-bottom: var(--spacing-xs);
-  font-size: 18px; /* Increased from 16px */
+  font-size: 20px; /* Increased to 20px */
 }
 
 .control-item {
@@ -324,7 +324,7 @@ main {
 }
 
 .control-item .description {
-  font-size: 16px; /* Increased from 13px */
+  font-size: 18px; /* Increased to 18px */
   color: var(--color-dim);
 }
 
@@ -343,7 +343,7 @@ main {
 
 .game-tip p {
   margin: 0;
-  font-size: 16px; /* Increased from 13px */
+  font-size: 18px; /* Increased to 18px */
   line-height: 1.5;
 }
 
@@ -406,13 +406,13 @@ footer {
 .footer-section h3 {
   color: var(--color-accent);
   margin-bottom: var(--spacing-sm);
-  font-size: 18px; /* Increased from 16px */
+  font-size: 20px; /* Increased to 20px */
 }
 
 .footer-section p {
   margin: var(--spacing-xs) 0;
   color: var(--color-dim);
-  font-size: 16px; /* Increased from 13px */
+  font-size: 18px; /* Increased to 18px */
 }
 
 .footer-bottom {
@@ -420,7 +420,7 @@ footer {
   padding-top: var(--spacing-lg);
   border-top: 1px solid var(--color-dim);
   color: var(--color-dim);
-  font-size: 16px; /* Increased from 12px */
+  font-size: 18px; /* Increased to 18px */
 }
 
 .footer-bottom p {
@@ -472,7 +472,7 @@ footer {
 
 .modal-story {
   font-family: var(--font-mono);
-  font-size: 16px; /* Increased from 14px for readability */
+  font-size: 18px; /* Increased to 18px */
   line-height: 1.6;
   color: var(--color-primary);
   background-color: var(--bg-primary);
@@ -601,7 +601,7 @@ footer {
   border: 1px solid var(--color-dim);
   border-radius: 4px;
   font-family: var(--font-mono);
-  font-size: 16px; /* Increased from 14px */
+  font-size: 18px; /* Increased to 18px */
 }
 
 .boot-message {
@@ -647,7 +647,7 @@ footer {
 
 .boot-hint {
   font-family: var(--font-mono);
-  font-size: 16px; /* Increased from 13px */
+  font-size: 18px; /* Increased to 18px */
   color: var(--color-accent);
   margin-top: var(--spacing-lg);
   animation: bootHintBlink 1.5s ease-in-out infinite;

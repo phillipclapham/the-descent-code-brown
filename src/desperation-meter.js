@@ -165,7 +165,21 @@ export class DesperationMeter {
         this.forceDoorsUnlocked = false;
         // Session 12d: Reset break room state
         this.inBreakRoom = false;
+
+        // Session 18.5: Force immediate DOM update (bypass CSS transition)
+        if (this.element && this.element.bar) {
+            this.element.bar.style.transition = 'none';
+            this.element.bar.style.width = '0%';
+            // Re-enable transition after a frame
+            requestAnimationFrame(() => {
+                if (this.element && this.element.bar) {
+                    this.element.bar.style.transition = '';
+                }
+            });
+        }
+
         this.render();
+        console.log('Desperation meter reset to 0%');
     }
 
     // Get current value (for gameplay effects in future sessions)
