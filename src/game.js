@@ -4,7 +4,7 @@ import { Renderer, GRID_WIDTH, GRID_HEIGHT } from './renderer.js';
 import { Player } from './player.js';
 import { InputHandler } from './input.js';
 import { DesperationMeter } from './desperation-meter.js';
-import { TileMap, TILE_FLOOR, TILE_STAIRS, TILE_STAIRS_UP, TILE_TOILET, TILE_WEAPON, TILE_CONSUMABLE, TILE_SHRINE, TILE_SHRINE_USED } from './tile-map.js';
+import { TileMap, TILE_FLOOR, TILE_STAIRS, TILE_STAIRS_UP, TILE_TOILET, TILE_WEAPON, TILE_CONSUMABLE, TILE_SHRINE, TILE_SHRINE_USED, TILE_FEATURE, TILE_FEATURE_READ } from './tile-map.js';
 import { DungeonGenerator } from './dungeon-generator.js';
 import { CombatSystem } from './combat.js';
 import { IntroModal } from './intro-modal.js';
@@ -125,6 +125,49 @@ class Game {
         }
 
         // All dungeon floors generated
+    }
+
+    // Session 18b: Get environmental lore message based on floor theme
+    getEnvironmentalLore(floorNumber) {
+        // Office theme (floors 10-8): ChromaCorp satire and employee complaints
+        const officeLore = [
+            "A notice: 'Directive 2847-B: All restroom facilities floors 2-10 OUT OF ORDER. Budget realignment.'",
+            "Scrawled on the wall: 'They broke EVERY toilet to save money. EVERY. SINGLE. ONE.'",
+            "A motivational poster: 'SYNERGY THROUGH SUFFERING' - ChromaCorp Management",
+            "An old memo: 'Employees may no longer use company time for biological necessities. - HR'",
+            "Graffiti: 'I've been holding it since Tuesday. Send help. Or toilet paper.'"
+        ];
+
+        // Maintenance theme (floors 7-5): Janitor notes and infrastructure decay
+        const maintenanceLore = [
+            "A janitor's note: 'Pipes on this level have been leaking since 2019. Nobody cares.'",
+            "Warning sign: 'CAUTION: Structural integrity questionable. Budget cuts have consequences.'",
+            "Scribbled message: 'They cut our staff by 60%. Still expect miracles. - Maintenance'",
+            "A faded work order: 'URGENT: Replace corroded pipes. Status: Denied - Not budget priority.'",
+            "Janitor's log: 'Found another rat nest. Management says rats are now our problem. Great.'"
+        ];
+
+        // Sewer theme (floors 4-1): Ancient infrastructure and dark humor
+        const sewerLore = [
+            "Carved into stone: '1927 - Original construction. Should've been condemned by 1950.'",
+            "A rusted plaque: 'ChromaCorp Tower - Built on the cheap, maintained even cheaper.'",
+            "Old graffiti: 'If you're reading this, you're desperate. The Throne awaits below.'",
+            "Warning etched in pipe: 'Turn back. This level floods when it rains. It's always raining.'",
+            "Ancient message: 'Made it to Floor 2. Didn't make it to Floor 1. Learn from my mistake.'"
+        ];
+
+        // Select lore based on floor number
+        let lorePool;
+        if (floorNumber >= 8) {
+            lorePool = officeLore;
+        } else if (floorNumber >= 5) {
+            lorePool = maintenanceLore;
+        } else {
+            lorePool = sewerLore;
+        }
+
+        // Return random message from appropriate pool
+        return lorePool[Math.floor(Math.random() * lorePool.length)];
     }
 
     // Spawn enemies, weapons, and consumables for the current floor (Session 10)
@@ -672,6 +715,24 @@ class Game {
 
                     console.log(`Shrine used at (${this.player.x}, ${this.player.y}): HP ${currentHP} → ${newHP}, Desperation ${currentDesp.toFixed(1)}% → ${newDesp.toFixed(1)}%`);
                 }
+
+                // Clear key to prevent repeat
+                this.input.keys['r'] = false;
+                this.input.keys['R'] = false;
+            }
+            // Session 18b: Check for environmental feature interaction
+            else if (playerTile === TILE_FEATURE || playerTile === TILE_FEATURE_READ) {
+                // Read feature: display lore message (can read multiple times)
+                const displayFloor = this.numFloors - this.currentFloor;
+                const loreMessage = this.getEnvironmentalLore(displayFloor);
+
+                // Set message with longer duration (4.5 seconds for lore)
+                this.player.setMessage(loreMessage, 4500);
+
+                // Play sound (subtle acknowledgment)
+                this.soundSystem.playPickup();
+
+                console.log(`Feature read at (${this.player.x}, ${this.player.y}) on Floor ${displayFloor}: "${loreMessage}"`);
 
                 // Clear key to prevent repeat
                 this.input.keys['r'] = false;
@@ -1391,24 +1452,55 @@ class Game {
         this.renderer.drawText(statusText, 10, statusBarY + 12, '#ffffff', 14);
 
         // Display player message (if any) - centered above status bar
+        // Session 18b: Multi-line text wrapping for long lore messages
         const message = this.player.getMessage();
         if (message) {
-            // Measure text width for centered background
             this.renderer.ctx.font = '16px "Courier New", monospace';
-            const textWidth = this.renderer.ctx.measureText(message).width;
-            const msgX = (800 - textWidth) / 2 - 10;
-            const msgY = statusBarY - 35;
+
+            // Word wrap long messages (max width: 700px)
+            const maxWidth = 700;
+            const words = message.split(' ');
+            const lines = [];
+            let currentLine = '';
+
+            for (const word of words) {
+                const testLine = currentLine ? `${currentLine} ${word}` : word;
+                const testWidth = this.renderer.ctx.measureText(testLine).width;
+
+                if (testWidth > maxWidth && currentLine) {
+                    lines.push(currentLine);
+                    currentLine = word;
+                } else {
+                    currentLine = testLine;
+                }
+            }
+            if (currentLine) {
+                lines.push(currentLine);
+            }
+
+            // Calculate dimensions for multi-line message box
+            const lineHeight = 20;
+            const padding = 10;
+            const boxHeight = (lines.length * lineHeight) + (padding * 2);
+            const maxLineWidth = Math.max(...lines.map(line => this.renderer.ctx.measureText(line).width));
+            const boxWidth = maxLineWidth + (padding * 2);
+            const msgX = (800 - boxWidth) / 2;
+            const msgY = statusBarY - boxHeight - 10;
 
             // Background for message
             this.renderer.ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
-            this.renderer.ctx.fillRect(msgX, msgY, textWidth + 20, 25);
+            this.renderer.ctx.fillRect(msgX, msgY, boxWidth, boxHeight);
 
             // Border for message
             this.renderer.ctx.strokeStyle = '#888888';
             this.renderer.ctx.lineWidth = 2;
-            this.renderer.ctx.strokeRect(msgX, msgY, textWidth + 20, 25);
+            this.renderer.ctx.strokeRect(msgX, msgY, boxWidth, boxHeight);
 
-            this.renderer.drawText(message, msgX + 10, msgY + 5, '#ff8800', 16);
+            // Render each line
+            for (let i = 0; i < lines.length; i++) {
+                const lineY = msgY + padding + (i * lineHeight);
+                this.renderer.drawText(lines[i], msgX + padding, lineY, '#ff8800', 16);
+            }
         }
     }
 

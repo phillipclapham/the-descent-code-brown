@@ -408,6 +408,19 @@ export class Player {
 
     // Drop currently selected item (X key) - Session 14a: Works for weapons AND consumables
     dropItem(tileMap, combat) {
+        // Session 18b: Check if current tile would be overwritten (features, shrines, etc.)
+        const currentTile = tileMap.getTile(this.x, this.y);
+        const TILE_FEATURE = 6;
+        const TILE_FEATURE_READ = 18;
+        const TILE_SHRINE = 16;
+        const TILE_SHRINE_USED = 17;
+
+        if (currentTile === TILE_FEATURE || currentTile === TILE_FEATURE_READ ||
+            currentTile === TILE_SHRINE || currentTile === TILE_SHRINE_USED) {
+            this.setMessage('Can\'t drop items here');
+            return false;
+        }
+
         // Check if weapon or consumable slot
         if (this.selectedSlot < 4) {
             // Weapon slot
@@ -548,14 +561,17 @@ export class Player {
     }
 
     // Set a message to display to the player
-    setMessage(msg) {
+    // Session 18b: Optional duration parameter for longer messages (lore)
+    setMessage(msg, duration = 2000) {
         this.message = msg;
         this.messageTime = Date.now();
+        this.messageDuration = duration; // Store duration for this message
     }
 
-    // Get current message (clears after 2 seconds)
+    // Get current message (clears after duration expires)
     getMessage() {
-        if (Date.now() - this.messageTime > 2000) {
+        const duration = this.messageDuration || 2000; // Default 2s if not set
+        if (Date.now() - this.messageTime > duration) {
             this.message = '';
         }
         return this.message;

@@ -20,6 +20,7 @@ export const TILE_WEAPON = 14;     // Weapon pickup - walkable
 export const TILE_CONSUMABLE = 15; // Consumable item pickup - walkable
 export const TILE_SHRINE = 16;     // Shrine altar - walkable, reduces desperation (Session 18)
 export const TILE_SHRINE_USED = 17; // Used shrine altar - walkable, no longer functional (Session 18)
+export const TILE_FEATURE_READ = 18; // Read environmental feature - walkable, lore already read (Session 18b)
 
 export class TileMap {
     constructor(width, height) {
@@ -87,7 +88,8 @@ export class TileMap {
                tile === TILE_WATER ||       // Walkable (Phase 3: slow movement)
                tile === TILE_TRAP ||        // Walkable (Phase 3: damage)
                tile === TILE_SHRINE ||      // Walkable (Session 18: interact to reduce desperation)
-               tile === TILE_SHRINE_USED;   // Walkable (Session 18: already used)
+               tile === TILE_SHRINE_USED || // Walkable (Session 18: already used)
+               tile === TILE_FEATURE_READ;  // Walkable (Session 18b: lore already read)
         // Note: TILE_DOOR_CLOSED, TILE_DOOR_LOCKED, and TILE_CHASM are NOT walkable
         // Player interaction will open/unlock doors first
         // Chasms are impassable visual hazards
@@ -192,6 +194,8 @@ export class TileMap {
                 return 'Ω';  // Shrine altar (Session 18)
             case TILE_SHRINE_USED:
                 return 'Ω';  // Used shrine altar (Session 18 - same symbol, different color)
+            case TILE_FEATURE_READ:
+                return '*';  // Read feature (Session 18b - same symbol, different color)
             default:
                 return '?';
         }
@@ -237,6 +241,8 @@ export class TileMap {
                 return '#00ffff';     // Cyan (shrine altar - Session 18)
             case TILE_SHRINE_USED:
                 return '#666666';     // Gray (used shrine altar - Session 18)
+            case TILE_FEATURE_READ:
+                return '#666666';     // Gray (read feature - Session 18b)
             default:
                 return '#ff0000';     // Red (error)
         }
