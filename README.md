@@ -8,6 +8,8 @@
 
 **[▶️ PLAY ONLINE](https://gottapoop.phillipclapham.com)** ← Live game!
 
+> **⌨️ Desktop Required:** This game requires a keyboard and is best played on desktop browsers. Mobile support is planned for a future update.
+
 Race through 10 floors of ChromaCorp Tower to reach the only working bathroom. Manage your rising desperation, fight enemies, find items, and use your "Clench" ability strategically. Can you make it before time runs out?
 
 ## 🎯 Features

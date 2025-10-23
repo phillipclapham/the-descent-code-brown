@@ -70,6 +70,7 @@ Can you make it to The Throne?
 Survive the descent. Find The Throne.
 Hold it like a legend.
 
+⌨️  KEYBOARD REQUIRED - Desktop browsers only
 (Check the controls sidebar on the left!)</pre>
                     <div class="modal-buttons">
                         <button id="start-game-btn" class="btn-primary">START GAME</button>
