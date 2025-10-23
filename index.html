@@ -9,6 +9,10 @@
     <meta property="og:type" content="website">
 
     <title>The Descent: Code Brown</title>
+    <!-- Google Fonts: VT323 (Authentic Terminal Font) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -127,6 +131,13 @@
         </div>
     </footer>
 
+    <!-- Boot Sequence -->
+    <script type="module">
+        import { initBootSequence } from './src/boot-sequence.js';
+        initBootSequence();
+    </script>
+
+    <!-- Main Game -->
     <script type="module" src="src/game.js"></script>
 </body>
 </html>
