@@ -438,7 +438,6 @@ export class HelpSystem {
       { text: "THE DESCENT: CODE BROWN", header: true },
       { text: "", indent: false },
       { text: "Created by Phillip Clapham", indent: false },
-      { text: "in collaboration with Claude Code (Anthropic)", indent: false },
       { text: "", indent: false },
       { text: "", indent: false },
       { text: "TECHNOLOGY", header: true },
